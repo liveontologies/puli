@@ -19,22 +19,19 @@
  * limitations under the License.
  * #L%
  */
-package org.liveontologies.puli.collections;
+package org.liveontologies.puli.justifications;
 
-import java.util.AbstractCollection;
-import java.util.Collection;
+/**
+ * Instances of this interface may monitor the interruption status.
+ * 
+ * @author Peter Skocovsky
+ */
+public interface InterruptMonitor {
 
-public abstract class AbstractCollection2<C extends Collection<?>>
-		extends AbstractCollection<C> implements Collection2<C> {
-
-	@Override
-	public boolean isMinimal(Collection<?> s) {
-		return !subCollectionsOf(s).iterator().hasNext();
-	}
-
-	@Override
-	public boolean isMaximal(Collection<?> s) {
-		return !superCollectionsOf(s).iterator().hasNext();
-	}
+	/**
+	 * @return {@code true} after this monitor was notified about interruption,
+	 *         {@code false} if it was not.
+	 */
+	boolean isInterrupted();
 
 }

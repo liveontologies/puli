@@ -19,22 +19,23 @@
  * limitations under the License.
  * #L%
  */
-package org.liveontologies.puli.collections;
+package org.liveontologies.puli.statistics;
 
-import java.util.AbstractCollection;
-import java.util.Collection;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-public abstract class AbstractCollection2<C extends Collection<?>>
-		extends AbstractCollection<C> implements Collection2<C> {
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-	@Override
-	public boolean isMinimal(Collection<?> s) {
-		return !subCollectionsOf(s).iterator().hasNext();
-	}
-
-	@Override
-	public boolean isMaximal(Collection<?> s) {
-		return !superCollectionsOf(s).iterator().hasNext();
-	}
+/**
+ * Marks one statistical value. If a method is annotated, the value is what it
+ * returns. The method must have no parameter.
+ * 
+ * @author Peter Skocovsky
+ */
+@Retention(RUNTIME)
+@Target({ FIELD, METHOD })
+public @interface Stat {
 
 }

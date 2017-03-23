@@ -19,22 +19,25 @@
  * limitations under the License.
  * #L%
  */
-package org.liveontologies.puli.collections;
+package org.liveontologies.puli.statistics;
 
-import java.util.AbstractCollection;
-import java.util.Collection;
+public class StatsException extends RuntimeException {
+	private static final long serialVersionUID = 3694803038220659642L;
 
-public abstract class AbstractCollection2<C extends Collection<?>>
-		extends AbstractCollection<C> implements Collection2<C> {
-
-	@Override
-	public boolean isMinimal(Collection<?> s) {
-		return !subCollectionsOf(s).iterator().hasNext();
+	public StatsException() {
+		super();
 	}
 
-	@Override
-	public boolean isMaximal(Collection<?> s) {
-		return !superCollectionsOf(s).iterator().hasNext();
+	public StatsException(final String message, final Throwable cause) {
+		super(message, cause);
+	}
+
+	public StatsException(final String message) {
+		super(message);
+	}
+
+	public StatsException(final Throwable cause) {
+		super(cause);
 	}
 
 }
