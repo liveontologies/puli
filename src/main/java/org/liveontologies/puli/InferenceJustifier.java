@@ -21,25 +21,18 @@
  */
 package org.liveontologies.puli;
 
-import java.util.Set;
-
 /**
- * An inference that is associated with a set of axioms that justify this
- * inference. This could be, for example, axioms occurring in the ontology.
+ * Provides justifications for inferences.
  * 
  * @author Peter Skocovsky
  *
  * @param <C>
- *            the type of conclusions and premises this inference operate with
- * @param <A>
- *            the type of axioms this inference operates with
+ *            The type of conclusion and premises used by the inferences.
+ * @param <J>
+ *            The type of justifications of the inferences.
  */
-public interface JustifiedInference<C, A> extends Inference<C> {
+public interface InferenceJustifier<C, J> {
 
-	/**
-	 * @return the axioms by which this inference is justified; the axioms can
-	 *         be different from premises in the sense that may not be derived
-	 */
-	Set<? extends A> getJustification();
+	J getJustification(Inference<C> inference);
 
 }

@@ -35,8 +35,9 @@ import java.util.Queue;
 import java.util.Set;
 
 import org.liveontologies.puli.Delegator;
-import org.liveontologies.puli.GenericInferenceSet;
-import org.liveontologies.puli.JustifiedInference;
+import org.liveontologies.puli.Inference;
+import org.liveontologies.puli.InferenceJustifier;
+import org.liveontologies.puli.InferenceSet;
 import org.liveontologies.puli.Util;
 import org.liveontologies.puli.collections.BloomTrieCollection2;
 import org.liveontologies.puli.collections.Collection2;
@@ -114,10 +115,11 @@ public class ResolutionJustificationComputation<C, A>
 	private int producedInferenceCount_ = 0, minimalInferenceCount_ = 0;
 
 	private ResolutionJustificationComputation(
-			final GenericInferenceSet<C, ? extends JustifiedInference<C, A>> inferences,
+			final InferenceSet<C> inferenceSet,
+			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor,
 			final SelectionFactory<C, A> selectionFactory) {
-		super(inferences, monitor);
+		super(inferenceSet, justifier, monitor);
 		this.selection_ = selectionFactory.createSelection(this);
 	}
 
@@ -215,10 +217,11 @@ public class ResolutionJustificationComputation<C, A>
 			this.justification_ = justification;
 		}
 
-		public DerivedInference(JustifiedInference<C, A> inference) {
+		public DerivedInference(final Inference<C> inference,
+				final InferenceJustifier<C, ? extends Set<? extends A>> justifier) {
 			this(inference.getConclusion(),
 					ImmutableSet.copyOf(inference.getPremises()),
-					ImmutableSet.copyOf(inference.getJustification()));
+					ImmutableSet.copyOf(justifier.getJustification(inference)));
 		}
 
 		public C getConclusion() {
@@ -540,8 +543,9 @@ public class ResolutionJustificationComputation<C, A>
 				if (next == null) {
 					return;
 				}
-				for (JustifiedInference<C, A> inf : getInferences(next)) {
-					produce(new DerivedInference<C, A>(inf));
+				for (final Inference<C> inf : getInferences(next)) {
+					produce(new DerivedInference<C, A>(inf,
+							getInferenceJustifier()));
 					for (C premise : inf.getPremises()) {
 						toInitialize(premise);
 					}
@@ -612,7 +616,7 @@ public class ResolutionJustificationComputation<C, A>
 					minimalInferenceCount_++;
 				}
 				C selected = selection_.getResolvingAtom(inf, getInferenceSet(),
-						goal_);
+						getInferenceJustifier(), goal_);
 				if (selected == null) {
 					// resolve on the conclusions
 					selected = inf.conclusion_;
@@ -659,7 +663,8 @@ public class ResolutionJustificationComputation<C, A>
 		 *         premise
 		 */
 		C getResolvingAtom(DerivedInference<C, A> inference,
-				GenericInferenceSet<C, ? extends JustifiedInference<C, A>> inferences,
+				InferenceSet<C> inferenceSet,
+				InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				C goal);
 
 	}
@@ -675,14 +680,15 @@ public class ResolutionJustificationComputation<C, A>
 
 		@Override
 		public C getResolvingAtom(DerivedInference<C, A> inference,
-				GenericInferenceSet<C, ? extends JustifiedInference<C, A>> inferences,
+				final InferenceSet<C> inferenceSet,
+				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				C goal) {
 			// select the premise that is derived by the fewest inferences;
 			// if there are no premises, select the conclusion
 			C result = null;
 			int minInferenceCount = Integer.MAX_VALUE;
 			for (C c : inference.getPremises()) {
-				int inferenceCount = inferences.getInferences(c).size();
+				int inferenceCount = inferenceSet.getInferences(c).size();
 				if (inferenceCount < minInferenceCount) {
 					result = c;
 					minInferenceCount = inferenceCount;
@@ -697,7 +703,8 @@ public class ResolutionJustificationComputation<C, A>
 
 		@Override
 		public C getResolvingAtom(DerivedInference<C, A> inference,
-				GenericInferenceSet<C, ? extends JustifiedInference<C, A>> inferences,
+				final InferenceSet<C> inferenceSet,
+				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				C goal) {
 			// select the conclusion, unless it is the goal conclusion and
 			// there are premises, in which case select the premise derived
@@ -706,7 +713,7 @@ public class ResolutionJustificationComputation<C, A>
 			if (goal.equals(inference.getConclusion())) {
 				int minInferenceCount = Integer.MAX_VALUE;
 				for (C c : inference.getPremises()) {
-					int inferenceCount = inferences.getInferences(c).size();
+					int inferenceCount = inferenceSet.getInferences(c).size();
 					if (inferenceCount < minInferenceCount) {
 						result = c;
 						minInferenceCount = inferenceCount;
@@ -732,7 +739,8 @@ public class ResolutionJustificationComputation<C, A>
 
 		@Override
 		public C getResolvingAtom(DerivedInference<C, A> inference,
-				GenericInferenceSet<C, ? extends JustifiedInference<C, A>> inferences,
+				final InferenceSet<C> inferenceSet,
+				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				C goal) {
 			// select the premise derived by the fewest inferences
 			// unless the number of such inferences is larger than the
@@ -741,7 +749,7 @@ public class ResolutionJustificationComputation<C, A>
 			int minInferenceCount = Integer.MAX_VALUE;
 			C result = null;
 			for (C c : inference.getPremises()) {
-				int inferenceCount = inferences.getInferences(c).size();
+				int inferenceCount = inferenceSet.getInferences(c).size();
 				if (inferenceCount < minInferenceCount) {
 					result = c;
 					minInferenceCount = inferenceCount;
@@ -803,25 +811,28 @@ public class ResolutionJustificationComputation<C, A>
 
 		@Override
 		public JustificationComputation<C, A> create(
-				final GenericInferenceSet<C, ? extends JustifiedInference<C, A>> inferenceSet,
+				final InferenceSet<C> inferenceSet,
+				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor) {
-			return create(inferenceSet, monitor, new SelectionFactory<C, A>() {
+			return create(inferenceSet, justifier, monitor,
+					new SelectionFactory<C, A>() {
 
-				@Override
-				public Selection<C, A> createSelection(
-						final ResolutionJustificationComputation<C, A> computation) {
-					return computation.new ThresholdSelection();
-				}
+						@Override
+						public Selection<C, A> createSelection(
+								final ResolutionJustificationComputation<C, A> computation) {
+							return computation.new ThresholdSelection();
+						}
 
-			});
+					});
 		}
 
 		public JustificationComputation<C, A> create(
-				final GenericInferenceSet<C, ? extends JustifiedInference<C, A>> inferenceSet,
+				final InferenceSet<C> inferenceSet,
+				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor,
 				final SelectionFactory<C, A> selectionFactory) {
 			return new ResolutionJustificationComputation<C, A>(inferenceSet,
-					monitor, selectionFactory);
+					justifier, monitor, selectionFactory);
 		}
 
 	}

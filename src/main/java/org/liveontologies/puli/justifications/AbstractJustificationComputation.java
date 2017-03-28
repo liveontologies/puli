@@ -22,9 +22,12 @@
 package org.liveontologies.puli.justifications;
 
 import java.util.Collection;
+import java.util.Set;
 
-import org.liveontologies.puli.GenericInferenceSet;
-import org.liveontologies.puli.JustifiedInference;
+import org.liveontologies.puli.Inference;
+import org.liveontologies.puli.InferenceJustifier;
+import org.liveontologies.puli.InferenceSet;
+import org.liveontologies.puli.Util;
 
 /**
  * A skeleton implementation of {@link JustificationComputation}
@@ -39,14 +42,20 @@ import org.liveontologies.puli.JustifiedInference;
 public abstract class AbstractJustificationComputation<C, A>
 		implements JustificationComputation<C, A> {
 
-	private final GenericInferenceSet<C, ? extends JustifiedInference<C, A>> inferenceSet_;
+	private final InferenceSet<C> inferenceSet_;
+
+	private final InferenceJustifier<C, ? extends Set<? extends A>> justifier_;
 
 	private final InterruptMonitor monitor_;
 
-	public AbstractJustificationComputation(
-			final GenericInferenceSet<C, ? extends JustifiedInference<C, A>> inferenceSet,
+	public AbstractJustificationComputation(final InferenceSet<C> inferenceSet,
+			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor) {
+		Util.checkNotNull(inferenceSet);
+		Util.checkNotNull(justifier);
+		Util.checkNotNull(monitor);
 		this.inferenceSet_ = inferenceSet;
+		this.justifier_ = justifier;
 		this.monitor_ = monitor;
 	}
 
@@ -57,13 +66,21 @@ public abstract class AbstractJustificationComputation<C, A>
 				JustificationComputation.DEFAULT_ORDER, listener);
 	}
 
-	public GenericInferenceSet<C, ? extends JustifiedInference<C, A>> getInferenceSet() {
+	public InferenceSet<C> getInferenceSet() {
 		return inferenceSet_;
 	}
 
-	public Collection<? extends JustifiedInference<C, A>> getInferences(
+	public InferenceJustifier<C, ? extends Set<? extends A>> getInferenceJustifier() {
+		return justifier_;
+	}
+
+	public Collection<? extends Inference<C>> getInferences(
 			final C conclusion) {
 		return inferenceSet_.getInferences(conclusion);
+	}
+
+	public Set<? extends A> getJustification(final Inference<C> inference) {
+		return justifier_.getJustification(inference);
 	}
 
 	protected boolean isInterrupted() {

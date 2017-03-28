@@ -55,4 +55,13 @@ public class InferenceSets {
 		return new CombinedInferenceSet<C, I>(inferenceSets);
 	}
 
+	public static <C> InferenceSet<C> addAssertedInferences(
+			final InferenceSet<C> inferences, final Set<? extends C> asserted) {
+		return new AddAssertedInferenceSet<C>(inferences, asserted);
+	}
+
+	public static <C> InferenceJustifier<C, ? extends Set<? extends C>> justifyAssertedInferences() {
+		return AssertedConclusionInferenceJustifier.getInstance();
+	}
+
 }

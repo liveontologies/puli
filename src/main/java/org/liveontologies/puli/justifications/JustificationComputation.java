@@ -24,8 +24,8 @@ package org.liveontologies.puli.justifications;
 import java.util.Comparator;
 import java.util.Set;
 
-import org.liveontologies.puli.GenericInferenceSet;
-import org.liveontologies.puli.JustifiedInference;
+import org.liveontologies.puli.InferenceJustifier;
+import org.liveontologies.puli.InferenceSet;
 
 /**
  * A common interface for procedures that compute justifications of conclusions
@@ -122,12 +122,13 @@ public interface JustificationComputation<C, A> {
 
 		/**
 		 * @param inferenceSet
+		 * @param justifier
 		 * @param monitor
 		 * @return a new justification computation which uses the given
-		 *         inference set
+		 *         inference set and inference justifier
 		 */
-		JustificationComputation<C, A> create(
-				GenericInferenceSet<C, ? extends JustifiedInference<C, A>> inferenceSet,
+		JustificationComputation<C, A> create(InferenceSet<C> inferenceSet,
+				InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				InterruptMonitor monitor);
 
 	}
