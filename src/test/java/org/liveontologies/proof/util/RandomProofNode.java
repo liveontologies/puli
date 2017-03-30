@@ -70,7 +70,7 @@ public class RandomProofNode {
 	}
 
 	public static ProofNode<Integer> generate(Random random) {
-		return generate(random, random.nextInt(100));
+		return generate(random, random.nextInt(100) + 1);
 	}
 
 	public static ProofNode<Integer> generate() {
