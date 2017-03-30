@@ -9,7 +9,7 @@ install:
 build_script:
   - mvn install -DskipTests=true
 test_script:
-  - mvn mvn test -Dassembly.skipAssembly=true -B
+  - mvn test -Dassembly.skipAssembly=true -B
 cache:
   - C:\maven\
   - C:\Users\appveyor\.m2
