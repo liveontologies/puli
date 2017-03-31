@@ -138,22 +138,28 @@ public class InferenceDerivabilityChecker<C>
 	}
 
 	@Override
-	public void block(C conclusion) {
+	public boolean block(C conclusion) {
 		if (blocked_.add(conclusion)) {
 			LOGGER_.trace("{}: blocked", conclusion);
 			unCheck(conclusion);
+			return true;
 		}
+		// else
+		return false;
 	}
 
 	@Override
-	public void unblock(C conclusion) {
+	public boolean unblock(C conclusion) {
 		if (blocked_.remove(conclusion)) {
 			LOGGER_.trace("{}: unblocked", conclusion);
 			if (goals_.remove(conclusion)
 					&& watchedInferences_.containsKey(conclusion)) {
 				toCheck(conclusion);
 			}
+			return true;
 		}
+		// else
+		return false;
 	}
 
 	/**
