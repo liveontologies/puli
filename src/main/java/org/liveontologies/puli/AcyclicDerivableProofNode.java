@@ -21,30 +21,52 @@
  */
 package org.liveontologies.puli;
 
-class AcyclicDerivableProofNode<C> extends AcyclicProofNode<C> {
+import com.google.common.base.Preconditions;
 
-	private final DerivabilityChecker<ProofNode<C>> checker_ = new ProofNodeDerivabilityChecker<C>();
+class AcyclicDerivableProofNode<C> extends ConvertedProofNode<C> {
+
+	private final AcyclicDerivableProofNode<C> parent_;
+
+	private final DerivabilityCheckerWithBlocking<ProofNode<C>> checker_;
 
 	AcyclicDerivableProofNode(ProofNode<C> delegate,
-			AcyclicDerivableProofNode<C> parent) {
-		super(delegate, parent);
+			AcyclicDerivableProofNode<C> parent,
+			DerivabilityCheckerWithBlocking<ProofNode<C>> checker) {
+		super(delegate);
+		this.parent_ = parent;
+		this.checker_ = checker;
 	}
 
 	AcyclicDerivableProofNode(ProofNode<C> delegate) {
-		this(delegate, null);
+		this(delegate, null, new ProofNodeDerivabilityChecker<C>());
 	}
 
 	@Override
-	final void convert(AcyclicProofStep<C> step) {
+	protected void convertInferences() {
+		Preconditions.checkArgument(checker_.getBlockedConclusions().isEmpty());
+		AcyclicDerivableProofNode<C> blocked = this;
+		do {
+			checker_.block(blocked.getDelegate());
+			blocked = blocked.parent_;
+		} while (blocked != null);
+		super.convertInferences();
+		blocked = this;
+		do {
+			checker_.unblock(blocked.getDelegate());
+			blocked = blocked.parent_;
+		} while (blocked != null);
+	}
+
+	@Override
+	protected final void convert(ConvertedProofStep<C> step) {
 		ProofStep<C> delegate = step.getDelegate();
 		for (ProofNode<C> premise : delegate.getPremises()) {
-			if (!checker_.isDerivable(
-					new FilteredProofNode<C>(premise, getBlockedNodes()))) {
+			if (!checker_.isDerivable(premise)) {
 				return;
 			}
 		}
 		// all premises are derivable
-		convert(new AcyclicDerivableProofStep<C>(delegate, this));
+		convert(new AcyclicDerivableProofStep<C>(delegate, this, checker_));
 	}
 
 	void convert(AcyclicDerivableProofStep<C> step) {

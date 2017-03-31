@@ -49,15 +49,6 @@ class AcyclicProofNode<C> extends ConvertedProofNode<C> {
 		return parent_;
 	}
 
-	/**
-	 * @param node
-	 * @return the original nodes which should not be used as premises of
-	 *         inferences
-	 */
-	Set<ProofNode<C>> getBlockedNodes() {
-		return blockedNodes_;
-	}
-
 	@Override
 	protected final void convert(ConvertedProofStep<C> step) {
 		ProofStep<C> delegate = step.getDelegate();

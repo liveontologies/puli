@@ -21,24 +21,23 @@
  */
 package org.liveontologies.puli;
 
-import java.util.List;
+class AcyclicDerivableProofStep<C> extends ConvertedProofStep<C> {
 
-class AcyclicDerivableProofStep<C> extends AcyclicProofStep<C> {
+	private final AcyclicDerivableProofNode<C> conclusion_;
+
+	private final DerivabilityCheckerWithBlocking<ProofNode<C>> checker_;
 
 	AcyclicDerivableProofStep(ProofStep<C> delegate,
-			AcyclicDerivableProofNode<C> conclusion) {
-		super(delegate, conclusion);
-	}
-
-	@Override
-	public List<ProofNode<C>> getPremises() {
-		return super.getPremises();
+			AcyclicDerivableProofNode<C> conclusion,
+			DerivabilityCheckerWithBlocking<ProofNode<C>> checker) {
+		super(delegate);
+		this.conclusion_ = conclusion;
+		this.checker_ = checker;
 	}
 
 	@Override
 	protected AcyclicDerivableProofNode<C> convert(ProofNode<C> premise) {
-		return new AcyclicDerivableProofNode<C>(premise,
-				(AcyclicDerivableProofNode<C>) getConclusion());
+		return new AcyclicDerivableProofNode<C>(premise, conclusion_, checker_);
 	}
 
 }

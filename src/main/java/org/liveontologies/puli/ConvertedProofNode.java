@@ -35,13 +35,17 @@ public class ConvertedProofNode<C> extends DelegatingProofNode<C> {
 	@Override
 	public Collection<ProofStep<C>> getInferences() {
 		if (inferences_ == null) {
-			Collection<? extends ProofStep<C>> original = super.getInferences();
-			inferences_ = new HashSet<ProofStep<C>>(original.size());
-			for (ProofStep<C> step : original) {
-				convert(step);
-			}
+			convertInferences();
 		}
 		return inferences_;
+	}
+
+	protected void convertInferences() {
+		Collection<? extends ProofStep<C>> original = super.getInferences();
+		inferences_ = new HashSet<ProofStep<C>>(original.size());
+		for (ProofStep<C> step : original) {
+			convert(step);
+		}
 	}
 
 	final void convert(ProofStep<C> step) {
