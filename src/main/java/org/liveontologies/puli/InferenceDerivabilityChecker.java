@@ -155,6 +155,7 @@ public class InferenceDerivabilityChecker<C>
 			if (goals_.remove(conclusion)
 					&& watchedInferences_.containsKey(conclusion)) {
 				toCheck(conclusion);
+				process();
 			}
 			return true;
 		}
