@@ -19,16 +19,13 @@
  * limitations under the License.
  * #L%
  */
-package org.liveontologies.proof.util;
+package org.liveontologies.puli;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-
-import org.liveontologies.puli.ProofNode;
-import org.liveontologies.puli.ProofNodes;
 
 public class RandomProofNode {
 

@@ -19,7 +19,7 @@
  * limitations under the License.
  * #L%
  */
-package org.liveontologies.proof.util;
+package org.liveontologies.puli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -32,11 +32,6 @@ import java.util.Random;
 import java.util.Set;
 
 import org.junit.Test;
-import org.liveontologies.puli.BaseInferenceSet;
-import org.liveontologies.puli.InferenceSet;
-import org.liveontologies.puli.ProofNode;
-import org.liveontologies.puli.ProofNodes;
-import org.liveontologies.puli.ProofStep;
 
 /**
  * @author Pavel Klinov

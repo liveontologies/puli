@@ -19,10 +19,7 @@
  * limitations under the License.
  * #L%
  */
-package org.liveontologies.proof.util;
-
-import org.liveontologies.puli.BaseInferenceSet;
-import org.liveontologies.puli.Inference;
+package org.liveontologies.puli;
 
 public class InferenceSetBuilder<C> {
 

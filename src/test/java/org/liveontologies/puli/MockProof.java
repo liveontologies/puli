@@ -19,13 +19,10 @@
  * limitations under the License.
  * #L%
  */
-package org.liveontologies.proof.util;
+package org.liveontologies.puli;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import org.liveontologies.puli.ProofNode;
-import org.liveontologies.puli.ProofStep;
 
 public class MockProof<C> {
 

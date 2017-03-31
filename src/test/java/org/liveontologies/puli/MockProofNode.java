@@ -19,14 +19,11 @@
  * limitations under the License.
  * #L%
  */
-package org.liveontologies.proof.util;
+package org.liveontologies.puli;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import org.liveontologies.puli.ProofNode;
-import org.liveontologies.puli.ProofStep;
 
 /**
  * @author Pavel Klinov pavel.klinov@uni-ulm.de
