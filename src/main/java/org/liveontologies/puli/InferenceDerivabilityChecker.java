@@ -35,7 +35,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.SetMultimap;
 
 /**
  * A utility to check derivability of conclusions by inferences. A conclusion is
@@ -47,7 +49,8 @@ import com.google.common.collect.ListMultimap;
  * @param <C>
  *            the type of conclusions supported by this checker
  */
-public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
+public class InferenceDerivabilityChecker<C>
+		implements DerivabilityCheckerWithBlocking<C> {
 
 	// logger for this class
 	private static final Logger LOGGER_ = LoggerFactory
@@ -57,6 +60,11 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 	 * the inferences that can be used for deriving conclusions
 	 */
 	private final InferenceSet<C> inferences_;
+
+	/**
+	 * conclusions that cannot be used in the derivations
+	 */
+	private final Set<C> blocked_ = new HashSet<C>();
 
 	/**
 	 * conclusions for which a derivability test was initiated or finished
@@ -94,6 +102,14 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 			.create();
 
 	/**
+	 * a map from a {@link #derivable_} conclusion to fired inferences that
+	 * derived other {@link #derivable_} conclusions and used this conclusion as
+	 * one of the premises
+	 */
+	private final SetMultimap<C, Inference<C>> firedInferences_ = HashMultimap
+			.create();
+
+	/**
 	 * a map from {@link #toCheck_} goals to the iterator over the premises of
 	 * the corresponding inference in {@link #watchedInferences_} that currently
 	 * points to this goal (as it is one of the premises)
@@ -116,6 +132,30 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 		return derivable;
 	}
 
+	@Override
+	public Set<C> getBlockedConclusions() {
+		return blocked_;
+	}
+
+	@Override
+	public void block(C conclusion) {
+		if (blocked_.add(conclusion)) {
+			LOGGER_.trace("{}: blocked", conclusion);
+			unCheck(conclusion);
+		}
+	}
+
+	@Override
+	public void unblock(C conclusion) {
+		if (blocked_.remove(conclusion)) {
+			LOGGER_.trace("{}: unblocked", conclusion);
+			if (goals_.remove(conclusion)
+					&& watchedInferences_.containsKey(conclusion)) {
+				toCheck(conclusion);
+			}
+		}
+	}
+
 	/**
 	 * @return all conclusions that could not be derived in tests for
 	 *         derivability. It guarantees to contain all conclusions for which
@@ -136,6 +176,9 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 			C next = toCheck_.poll();
 
 			if (next != null) {
+				if (blocked_.contains(next)) {
+					continue;
+				}
 				Iterator<? extends Inference<C>> inferences = inferences_
 						.getInferences(next).iterator();
 				if (inferences.hasNext()) {
@@ -148,9 +191,6 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 
 			if (next != null) {
 				List<Inference<C>> watched = watchedInferences_.removeAll(next);
-				if (watched == null) {
-					continue;
-				}
 				List<Iterator<? extends C>> premiseIterators = premiseIteratorsMap_
 						.removeAll(next);
 				for (int i = 0; i < watched.size(); i++) {
@@ -200,10 +240,14 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 		toCheck(premise);
 	}
 
-	private void proved(C conclusion) {
+	private void fire(Inference<C> inf) {
+		C conclusion = inf.getConclusion();
 		if (derivable_.add(conclusion)) {
 			LOGGER_.trace("{}: derived", conclusion);
 			toPropagate_.add(conclusion);
+		}
+		for (C premise : inf.getPremises()) {
+			firedInferences_.put(premise, inf);
 		}
 	}
 
@@ -218,7 +262,33 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 		}
 		// all premises are derived
 		LOGGER_.trace("{}: fire", inf);
-		proved(inf.getConclusion());
+		fire(inf);
+	}
+
+	void unCheck(C conclusion) {
+		Queue<C> toUncheck = new ArrayDeque<C>(32);
+		toUncheck.add(conclusion);
+		for (;;) {
+			conclusion = toUncheck.poll();
+			if (conclusion == null) {
+				break;
+			}
+			// else
+			if (!goals_.remove(conclusion)) {
+				continue;
+			}
+			// else was checked
+			if (!derivable_.remove(conclusion)) {
+				continue;
+			}
+			// else was derivable
+			for (Inference<C> inf : firedInferences_.removeAll(conclusion)) {
+				toUncheck.add(inf.getConclusion());
+				for (C premise : inf.getPremises()) {
+					firedInferences_.remove(premise, inf);
+				}
+			}
+		}
 	}
 
 }

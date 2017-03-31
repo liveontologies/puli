@@ -22,6 +22,7 @@
 package org.liveontologies.puli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -93,6 +94,36 @@ public class ProofTest {
 		assertEquals(1, ProofNodes.eliminateNotDerivableAndCycles(root, stated)
 				.getInferences().size());
 
+	}
+
+	@Test
+	public void testDerivabilityCheckerWithBlocking() throws Exception {
+		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
+		b.conclusion(0).premise(1).premise(2).add();
+		b.conclusion(0).premise(3).premise(4).add();
+		b.conclusion(2).premise(0).premise(0).add();
+		b.conclusion(1).premise(3).premise(4).add();
+		b.conclusion(3).add();
+		b.conclusion(4).add();
+		BaseInferenceSet.Projection<Integer> is = b.build();
+		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
+				is);
+		assertTrue(checker.isDerivable(0));
+		checker.block(1);
+		assertTrue(checker.isDerivable(0));
+		checker.unblock(1);
+		checker.block(3);
+		assertFalse(checker.isDerivable(0));
+		assertFalse(checker.isDerivable(3));
+		assertTrue(checker.isDerivable(4));
+		checker.unblock(3);
+		assertTrue(checker.isDerivable(0));
+		assertTrue(checker.isDerivable(3));
+		assertTrue(checker.isDerivable(4));
+		checker.block(4);
+		assertFalse(checker.isDerivable(0));
+		assertTrue(checker.isDerivable(3));
+		assertFalse(checker.isDerivable(4));
 	}
 
 	@Test
