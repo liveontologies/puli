@@ -21,26 +21,31 @@
  */
 package org.liveontologies.puli.justifications;
 
-/**
- * Instances of this interface may monitor the interruption status.
- * 
- * @author Peter Skocovsky
- */
-public interface InterruptMonitor {
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
 
-	/**
-	 * @return {@code true} after this monitor was notified about interruption,
-	 *         {@code false} if it was not.
-	 */
-	boolean isInterrupted();
+public class JustificationCollector<A>
+		implements JustificationComputation.Listener<A> {
 
-	public static final InterruptMonitor DUMMY = new InterruptMonitor() {
+	private final Collection<Set<? extends A>> justifications_;
 
-		@Override
-		public boolean isInterrupted() {
-			return false;
-		}
+	public JustificationCollector(
+			final Collection<Set<? extends A>> justifications) {
+		this.justifications_ = justifications;
+	}
 
-	};
+	public JustificationCollector() {
+		this(new ArrayList<Set<? extends A>>());
+	}
+
+	@Override
+	public void newJustification(final Set<A> justification) {
+		justifications_.add(justification);
+	}
+
+	public Collection<Set<? extends A>> getJustifications() {
+		return justifications_;
+	}
 
 }

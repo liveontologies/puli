@@ -434,6 +434,8 @@ public class ResolutionJustificationComputation<C, A>
 	private static class Resolvent<C, A> extends ForwardingSet<A>
 			implements InferenceHolder<C, A> {
 
+		private int hash_ = 0;
+		
 		private final DerivedInference<C, A> firstInference_, secondInference_;
 
 		private final Set<A> justification_; // lazy representation
@@ -492,6 +494,14 @@ public class ResolutionJustificationComputation<C, A>
 		@Override
 		protected Set<A> delegate() {
 			return justification_;
+		}
+
+		@Override
+		public int hashCode() {
+			if (hash_ == 0) {
+				hash_ = super.hashCode();
+			}
+			return hash_;
 		}
 
 	}
