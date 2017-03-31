@@ -33,9 +33,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.liveontologies.puli.Util;
-
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
@@ -63,7 +62,7 @@ public class Stats {
 
 	public static Iterable<Map.Entry<String, Object>> getStats(
 			final Object hasStats) {
-		Util.checkNotNull(hasStats);
+		Preconditions.checkNotNull(hasStats);
 		if (hasStats instanceof Class) {
 			return getStats((Class<?>) hasStats, null);
 		} else {
@@ -73,7 +72,7 @@ public class Stats {
 
 	public static Iterable<Map.Entry<String, Object>> getStats(
 			final Class<?> hasStatsClass, final Object hasStats) {
-		Util.checkNotNull(hasStatsClass);
+		Preconditions.checkNotNull(hasStatsClass);
 
 		final Iterable<Field> statFields = getAnnotatedElements(Stat.class,
 				hasStatsClass.getFields());
@@ -124,7 +123,7 @@ public class Stats {
 	}
 
 	public static void resetStats(final Object hasStats) {
-		Util.checkNotNull(hasStats);
+		Preconditions.checkNotNull(hasStats);
 		if (hasStats instanceof Class) {
 			resetStats((Class<?>) hasStats, null);
 		} else {
@@ -134,7 +133,7 @@ public class Stats {
 
 	public static void resetStats(final Class<?> hasStatsClass,
 			final Object hasStats) {
-		Util.checkNotNull(hasStatsClass);
+		Preconditions.checkNotNull(hasStatsClass);
 
 		final Iterable<Method> resetMethods = getAnnotatedElements(
 				ResetStats.class, hasStatsClass.getMethods());
@@ -153,7 +152,7 @@ public class Stats {
 
 	private static Iterable<Object> getNested(final Class<?> hasStatsClass,
 			final Object hasStats) {
-		Util.checkNotNull(hasStatsClass);
+		Preconditions.checkNotNull(hasStatsClass);
 
 		final Iterable<Field> nestedFields = getAnnotatedElements(
 				NestedStats.class, hasStatsClass.getFields());

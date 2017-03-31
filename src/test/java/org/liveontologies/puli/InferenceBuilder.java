@@ -24,6 +24,8 @@ package org.liveontologies.puli;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 public class InferenceBuilder<C> {
 
 	private final String name_;
@@ -41,7 +43,7 @@ public class InferenceBuilder<C> {
 	}
 
 	InferenceBuilder<C> conclusion(C conclusion) {
-		Util.checkNotNull(conclusion);
+		Preconditions.checkNotNull(conclusion);
 		if (conclusion_ != null) {
 			throw new RuntimeException(
 					"Conclusion already assigned: " + conclusion);
@@ -51,7 +53,7 @@ public class InferenceBuilder<C> {
 	}
 
 	InferenceBuilder<C> premise(C premise) {
-		Util.checkNotNull(premise);
+		Preconditions.checkNotNull(premise);
 		premises_.add(premise);
 		return this;
 	}

@@ -21,6 +21,8 @@
  */
 package org.liveontologies.puli;
 
+import com.google.common.base.Preconditions;
+
 /**
  * A prototype that can be used for delegating method calls to a provided
  * delegate object. Instances of this class are compared by comparing the
@@ -36,7 +38,7 @@ public class Delegator<D> {
 	private final D delegate_;
 
 	public Delegator(D delegate) {
-		Util.checkNotNull(delegate);
+		Preconditions.checkNotNull(delegate);
 		this.delegate_ = delegate;
 	}
 

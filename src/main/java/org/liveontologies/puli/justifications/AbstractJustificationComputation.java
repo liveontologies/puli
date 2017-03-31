@@ -27,7 +27,8 @@ import java.util.Set;
 import org.liveontologies.puli.Inference;
 import org.liveontologies.puli.InferenceJustifier;
 import org.liveontologies.puli.InferenceSet;
-import org.liveontologies.puli.Util;
+
+import com.google.common.base.Preconditions;
 
 /**
  * A skeleton implementation of {@link JustificationComputation}
@@ -51,9 +52,9 @@ public abstract class AbstractJustificationComputation<C, A>
 	public AbstractJustificationComputation(final InferenceSet<C> inferenceSet,
 			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor) {
-		Util.checkNotNull(inferenceSet);
-		Util.checkNotNull(justifier);
-		Util.checkNotNull(monitor);
+		Preconditions.checkNotNull(inferenceSet);
+		Preconditions.checkNotNull(justifier);
+		Preconditions.checkNotNull(monitor);
 		this.inferenceSet_ = inferenceSet;
 		this.justifier_ = justifier;
 		this.monitor_ = monitor;

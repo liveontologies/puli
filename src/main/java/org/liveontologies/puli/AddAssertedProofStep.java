@@ -23,13 +23,16 @@ package org.liveontologies.puli;
 
 import java.util.Set;
 
+import com.google.common.base.Preconditions;
+
 class AddAssertedProofStep<C> extends ConvertedProofStep<C> {
 
 	private final Set<? extends C> assertedAxioms_;
 
-	AddAssertedProofStep(ProofStep<C> delegate, Set<? extends C> assertedAxioms) {
+	AddAssertedProofStep(ProofStep<C> delegate,
+			Set<? extends C> assertedAxioms) {
 		super(delegate);
-		Util.checkNotNull(assertedAxioms);
+		Preconditions.checkNotNull(assertedAxioms);
 		this.assertedAxioms_ = assertedAxioms;
 	}
 

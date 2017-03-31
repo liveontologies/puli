@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Combination of multiple inference sets. Inferences from this inference set
  * deriving some conclusion are union of inferences from the supplied inference
@@ -45,7 +47,7 @@ public class CombinedInferenceSet<C, I extends Inference<C>>
 
 	public CombinedInferenceSet(
 			final Iterable<? extends GenericInferenceSet<C, I>> inferenceSets) {
-		Util.checkNotNull(inferenceSets);
+		Preconditions.checkNotNull(inferenceSets);
 		this.inferenceSets_ = inferenceSets;
 	}
 

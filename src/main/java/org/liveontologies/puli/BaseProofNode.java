@@ -24,6 +24,8 @@ package org.liveontologies.puli;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.google.common.base.Preconditions;
+
 class BaseProofNode<C> extends AbstractProofNode<C> {
 
 	private final InferenceSet<C> inferenceSet_;
@@ -32,7 +34,7 @@ class BaseProofNode<C> extends AbstractProofNode<C> {
 
 	BaseProofNode(InferenceSet<C> inferences, C member) {
 		super(member);
-		Util.checkNotNull(inferences);
+		Preconditions.checkNotNull(inferences);
 		this.inferenceSet_ = inferences;
 	}
 

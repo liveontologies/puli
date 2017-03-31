@@ -21,13 +21,15 @@
  */
 package org.liveontologies.puli;
 
+import com.google.common.base.Preconditions;
+
 class AcyclicProofStep<C> extends ConvertedProofStep<C> {
 
 	private final AcyclicProofNode<C> conclusion_;
 
 	AcyclicProofStep(ProofStep<C> delegate, AcyclicProofNode<C> conclusion) {
 		super(delegate);
-		Util.checkNotNull(conclusion);
+		Preconditions.checkNotNull(conclusion);
 		this.conclusion_ = conclusion;
 	}
 

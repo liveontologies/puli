@@ -23,6 +23,8 @@ package org.liveontologies.puli;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 public class Inferences {
 
 	public static <C> Inference<C> create(String name, C conclusion,
@@ -51,7 +53,7 @@ public class Inferences {
 	}
 
 	public static <C> String toString(Inference<C> inference) {
-		Util.checkNotNull(inference);
+		Preconditions.checkNotNull(inference);
 		return inference.getConclusion() + " -| " + inference.getPremises()
 				+ " by " + inference.getName();
 	}

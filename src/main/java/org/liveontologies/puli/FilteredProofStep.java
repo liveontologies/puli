@@ -23,6 +23,8 @@ package org.liveontologies.puli;
 
 import java.util.Set;
 
+import com.google.common.base.Preconditions;
+
 class FilteredProofStep<C> extends ConvertedProofStep<C> {
 
 	private final Set<? extends ProofNode<C>> forbidden_;
@@ -30,7 +32,7 @@ class FilteredProofStep<C> extends ConvertedProofStep<C> {
 	FilteredProofStep(ProofStep<C> delegate,
 			Set<? extends ProofNode<C>> forbidden) {
 		super(delegate);
-		Util.checkNotNull(forbidden);
+		Preconditions.checkNotNull(forbidden);
 		this.forbidden_ = forbidden;
 	}
 

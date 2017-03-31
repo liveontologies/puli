@@ -23,6 +23,8 @@ package org.liveontologies.puli;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 public class BaseInference<C> extends AbstractInference<C> {
 
 	private final String name_;
@@ -33,9 +35,9 @@ public class BaseInference<C> extends AbstractInference<C> {
 
 	public BaseInference(String name, C conclusion,
 			List<? extends C> premises) {
-		Util.checkNotNull(name);
-		Util.checkNotNull(conclusion);
-		Util.checkNotNull(premises);
+		Preconditions.checkNotNull(name);
+		Preconditions.checkNotNull(conclusion);
+		Preconditions.checkNotNull(premises);
 		this.name_ = name;
 		this.conclusion_ = conclusion;
 		this.premises_ = premises;

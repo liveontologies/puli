@@ -26,6 +26,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 class FilteredProofNode<C> extends ConvertedProofNode<C> {
 
 	// logger for this class
@@ -37,7 +39,7 @@ class FilteredProofNode<C> extends ConvertedProofNode<C> {
 	FilteredProofNode(ProofNode<C> delegate,
 			Set<? extends ProofNode<C>> forbidden) {
 		super(delegate);
-		Util.checkNotNull(forbidden);
+		Preconditions.checkNotNull(forbidden);
 		this.forbidden_ = forbidden;
 	}
 

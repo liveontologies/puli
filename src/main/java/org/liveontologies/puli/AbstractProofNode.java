@@ -21,12 +21,14 @@
  */
 package org.liveontologies.puli;
 
+import com.google.common.base.Preconditions;
+
 public abstract class AbstractProofNode<C> implements ProofNode<C> {
 
 	private final C member_;
 
 	public AbstractProofNode(C member) {
-		Util.checkNotNull(member);
+		Preconditions.checkNotNull(member);
 		this.member_ = member;
 	}
 

@@ -38,7 +38,6 @@ import org.liveontologies.puli.Delegator;
 import org.liveontologies.puli.Inference;
 import org.liveontologies.puli.InferenceJustifier;
 import org.liveontologies.puli.InferenceSet;
-import org.liveontologies.puli.Util;
 import org.liveontologies.puli.collections.BloomTrieCollection2;
 import org.liveontologies.puli.collections.Collection2;
 import org.liveontologies.puli.statistics.NestedStats;
@@ -46,6 +45,7 @@ import org.liveontologies.puli.statistics.ResetStats;
 import org.liveontologies.puli.statistics.Stat;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ForwardingSet;
 import com.google.common.collect.ImmutableSet;
@@ -536,7 +536,7 @@ public class ResolutionJustificationComputation<C, A>
 
 		public JustificationEnumerator(C goal, Comparator<? super Set<A>> order,
 				Listener<A> listener) {
-			Util.checkNotNull(listener);
+			Preconditions.checkNotNull(listener);
 			this.goal_ = goal;
 			this.listener_ = listener;
 			this.producedInferences_ = new PriorityQueue<InferenceHolder<C, A>>(

@@ -24,6 +24,8 @@ package org.liveontologies.puli;
 import java.util.Collection;
 import java.util.Set;
 
+import com.google.common.base.Preconditions;
+
 class AddAssertedProofNode<C> extends ConvertedProofNode<C> {
 
 	private final Set<? extends C> assertedAxioms_;
@@ -31,7 +33,7 @@ class AddAssertedProofNode<C> extends ConvertedProofNode<C> {
 	AddAssertedProofNode(ProofNode<C> delegate,
 			Set<? extends C> assertedAxioms) {
 		super(delegate);
-		Util.checkNotNull(assertedAxioms);
+		Preconditions.checkNotNull(assertedAxioms);
 		this.assertedAxioms_ = assertedAxioms;
 	}
 

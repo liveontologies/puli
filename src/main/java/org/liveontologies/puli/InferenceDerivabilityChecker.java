@@ -22,24 +22,20 @@
 package org.liveontologies.puli;
 
 import java.util.ArrayDeque;
-
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import org.liveontologies.puli.DerivabilityChecker;
-import org.liveontologies.puli.Inference;
-import org.liveontologies.puli.InferenceDerivabilityChecker;
-import org.liveontologies.puli.InferenceSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 
 /**
  * A utility to check derivability of conclusions by inferences. A conclusion is
@@ -70,7 +66,7 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 	/**
 	 * {@link #goals_} that are not yet checked for derivability
 	 */
-	private final Queue<C> toCheck_ = new LinkedList<C>();
+	private final Queue<C> toCheck_ = new ArrayDeque<C>(128);
 
 	/**
 	 * {@link #goals_} that that were found derivable
@@ -94,17 +90,19 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 	 * this goal can be used as a premise; these inferences are "waiting" for
 	 * this conclusion to be derived
 	 */
-	private final Map<C, List<Inference<C>>> watchedInferences_ = new HashMap<C, List<Inference<C>>>();
+	private final ListMultimap<C, Inference<C>> watchedInferences_ = ArrayListMultimap
+			.create();
 
 	/**
 	 * a map from {@link #toCheck_} goals to the iterator over the premises of
 	 * the corresponding inference in {@link #watchedInferences_} that currently
 	 * points to this goal (as it is one of the premises)
 	 */
-	private final Map<C, List<Iterator<? extends C>>> premiseIteratorsMap_ = new HashMap<C, List<Iterator<? extends C>>>();
+	private final ListMultimap<C, Iterator<? extends C>> premiseIteratorsMap_ = ArrayListMultimap
+			.create();
 
 	public InferenceDerivabilityChecker(InferenceSet<C> inferences) {
-		Util.checkNotNull(inferences);
+		Preconditions.checkNotNull(inferences);
 		this.inferences_ = inferences;
 	}
 
@@ -149,12 +147,12 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 			next = toPropagate_.poll();
 
 			if (next != null) {
-				List<Inference<C>> watched = watchedInferences_.remove(next);
+				List<Inference<C>> watched = watchedInferences_.removeAll(next);
 				if (watched == null) {
 					continue;
 				}
 				List<Iterator<? extends C>> premiseIterators = premiseIteratorsMap_
-						.remove(next);
+						.removeAll(next);
 				for (int i = 0; i < watched.size(); i++) {
 					Inference<C> inf = watched.get(i);
 					Iterator<? extends C> iterator = premiseIterators.get(i);
@@ -197,12 +195,6 @@ public class InferenceDerivabilityChecker<C> implements DerivabilityChecker<C> {
 		List<Inference<C>> inferences = watchedInferences_.get(premise);
 		List<Iterator<? extends C>> premiseIterators = premiseIteratorsMap_
 				.get(premise);
-		if (inferences == null) {
-			inferences = new ArrayList<Inference<C>>();
-			watchedInferences_.put(premise, inferences);
-			premiseIterators = new ArrayList<Iterator<? extends C>>();
-			premiseIteratorsMap_.put(premise, premiseIterators);
-		}
 		inferences.add(inf);
 		premiseIterators.add(premiseIterator);
 		toCheck(premise);

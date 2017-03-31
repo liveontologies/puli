@@ -21,6 +21,8 @@
  */
 package org.liveontologies.puli;
 
+import com.google.common.base.Preconditions;
+
 class DerivableProofNode<C> extends ConvertedProofNode<C> {
 
 	private final DerivabilityChecker<ProofNode<C>> checker_;
@@ -28,7 +30,7 @@ class DerivableProofNode<C> extends ConvertedProofNode<C> {
 	DerivableProofNode(ProofNode<C> delegate,
 			DerivabilityChecker<ProofNode<C>> checker) {
 		super(delegate);
-		Util.checkNotNull(checker);
+		Preconditions.checkNotNull(checker);
 		this.checker_ = checker;
 	}
 

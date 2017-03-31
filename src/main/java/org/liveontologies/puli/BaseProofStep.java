@@ -24,6 +24,8 @@ package org.liveontologies.puli;
 import java.util.AbstractList;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 class BaseProofStep<C> extends AbstractProofStep<C> {
 
 	private final InferenceSet<C> inferenceSet_;
@@ -31,8 +33,8 @@ class BaseProofStep<C> extends AbstractProofStep<C> {
 	private final Inference<C> inference_;
 
 	BaseProofStep(InferenceSet<C> inferences, Inference<C> inference) {
-		Util.checkNotNull(inferences);
-		Util.checkNotNull(inference);
+		Preconditions.checkNotNull(inferences);
+		Preconditions.checkNotNull(inference);
 		this.inferenceSet_ = inferences;
 		this.inference_ = inference;
 	}
