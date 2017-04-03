@@ -95,6 +95,10 @@ public class ProofNodes {
 		return new LimitedProofNode<C>(node, limit);
 	}
 
+	public static <C> ProofNode<C> cache(ProofNode<C> node) {
+		return new CachedProofNode<C>(node);
+	}
+
 	public static <C> boolean isDerivable(ProofNode<C> node) {
 		return new ProofNodeDerivabilityChecker<C>().isDerivable(node);
 	}

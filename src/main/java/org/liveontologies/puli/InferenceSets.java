@@ -60,6 +60,11 @@ public class InferenceSets {
 		return new AddAssertedInferenceSet<C>(inferences, asserted);
 	}
 
+	public static <C> DynamicInferenceSet<C> cache(
+			DynamicInferenceSet<C> inferences) {
+		return new CachingInferenceSet<C>(inferences);
+	}
+
 	public static <C> InferenceJustifier<C, ? extends Set<? extends C>> justifyAssertedInferences() {
 		return AssertedConclusionInferenceJustifier.getInstance();
 	}
