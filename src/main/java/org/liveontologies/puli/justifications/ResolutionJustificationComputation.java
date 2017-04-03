@@ -69,7 +69,7 @@ import com.google.common.collect.Sets;
  *            the type of axioms used by the inferences
  */
 public class ResolutionJustificationComputation<C, A>
-		extends AbstractJustificationComputation<C, A> {
+		extends MinimalSubsetsFromInferences<C, A> {
 
 	private static final ResolutionJustificationComputation.Factory<?, ?> FACTORY_ = new Factory<Object, Object>();
 
@@ -135,10 +135,8 @@ public class ResolutionJustificationComputation<C, A>
 	}
 
 	@Override
-	public void enumerateJustifications(final C conclusion,
-			final Comparator<? super Set<A>> order,
-			final Listener<A> listener) {
-		new JustificationEnumerator(conclusion, order, listener).process();
+	public MinimalSubsetEnumerator<A> newEnumerator(C query) {
+		return new JustificationEnumerator(query);
 	}
 
 	@Stat
@@ -435,7 +433,7 @@ public class ResolutionJustificationComputation<C, A>
 			implements InferenceHolder<C, A> {
 
 		private int hash_ = 0;
-		
+
 		private final DerivedInference<C, A> firstInference_, secondInference_;
 
 		private final Set<A> justification_; // lazy representation
@@ -506,7 +504,8 @@ public class ResolutionJustificationComputation<C, A>
 
 	}
 
-	private class JustificationEnumerator {
+	private class JustificationEnumerator
+			extends AbstractMinimalSubsetEnumerator<A> {
 
 		/**
 		 * the conclusion for which to enumerate justifications
@@ -516,12 +515,12 @@ public class ResolutionJustificationComputation<C, A>
 		/**
 		 * the listener through which to report the justifications
 		 */
-		private final Listener<A> listener_;
+		private Listener<A> listener_;
 
 		/**
 		 * newly computed inferences to be resolved upon
 		 */
-		private final Queue<InferenceHolder<C, A>> producedInferences_;
+		private Queue<InferenceHolder<C, A>> producedInferences_;
 
 		/**
 		 * to check minimality of justifications
@@ -534,16 +533,21 @@ public class ResolutionJustificationComputation<C, A>
 		 */
 		private final Queue<C> toInitialize_ = new ArrayDeque<C>();
 
-		public JustificationEnumerator(C goal, Comparator<? super Set<A>> order,
-				Listener<A> listener) {
-			Preconditions.checkNotNull(listener);
+		public JustificationEnumerator(final C goal) {
 			this.goal_ = goal;
+		}
+
+		@Override
+		public void enumerate(final Comparator<? super Set<A>> order,
+				final Listener<A> listener) {
+			Preconditions.checkNotNull(listener);
 			this.listener_ = listener;
 			this.producedInferences_ = new PriorityQueue<InferenceHolder<C, A>>(
 					INITIAL_QUEUE_CAPACITY_, getOrderExtension(order));
 			initialize();
 			unblockJobs();
 			changeSelection();
+			process();
 		}
 
 		private void initialize() {
@@ -609,7 +613,7 @@ public class ResolutionJustificationComputation<C, A>
 				// else
 				if (inf.premises_.isEmpty() && goal_.equals(inf.conclusion_)) {
 					minimalJustifications_.add(inf.justification_);
-					listener_.newJustification(inf.justification_);
+					listener_.newMinimalSubset(inf.justification_);
 					block(inf);
 					continue;
 				}
@@ -658,6 +662,38 @@ public class ResolutionJustificationComputation<C, A>
 			}
 			producedInferenceCount_++;
 			producedInferences_.add(resolvent);
+		}
+
+		private Comparator<InferenceHolder<C, A>> getOrderExtension(
+				final Comparator<? super Set<A>> order) {
+
+			final Comparator<? super Set<A>> justOrder;
+			if (order == null) {
+				justOrder = DEFAULT_ORDER;
+			} else {
+				justOrder = order;
+			}
+
+			return new Comparator<InferenceHolder<C, A>>() {
+
+				@Override
+				public int compare(final InferenceHolder<C, A> first,
+						final InferenceHolder<C, A> second) {
+					int result = justOrder.compare(first.getJustification(),
+							second.getJustification());
+					if (result != 0) {
+						return result;
+					}
+					// else
+					final int firstPremiseCount = first.getPremiseCount();
+					final int secondPremiseCount = second.getPremiseCount();
+					result = (firstPremiseCount < secondPremiseCount) ? -1
+							: ((firstPremiseCount == secondPremiseCount) ? 0
+									: 1);
+					return result;
+				}
+
+			};
 		}
 
 	}
@@ -775,37 +811,6 @@ public class ResolutionJustificationComputation<C, A>
 
 	}
 
-	private Comparator<InferenceHolder<C, A>> getOrderExtension(
-			final Comparator<? super Set<A>> order) {
-
-		final Comparator<? super Set<A>> justOrder;
-		if (order == null) {
-			justOrder = DEFAULT_ORDER;
-		} else {
-			justOrder = order;
-		}
-
-		return new Comparator<InferenceHolder<C, A>>() {
-
-			@Override
-			public int compare(final InferenceHolder<C, A> first,
-					final InferenceHolder<C, A> second) {
-				int result = justOrder.compare(first.getJustification(),
-						second.getJustification());
-				if (result != 0) {
-					return result;
-				}
-				// else
-				final int firstPremiseCount = first.getPremiseCount();
-				final int secondPremiseCount = second.getPremiseCount();
-				result = (firstPremiseCount < secondPremiseCount) ? -1
-						: ((firstPremiseCount == secondPremiseCount) ? 0 : 1);
-				return result;
-			}
-
-		};
-	}
-
 	/**
 	 * The factory for creating computations
 	 * 
@@ -817,10 +822,10 @@ public class ResolutionJustificationComputation<C, A>
 	 *            the type of axioms used by the inferences
 	 */
 	public static class Factory<C, A>
-			implements JustificationComputation.Factory<C, A> {
+			implements MinimalSubsetsFromInferences.Factory<C, A> {
 
 		@Override
-		public JustificationComputation<C, A> create(
+		public MinimalSubsetEnumerator.Factory<C, A> create(
 				final InferenceSet<C> inferenceSet,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor) {
@@ -836,7 +841,7 @@ public class ResolutionJustificationComputation<C, A>
 					});
 		}
 
-		public JustificationComputation<C, A> create(
+		public MinimalSubsetEnumerator.Factory<C, A> create(
 				final InferenceSet<C> inferenceSet,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor,

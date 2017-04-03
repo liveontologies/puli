@@ -25,27 +25,26 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 
-public class JustificationCollector<A>
-		implements JustificationComputation.Listener<A> {
+public class MinimalSubsetCollector<E>
+		implements MinimalSubsetEnumerator.Listener<E> {
 
-	private final Collection<Set<? extends A>> justifications_;
+	private final Collection<Set<? extends E>> sets_;
 
-	public JustificationCollector(
-			final Collection<Set<? extends A>> justifications) {
-		this.justifications_ = justifications;
+	public MinimalSubsetCollector(final Collection<Set<? extends E>> sets) {
+		this.sets_ = sets;
 	}
 
-	public JustificationCollector() {
-		this(new ArrayList<Set<? extends A>>());
+	public MinimalSubsetCollector() {
+		this(new ArrayList<Set<? extends E>>());
 	}
 
 	@Override
-	public void newJustification(final Set<A> justification) {
-		justifications_.add(justification);
+	public void newMinimalSubset(final Set<E> set) {
+		sets_.add(set);
 	}
 
-	public Collection<Set<? extends A>> getJustifications() {
-		return justifications_;
+	public Collection<Set<? extends E>> getSets() {
+		return sets_;
 	}
 
 }

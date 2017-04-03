@@ -31,7 +31,9 @@ import org.liveontologies.puli.InferenceSet;
 import com.google.common.base.Preconditions;
 
 /**
- * A skeleton implementation of {@link JustificationComputation}
+ * A skeleton implementation of enumerator factories that use inference sets.
+ * Enumerated sets are over axioms with which the inferences are justified and
+ * the query for enumerator is one of the conclusions.
  * 
  * @author Yevgeny Kazakov
  *
@@ -40,8 +42,8 @@ import com.google.common.base.Preconditions;
  * @param <A>
  *            the type of axioms used by the inferences
  */
-public abstract class AbstractJustificationComputation<C, A>
-		implements JustificationComputation<C, A> {
+public abstract class MinimalSubsetsFromInferences<C, A>
+		implements MinimalSubsetEnumerator.Factory<C, A> {
 
 	private final InferenceSet<C> inferenceSet_;
 
@@ -49,7 +51,7 @@ public abstract class AbstractJustificationComputation<C, A>
 
 	private final InterruptMonitor monitor_;
 
-	public AbstractJustificationComputation(final InferenceSet<C> inferenceSet,
+	public MinimalSubsetsFromInferences(final InferenceSet<C> inferenceSet,
 			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor) {
 		Preconditions.checkNotNull(inferenceSet);
@@ -58,13 +60,6 @@ public abstract class AbstractJustificationComputation<C, A>
 		this.inferenceSet_ = inferenceSet;
 		this.justifier_ = justifier;
 		this.monitor_ = monitor;
-	}
-
-	@Override
-	public void enumerateJustifications(final C conclusion,
-			final JustificationComputation.Listener<A> listener) {
-		enumerateJustifications(conclusion,
-				JustificationComputation.DEFAULT_ORDER, listener);
 	}
 
 	public InferenceSet<C> getInferenceSet() {
@@ -86,6 +81,33 @@ public abstract class AbstractJustificationComputation<C, A>
 
 	protected boolean isInterrupted() {
 		return monitor_.isInterrupted();
+	}
+
+	/**
+	 * Factory for creating enumerator factories.
+	 * 
+	 * @author Yevgeny Kazakov
+	 * @author Peter Skocovsky
+	 * 
+	 * @param <C>
+	 *            the type of conclusion and premises used by the inferences
+	 * @param <A>
+	 *            the type of axioms used by the inferences
+	 */
+	public static interface Factory<C, A> {
+
+		/**
+		 * @param inferenceSet
+		 * @param justifier
+		 * @param monitor
+		 * @return a new {@link MinimalSubsetEnumerator.Factory} which uses the
+		 *         given inference set and inference justifier
+		 */
+		MinimalSubsetEnumerator.Factory<C, A> create(
+				InferenceSet<C> inferenceSet,
+				InferenceJustifier<C, ? extends Set<? extends A>> justifier,
+				InterruptMonitor monitor);
+
 	}
 
 }
