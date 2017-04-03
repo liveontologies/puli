@@ -23,10 +23,11 @@ package org.liveontologies.puli;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -40,9 +41,9 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 
 /**
- * A utility to check derivability of conclusions by inferences. A conclusion is
- * derivable if it is a conclusion of an inference whose all premises are
- * (recursively) derivable.
+ * A utility to check derivability of conclusions by inferences (in the presence
+ * of blocked conclusions). A conclusion is derivable if it is not blocked and a
+ * conclusion of an inference whose all premises are (recursively) derivable.
  * 
  * @author Yevgeny Kazakov
  *
@@ -67,55 +68,65 @@ public class InferenceDerivabilityChecker<C>
 	private final Set<C> blocked_ = new HashSet<C>();
 
 	/**
-	 * conclusions for which a derivability test was initiated or finished
-	 */
-	private final Set<C> goals_ = new HashSet<C>();
-
-	/**
-	 * {@link #goals_} that are not yet checked for derivability
-	 */
-	private final Queue<C> toCheck_ = new ArrayDeque<C>(128);
-
-	/**
 	 * {@link #goals_} that that were found derivable
 	 */
 	private final Set<C> derivable_ = new HashSet<C>();
 
 	/**
-	 * queue of iterators over yet unexpanded inferences for conclusions; when
-	 * inference is expanded, derivibility of its premises is recursively
-	 * checked; all iterators must have the next elements
-	 */
-	private final Deque<Iterator<? extends Inference<C>>> toExpand_ = new ArrayDeque<Iterator<? extends Inference<C>>>();
-
-	/**
-	 * {@link #derivable_} goals not yet used to derived other {@link #goals_}
-	 */
-	private final Queue<C> toPropagate_ = new LinkedList<C>();
-
-	/**
-	 * a map from {@link #toCheck_} goals to the list of inferences in which
-	 * this goal can be used as a premise; these inferences are "waiting" for
-	 * this conclusion to be derived
+	 * a map from a conclusion not in {@link #derivable_} to
+	 * {@link #inferences_} that have this conclusion as one of the premises;
+	 * intuitively, these inferences are "waiting" for this conclusion to be
+	 * derived
 	 */
 	private final ListMultimap<C, Inference<C>> watchedInferences_ = ArrayListMultimap
 			.create();
 
 	/**
-	 * a map from a {@link #derivable_} conclusion to fired inferences that
-	 * derived other {@link #derivable_} conclusions and used this conclusion as
-	 * one of the premises
+	 * a mirror map corresponding to {@link #watchedInferences_} that points to
+	 * the positions of premises in the respective inferences
 	 */
-	private final SetMultimap<C, Inference<C>> firedInferences_ = HashMultimap
+	private final ListMultimap<C, Integer> watchPremisePositions_ = ArrayListMultimap
 			.create();
 
 	/**
-	 * a map from {@link #toCheck_} goals to the iterator over the premises of
-	 * the corresponding inference in {@link #watchedInferences_} that currently
-	 * points to this goal (as it is one of the premises)
+	 * a map from a {@link #derivable_} conclusion to {@link #inferences_} whose
+	 * all premises are also in {@link #derivable_}; intuitively, these
+	 * inferences are used in the derivations
 	 */
-	private final ListMultimap<C, Iterator<? extends C>> premiseIteratorsMap_ = ArrayListMultimap
+	private final SetMultimap<C, Inference<C>> firedInferencesByPremises_ = HashMultimap
 			.create();
+
+	/**
+	 * a map containing inferences in {@link #firedInferencesByPremises_} with a
+	 * key for every premise of such inference
+	 */
+	private final ListMultimap<C, Inference<C>> firedInferencesByConclusions_ = ArrayListMultimap
+			.create();
+
+	/**
+	 * a map from conclusions to iterators over all inferences in
+	 * {@link #inferences_} with these conclusions that are neither present in
+	 * {@link #watchedInferences_} nor in {@link #firedInferencesByConclusions_}
+	 */
+	private final Map<C, Queue<Inference<C>>> remainingInferences_ = new HashMap<C, Queue<Inference<C>>>();
+
+	/**
+	 * conclusions for which a derivability test was initiated or finished
+	 */
+	private final Set<C> goals_ = new HashSet<C>();
+
+	/**
+	 * {@link #goals_} that needs to be checked for derivability; they should
+	 * not be in {@link #blocked_}
+	 */
+	private final Deque<C> toCheck_ = new ArrayDeque<C>(128);
+
+	private final Deque<C> toSetUnknown_ = new ArrayDeque<C>(128);
+
+	/**
+	 * {@link #derivable_} goals which may have some {@link #watchedInferences_}
+	 */
+	private final Queue<C> toPropagate_ = new LinkedList<C>();
 
 	public InferenceDerivabilityChecker(InferenceSet<C> inferences) {
 		Preconditions.checkNotNull(inferences);
@@ -141,7 +152,8 @@ public class InferenceDerivabilityChecker<C>
 	public boolean block(C conclusion) {
 		if (blocked_.add(conclusion)) {
 			LOGGER_.trace("{}: blocked", conclusion);
-			unCheck(conclusion);
+			setUnknown(conclusion);
+			process();
 			return true;
 		}
 		// else
@@ -152,11 +164,12 @@ public class InferenceDerivabilityChecker<C>
 	public boolean unblock(C conclusion) {
 		if (blocked_.remove(conclusion)) {
 			LOGGER_.trace("{}: unblocked", conclusion);
-			if (goals_.remove(conclusion)
-					&& watchedInferences_.containsKey(conclusion)) {
-				toCheck(conclusion);
-				process();
+			if (derivable_.contains(conclusion)) {
+				toPropagate_.add(conclusion);
+			} else if (goals_.contains(conclusion)) {
+				toCheck_.addFirst(conclusion);
 			}
+			process();
 			return true;
 		}
 		// else
@@ -178,122 +191,147 @@ public class InferenceDerivabilityChecker<C>
 		return watchedInferences_.keySet();
 	}
 
+	private void toCheck(C conclusion) {
+		if (blocked_.contains(conclusion)) {
+			return;
+		}
+		if (goals_.add(conclusion)) {
+			LOGGER_.trace("{}: new goal", conclusion);
+			toCheck_.addFirst(conclusion);
+		}
+	}
+
+	private void derivable(C conclusion) {
+		if (derivable_.add(conclusion)) {
+			LOGGER_.trace("{}: derived", conclusion);
+			if (!blocked_.contains(conclusion)) {
+				toPropagate_.add(conclusion);
+			}
+		}
+	}
+
 	private void process() {
 		for (;;) {
-			C next = toCheck_.poll();
+			// propagating derivable inferences with the highest priority
+			C derivable = toPropagate_.poll();
 
-			if (next != null) {
-				if (blocked_.contains(next)) {
-					continue;
-				}
-				Iterator<? extends Inference<C>> inferences = inferences_
-						.getInferences(next).iterator();
-				if (inferences.hasNext()) {
-					toExpand_.addFirst(inferences);
-				}
-				continue;
-			}
-
-			next = toPropagate_.poll();
-
-			if (next != null) {
-				List<Inference<C>> watched = watchedInferences_.removeAll(next);
-				List<Iterator<? extends C>> premiseIterators = premiseIteratorsMap_
-						.removeAll(next);
+			if (derivable != null) {
+				List<Inference<C>> watched = watchedInferences_
+						.removeAll(derivable);
+				List<Integer> positions = watchPremisePositions_
+						.removeAll(derivable);
 				for (int i = 0; i < watched.size(); i++) {
 					Inference<C> inf = watched.get(i);
-					Iterator<? extends C> iterator = premiseIterators.get(i);
-					check(iterator, inf);
+					int pos = positions.get(i);
+					check(pos, inf);
 				}
 				continue;
 			}
 
-			Iterator<? extends Inference<C>> inferences = toExpand_.peekFirst();
-			if (inferences != null) {
-				Inference<C> inf = inferences.next();
-				if (derivable_.contains(inf.getConclusion())) {
-					toExpand_.remove();
+			// expanding inferences if there is nothing to propagate
+			C unknown = toCheck_.peek();
+			if (unknown != null) {
+				if (derivable_.contains(unknown)) {
+					toCheck_.poll();
+					continue;
+				}
+				Queue<Inference<C>> inferences = getRemainingInferences(
+						unknown);
+				Inference<C> inf = inferences.poll();
+				if (inf == null) {
+					toCheck_.poll();
 					continue;
 				}
 				LOGGER_.trace("{}: expanding", inf);
-				check(inf.getPremises().iterator(), inf);
-				if (!inferences.hasNext()) {
-					toExpand_.remove();
-				}
+				check(0, inf);
 				continue;
 			}
 
 			// all done
 			return;
-
 		}
 
 	}
 
-	private void toCheck(C conclusion) {
-		if (goals_.add(conclusion)) {
-			LOGGER_.trace("{}: new goal", conclusion);
-			toCheck_.add(conclusion);
+	private Queue<Inference<C>> getRemainingInferences(C conclusion) {
+		Queue<Inference<C>> result = remainingInferences_.get(conclusion);
+		if (result == null) {
+			result = new ArrayDeque<Inference<C>>(
+					inferences_.getInferences(conclusion));
+			remainingInferences_.put(conclusion, result);
 		}
+		return result;
 	}
 
-	private void addWatch(C premise, Iterator<? extends C> premiseIterator,
-			Inference<C> inf) {
-		List<Inference<C>> inferences = watchedInferences_.get(premise);
-		List<Iterator<? extends C>> premiseIterators = premiseIteratorsMap_
-				.get(premise);
-		inferences.add(inf);
-		premiseIterators.add(premiseIterator);
-		toCheck(premise);
+	private void check(int pos, Inference<C> inf) {
+		List<? extends C> premises = inf.getPremises();
+		int premiseCount = premises.size();
+		int premisesChecked = 0;
+		for (;;) {
+			if (premisesChecked == premiseCount) {
+				// all premises are derived
+				fire(inf);
+				return;
+			}
+			C premise = premises.get(pos);
+			if (!derivable_.contains(premise)) {
+				addWatch(premise, pos, inf);
+				return;
+			}
+			pos++;
+			if (pos == premiseCount) {
+				pos = 0;
+			}
+			premisesChecked++;
+		}
 	}
 
 	private void fire(Inference<C> inf) {
-		C conclusion = inf.getConclusion();
-		if (derivable_.add(conclusion)) {
-			LOGGER_.trace("{}: derived", conclusion);
-			toPropagate_.add(conclusion);
-		}
-		for (C premise : inf.getPremises()) {
-			firedInferences_.put(premise, inf);
-		}
-	}
-
-	private void check(Iterator<? extends C> premiseIterator,
-			Inference<C> inf) {
-		while (premiseIterator.hasNext()) {
-			C next = premiseIterator.next();
-			if (!derivable_.contains(next)) {
-				addWatch(next, premiseIterator, inf);
-				return;
-			}
-		}
-		// all premises are derived
 		LOGGER_.trace("{}: fire", inf);
-		fire(inf);
+		C conclusion = inf.getConclusion();
+		derivable(conclusion);
+		firedInferencesByConclusions_.put(inf.getConclusion(), inf);
+		List<? extends C> premises = inf.getPremises();
+		for (int pos = 0; pos < premises.size(); pos++) {
+			firedInferencesByPremises_.put(premises.get(pos), inf);
+		}
 	}
 
-	void unCheck(C conclusion) {
-		Queue<C> toUncheck = new ArrayDeque<C>(32);
-		toUncheck.add(conclusion);
+	private void addWatch(C premise, int pos, Inference<C> inf) {
+		LOGGER_.trace("{}: watching position {}", inf, pos);
+		List<Inference<C>> inferences = watchedInferences_.get(premise);
+		List<Integer> positions = watchPremisePositions_.get(premise);
+		inferences.add(inf);
+		positions.add(pos);
+		toCheck(premise);
+	}
+
+	void setUnknown(C conclusion) {
+		toSetUnknown_.add(conclusion);
 		for (;;) {
-			conclusion = toUncheck.poll();
+			conclusion = toSetUnknown_.poll();
 			if (conclusion == null) {
 				break;
 			}
-			// else
-			if (!goals_.remove(conclusion)) {
-				continue;
-			}
-			// else was checked
 			if (!derivable_.remove(conclusion)) {
 				continue;
 			}
 			// else was derivable
-			for (Inference<C> inf : firedInferences_.removeAll(conclusion)) {
-				toUncheck.add(inf.getConclusion());
+			LOGGER_.trace("{}: unknown goal", conclusion);
+			if (!blocked_.contains(conclusion)) {
+				toCheck_.addLast(conclusion);
+			}
+			List<Inference<C>> fired = firedInferencesByConclusions_
+					.removeAll(conclusion);
+			for (Inference<C> inf : fired) {
 				for (C premise : inf.getPremises()) {
-					firedInferences_.remove(premise, inf);
+					firedInferencesByPremises_.remove(premise, inf);
 				}
+			}
+			getRemainingInferences(conclusion).addAll(fired);
+			for (Inference<C> inf : firedInferencesByPremises_
+					.get(conclusion)) {
+				toSetUnknown_.add(inf.getConclusion());
 			}
 		}
 	}

@@ -97,7 +97,48 @@ public class ProofTest {
 	}
 
 	@Test
-	public void testDerivabilityCheckerWithBlocking() throws Exception {
+	public void testDerivabilityCheckerWithBlocking0() throws Exception {
+		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
+		b.conclusion(0).premise(1).add();
+		b.conclusion(1).premise(2).add();
+		b.conclusion(11).premise(2).add();
+		b.conclusion(2).add();
+		BaseInferenceSet.Projection<Integer> is = b.build();
+		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
+				is);
+		checker.block(2);
+		assertFalse(checker.isDerivable(0));
+		checker.block(1);
+		checker.unblock(2);
+		assertTrue(checker.isDerivable(11));
+		assertFalse(checker.isDerivable(0));
+		checker.unblock(1);
+		assertTrue(checker.isDerivable(0));
+	}
+
+	@Test
+	public void testDerivabilityCheckerWithBlocking1() throws Exception {
+		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
+		b.conclusion(0).premise(11).premise(22).add();
+		b.conclusion(11).premise(1).add();
+		b.conclusion(22).premise(2).add();
+		b.conclusion(1).add();
+		b.conclusion(2).add();
+		BaseInferenceSet.Projection<Integer> is = b.build();
+		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
+				is);
+		assertTrue(checker.isDerivable(0));
+		checker.block(2);
+		assertFalse(checker.isDerivable(0));
+		checker.block(1);
+		checker.unblock(2);
+		assertFalse(checker.isDerivable(0));
+		checker.unblock(1);
+		assertTrue(checker.isDerivable(0));
+	}
+
+	@Test
+	public void testDerivabilityCheckerWithBlocking2() throws Exception {
 		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
 		b.conclusion(0).premise(1).premise(2).add();
 		b.conclusion(0).premise(3).premise(4).add();
