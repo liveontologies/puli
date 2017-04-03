@@ -21,6 +21,8 @@
  */
 package org.liveontologies.puli;
 
+import java.util.Collection;
+
 import com.google.common.base.Preconditions;
 
 class DerivableProofNode<C> extends ConvertedProofNode<C> {
@@ -40,6 +42,13 @@ class DerivableProofNode<C> extends ConvertedProofNode<C> {
 
 	DerivabilityChecker<ProofNode<C>> getDerivabilityChecker() {
 		return checker_;
+	}
+
+	@Override
+	public Collection<ProofStep<C>> getInferences() {
+		Collection<ProofStep<C>> result = super.getInferences();
+		Preconditions.checkArgument(!result.isEmpty());
+		return result;
 	}
 
 	@Override
