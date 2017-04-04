@@ -67,6 +67,9 @@ public class InferenceDerivabilityChecker<C>
 	 */
 	private final Set<C> blocked_ = new HashSet<C>();
 
+	private final Queue<C> toBlock_ = new ArrayDeque<C>(32),
+			toUnblock_ = new ArrayDeque<C>(32);
+
 	/**
 	 * {@link #goals_} that that were found derivable
 	 */
@@ -136,6 +139,7 @@ public class InferenceDerivabilityChecker<C>
 	@Override
 	public boolean isDerivable(C conclusion) {
 		LOGGER_.trace("{}: checking derivability", conclusion);
+		initBlocking();
 		toCheck(conclusion);
 		process();
 		boolean derivable = derivable_.contains(conclusion);
@@ -152,8 +156,7 @@ public class InferenceDerivabilityChecker<C>
 	public boolean block(C conclusion) {
 		if (blocked_.add(conclusion)) {
 			LOGGER_.trace("{}: blocked", conclusion);
-			setUnknown(conclusion);
-			process();
+			toBlock_.add(conclusion);
 			return true;
 		}
 		// else
@@ -164,12 +167,7 @@ public class InferenceDerivabilityChecker<C>
 	public boolean unblock(C conclusion) {
 		if (blocked_.remove(conclusion)) {
 			LOGGER_.trace("{}: unblocked", conclusion);
-			if (derivable_.contains(conclusion)) {
-				toPropagate_.add(conclusion);
-			} else if (goals_.contains(conclusion)) {
-				toCheck_.addFirst(conclusion);
-			}
-			process();
+			toUnblock_.add(conclusion);
 			return true;
 		}
 		// else
@@ -189,6 +187,35 @@ public class InferenceDerivabilityChecker<C>
 	 */
 	public Set<? extends C> getNonDerivableConclusions() {
 		return watchedInferences_.keySet();
+	}
+
+	private void initBlocking() {
+		for (;;) {
+			C next = toBlock_.poll();
+			if (next == null) {
+				break;
+			}
+			if (!blocked_.contains(next)) {
+				// was unblocked later
+				continue;
+			}
+			setUnknown(next);
+		}
+		for (;;) {
+			C next = toUnblock_.poll();
+			if (next == null) {
+				break;
+			}
+			if (blocked_.contains(next)) {
+				// was blocked later
+				continue;
+			}
+			if (derivable_.contains(next)) {
+				toPropagate_.add(next);
+			} else if (goals_.contains(next)) {
+				toCheck_.addFirst(next);
+			}
+		}
 	}
 
 	private void toCheck(C conclusion) {
