@@ -47,12 +47,12 @@ public interface MinimalSubsetEnumerator<E> {
 	void enumerate(Listener<E> listener);
 
 	/**
-	 * Starts computation of subset-minimal sets and notifies the provided
+	 * Starts enumeration of subset-minimal sets and notifies the provided
 	 * listener about each new set as soon as it is computed. The listener is
-	 * notified about the sets in the order defined by the provided
-	 * {@link Comparator}. The listener is notified exactly once for every set.
-	 * When the method returns, the listener must be notified about all the
-	 * subset-minimal sets.
+	 * notified exactly once for every set. When the method returns, the
+	 * listener must be notified about all the subset-minimal sets. The listener
+	 * is notified about the sets in the order defined by the provided
+	 * {@link Comparator}.
 	 * <p>
 	 * <strong>There is an additional constraint on the provided
 	 * comparator!</strong> It must be compatible with subset ordering,
@@ -70,6 +70,34 @@ public interface MinimalSubsetEnumerator<E> {
 	 *            The listener that is notified about new justifications.
 	 */
 	void enumerate(Comparator<? super Set<E>> order, Listener<E> listener);
+
+	/**
+	 * Starts enumeration of subset-minimal sets and notifies the provided
+	 * listener about each new set as soon as it is computed. The listener is
+	 * notified exactly once for every set. When the method returns, the
+	 * listener must be notified about all the subset-minimal sets. The listener
+	 * is notified about the sets in the order following the natural ordering of
+	 * results of {@link ComparableWrapper.Factory#wrap(Object)
+	 * wrapper.wrap(set)}.
+	 * <p>
+	 * <strong>There is an additional constraint on the natural ordering of
+	 * results of {@link ComparableWrapper.Factory#wrap(Object)
+	 * wrapper.wrap(set)}!</strong> It must be compatible with subset ordering
+	 * of the sets passed as arguments, otherwise the results are not guaranteed
+	 * to be correct. Formally: <blockquote>If
+	 * {@link Set#containsAll(java.util.Collection) set2.containsAll(set1) ==
+	 * true} and {@link Set#containsAll(java.util.Collection)
+	 * set1.containsAll(set2) == false} then {@link Comparable#compareTo(Object)
+	 * wrapper.wrap(set1).compareTo(wrapper.wrap(set2)) < 0}.</blockquote>
+	 * 
+	 * @param wrapper
+	 *            The wrapper used to wrap the sets before they are compared
+	 *            with each other.
+	 * @param listener
+	 *            The listener that is notified about new justifications.
+	 */
+	void enumerate(ComparableWrapper.Factory<Set<E>, ?> wrapper,
+			Listener<E> listener);
 
 	public static interface Listener<A> {
 

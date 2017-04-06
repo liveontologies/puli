@@ -25,7 +25,6 @@ import java.util.AbstractSet;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -72,8 +71,6 @@ public class ResolutionJustificationComputation<C, A>
 		extends MinimalSubsetsFromInferences<C, A> {
 
 	private static final ResolutionJustificationComputation.Factory<?, ?> FACTORY_ = new Factory<Object, Object>();
-
-	private static final int INITIAL_QUEUE_CAPACITY_ = 256;
 
 	@SuppressWarnings("unchecked")
 	public static <C, A> Factory<C, A> getFactory() {
@@ -513,6 +510,11 @@ public class ResolutionJustificationComputation<C, A>
 		private final C goal_;
 
 		/**
+		 * comparable justification wrapper factory
+		 */
+		private ComparableWrapper.Factory<Set<A>, ?> wrapper_;
+
+		/**
 		 * the listener through which to report the justifications
 		 */
 		private Listener<A> listener_;
@@ -520,7 +522,7 @@ public class ResolutionJustificationComputation<C, A>
 		/**
 		 * newly computed inferences to be resolved upon
 		 */
-		private Queue<InferenceHolder<C, A>> producedInferences_;
+		private Queue<Job<C, A, ?>> producedInferences_;
 
 		/**
 		 * to check minimality of justifications
@@ -538,12 +540,18 @@ public class ResolutionJustificationComputation<C, A>
 		}
 
 		@Override
-		public void enumerate(final Comparator<? super Set<A>> order,
-				final Listener<A> listener) {
+		public void enumerate(
+				final ComparableWrapper.Factory<Set<A>, ?> wrapper,
+				final MinimalSubsetEnumerator.Listener<A> listener) {
 			Preconditions.checkNotNull(listener);
+			if (wrapper == null) {
+				enumerate(listener);
+				return;
+			}
+			// else
+			this.wrapper_ = wrapper;
 			this.listener_ = listener;
-			this.producedInferences_ = new PriorityQueue<InferenceHolder<C, A>>(
-					INITIAL_QUEUE_CAPACITY_, getOrderExtension(order));
+			this.producedInferences_ = new PriorityQueue<Job<C, A, ?>>();
 			initialize();
 			unblockJobs();
 			changeSelection();
@@ -601,11 +609,11 @@ public class ResolutionJustificationComputation<C, A>
 				if (isInterrupted()) {
 					break;
 				}
-				InferenceHolder<C, A> next = producedInferences_.poll();
+				final Job<C, A, ?> next = producedInferences_.poll();
 				if (next == null) {
 					break;
 				}
-				DerivedInference<C, A> inf = next.getInference();
+				DerivedInference<C, A> inf = next.inference.getInference();
 				if (!minimalJustifications_.isMinimal(inf.justification_)) {
 					block(inf);
 					continue;
@@ -661,39 +669,43 @@ public class ResolutionJustificationComputation<C, A>
 				return;
 			}
 			producedInferenceCount_++;
-			producedInferences_.add(resolvent);
+			final Job<C, A, ?> job = Job.create(wrapper_, resolvent);
+			producedInferences_.add(job);
 		}
 
-		private Comparator<InferenceHolder<C, A>> getOrderExtension(
-				final Comparator<? super Set<A>> order) {
+	}
 
-			final Comparator<? super Set<A>> justOrder;
-			if (order == null) {
-				justOrder = DEFAULT_ORDER;
-			} else {
-				justOrder = order;
+	private static class Job<C, A, W extends ComparableWrapper<Set<A>, W>>
+			implements Comparable<Job<C, A, W>> {
+
+		private final W wrapped_;
+
+		public final InferenceHolder<C, A> inference;
+
+		public Job(final W wrapped, final InferenceHolder<C, A> inference) {
+			this.wrapped_ = wrapped;
+			this.inference = inference;
+		}
+
+		public static <C, A, W extends ComparableWrapper<Set<A>, W>> Job<C, A, W> create(
+				final ComparableWrapper.Factory<Set<A>, W> wrapper,
+				final InferenceHolder<C, A> inference) {
+			final W wrapped = wrapper.wrap(inference.getJustification());
+			return new Job<C, A, W>(wrapped, inference);
+		}
+
+		@Override
+		public int compareTo(final Job<C, A, W> other) {
+			int result = wrapped_.compareTo(other.wrapped_);
+			if (result != 0) {
+				return result;
 			}
-
-			return new Comparator<InferenceHolder<C, A>>() {
-
-				@Override
-				public int compare(final InferenceHolder<C, A> first,
-						final InferenceHolder<C, A> second) {
-					int result = justOrder.compare(first.getJustification(),
-							second.getJustification());
-					if (result != 0) {
-						return result;
-					}
-					// else
-					final int firstPremiseCount = first.getPremiseCount();
-					final int secondPremiseCount = second.getPremiseCount();
-					result = (firstPremiseCount < secondPremiseCount) ? -1
-							: ((firstPremiseCount == secondPremiseCount) ? 0
-									: 1);
-					return result;
-				}
-
-			};
+			// else
+			final int thisPremiseCount = inference.getPremiseCount();
+			final int otherPremiseCount = other.inference.getPremiseCount();
+			result = (thisPremiseCount < otherPremiseCount) ? -1
+					: ((thisPremiseCount == otherPremiseCount) ? 0 : 1);
+			return result;
 		}
 
 	}
