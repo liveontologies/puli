@@ -219,11 +219,12 @@ public class InferenceDerivabilityChecker<C>
 	}
 
 	private void toCheck(C conclusion) {
-		if (blocked_.contains(conclusion)) {
-			return;
-		}
 		if (goals_.add(conclusion)) {
 			LOGGER_.trace("{}: new goal", conclusion);
+			if (blocked_.contains(conclusion)) {
+				LOGGER_.trace("{}: goal blocked", conclusion);
+				return;
+			}
 			toCheck_.addFirst(conclusion);
 		}
 	}
