@@ -21,24 +21,24 @@
  */
 package org.liveontologies.puli;
 
-public class InferenceSetBuilder<C> {
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-	static final String INF_NAME = "inf";
+public class InferenceSetAndJustifierBuilder<C, A>
+		extends InferenceSetBuilder<C> {
 
-	private final BaseInferenceSet.Projection<C> inferenceSet_ = new BaseInferenceSet.Projection<C>();
+	private final Map<Inference<C>, Set<? extends A>> inferenceJustifications_ = new HashMap<Inference<C>, Set<? extends A>>();
 
-	/**
-	 * use {@link #create()}
-	 */
-	InferenceSetBuilder() {
+	public InferenceSetAndJustifierBuilder() {
+		// Empty.
 	}
 
-	public static <C> InferenceSetBuilder<C> create() {
-		return new InferenceSetBuilder<C>();
-	}
-
-	public BaseInferenceSet.Projection<C> build() {
-		return inferenceSet_;
+	public InferenceJustifier<C, ? extends Set<? extends A>> buildJustifier() {
+		return new BaseInferenceJustifier<C, Set<? extends A>>(
+				inferenceJustifications_, Collections.<A> emptySet());
 	}
 
 	public ThisInferenceBuilder conclusion(C conclusion) {
@@ -47,7 +47,10 @@ public class InferenceSetBuilder<C> {
 		return result;
 	}
 
-	public class ThisInferenceBuilder extends InferenceBuilder<C> {
+	public class ThisInferenceBuilder
+			extends InferenceSetBuilder<C>.ThisInferenceBuilder {
+
+		private final Set<A> axioms_ = new HashSet<A>();
 
 		protected ThisInferenceBuilder(String name) {
 			super(name);
@@ -65,9 +68,14 @@ public class InferenceSetBuilder<C> {
 			return this;
 		}
 
+		public ThisInferenceBuilder axiom(final A axiom) {
+			axioms_.add(axiom);
+			return this;
+		}
+
 		public Inference<C> add() {
-			Inference<C> inference = build();
-			inferenceSet_.produce(inference);
+			final Inference<C> inference = super.add();
+			inferenceJustifications_.put(inference, axioms_);
 			return inference;
 		}
 
