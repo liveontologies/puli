@@ -99,9 +99,9 @@ public interface MinimalSubsetEnumerator<E> {
 	void enumerate(ComparableWrapper.Factory<Set<E>, ?> wrapper,
 			Listener<E> listener);
 
-	public static interface Listener<A> {
+	public static interface Listener<E> {
 
-		void newMinimalSubset(Set<A> set);
+		void newMinimalSubset(Set<E> set);
 
 		public static Listener<?> DUMMY = new Listener<Object>() {
 

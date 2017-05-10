@@ -29,19 +29,20 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class RepairEnumeratorTest<C, A> extends BaseEnumeratorTest<C, A> {
+public class DualJustificationEnumeratorTest<C, A>
+		extends BaseDualEnumeratorTest<C, A> {
 
-	public static final String TEST_INPUT_SUBPKG = "input.repairs";
-
-	public static List<MinimalSubsetsFromInferences.Factory<?, ?>> getRepairEnumeratorFactories() {
+	public static List<MinimalSubsetsFromInferences.Factory<?, ?>> getJustificationEnumeratorFactories() {
 		final List<MinimalSubsetsFromInferences.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromInferences.Factory<?, ?>>();
-		factories.add(TopDownRepairComputation.getFactory());
+		factories.add(ResolutionJustificationComputation.getFactory());
 		return factories;
 	}
 
 	@Parameters(name = "{index}: {0}")
 	public static Iterable<Object[]> data() throws Exception {
-		return getParameters(getRepairEnumeratorFactories(), TEST_INPUT_SUBPKG);
+		return BaseEnumeratorTest.getParameters(
+				getJustificationEnumeratorFactories(),
+				RepairEnumeratorTest.TEST_INPUT_SUBPKG);
 	}
 
 }

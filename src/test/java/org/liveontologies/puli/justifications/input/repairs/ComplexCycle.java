@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 public class ComplexCycle
 		extends org.liveontologies.puli.justifications.input.ComplexCycle {
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Collection<? extends Set<? extends Integer>> getExpectedResult() {
 		// @formatter:off
@@ -37,21 +38,13 @@ public class ComplexCycle
 				ImmutableSet.of(1, 4),
 				ImmutableSet.of(1, 5, 6),
 				ImmutableSet.of(1, 5, 7),
-				ImmutableSet.of(1, 6, 8),
-				ImmutableSet.of(1, 6, 9),
-				ImmutableSet.of(1, 7, 8),
-				ImmutableSet.of(1, 7, 9),
 				ImmutableSet.of(2, 3, 8),
 				ImmutableSet.of(2, 3, 9),
-				ImmutableSet.of(2, 6, 8),
-				ImmutableSet.of(2, 6, 9),
-				ImmutableSet.of(2, 7, 8),
-				ImmutableSet.of(2, 7, 9),
 				ImmutableSet.of(4, 8),
 				ImmutableSet.of(4, 9),
 				ImmutableSet.of(6, 8),
-				ImmutableSet.of(7, 8),
 				ImmutableSet.of(6, 9),
+				ImmutableSet.of(7, 8),
 				ImmutableSet.of(7, 9)
 			);
 		// @formatter:on

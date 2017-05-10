@@ -29,9 +29,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class RepairEnumeratorTest<C, A> extends BaseEnumeratorTest<C, A> {
-
-	public static final String TEST_INPUT_SUBPKG = "input.repairs";
+public class DualRepairEnumeratorTest<C, A>
+		extends BaseDualEnumeratorTest<C, A> {
 
 	public static List<MinimalSubsetsFromInferences.Factory<?, ?>> getRepairEnumeratorFactories() {
 		final List<MinimalSubsetsFromInferences.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromInferences.Factory<?, ?>>();
@@ -41,7 +40,8 @@ public class RepairEnumeratorTest<C, A> extends BaseEnumeratorTest<C, A> {
 
 	@Parameters(name = "{index}: {0}")
 	public static Iterable<Object[]> data() throws Exception {
-		return getParameters(getRepairEnumeratorFactories(), TEST_INPUT_SUBPKG);
+		return BaseEnumeratorTest.getParameters(getRepairEnumeratorFactories(),
+				JustificationEnumeratorTest.TEST_INPUT_SUBPKG);
 	}
 
 }
