@@ -23,27 +23,24 @@ package org.liveontologies.puli.justifications.input;
 
 import org.liveontologies.puli.InferenceSetAndJustifierBuilder;
 
-public abstract class ComplexCycle
+public abstract class Tautology
 		extends BaseEnumeratorTestInput<String, Integer> {
 
 	private static InferenceSetAndJustifierBuilder<String, Integer> getBuilder() {
 
 		final InferenceSetAndJustifierBuilder<String, Integer> builder = new InferenceSetAndJustifierBuilder<String, Integer>();
 
-		builder.conclusion("A").premise("B").axiom(1).add();
-		builder.conclusion("A").premise("C").axiom(2).add();
-		builder.conclusion("B").premise("C").axiom(3).add();
-		builder.conclusion("C").premise("D").axiom(4).add();
-		builder.conclusion("D").premise("B").axiom(5).add();
-		builder.conclusion("D").axiom(6).axiom(7).add();
-		builder.conclusion("A").premise("E").axiom(8).add();
-		builder.conclusion("E").axiom(1).axiom(9).add();
-		builder.conclusion("B").axiom(8).axiom(9).add();
+		builder.conclusion("A").axiom(1).axiom(2).add();
+
+		builder.conclusion("A").premise("C").premise("D").add();
+		builder.conclusion("C").add();
+		builder.conclusion("D").axiom(2).axiom(4).axiom(5).add();
+		builder.conclusion("D").add();
 
 		return builder;
 	}
 
-	public ComplexCycle() {
+	public Tautology() {
 		super(getBuilder());
 	}
 

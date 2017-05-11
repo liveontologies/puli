@@ -22,23 +22,34 @@
 package org.liveontologies.puli;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
+
+import com.google.common.base.Preconditions;
 
 public class InferenceSetAndJustifierBuilder<C, A>
 		extends InferenceSetBuilder<C> {
-
-	private final Map<Inference<C>, Set<? extends A>> inferenceJustifications_ = new HashMap<Inference<C>, Set<? extends A>>();
 
 	public InferenceSetAndJustifierBuilder() {
 		// Empty.
 	}
 
+	private final InferenceJustifier<C, Set<? extends A>> justifier_ = new InferenceJustifier<C, Set<? extends A>>() {
+
+		@Override
+		public Set<? extends A> getJustification(final Inference<C> inference) {
+			if (inference instanceof InferenceSetAndJustifierBuilder.ThisInference) {
+				return ((InferenceSetAndJustifierBuilder<C, A>.ThisInference) inference).axioms_;
+			}
+			// else
+			return Collections.emptySet();
+		}
+
+	};
+
 	public InferenceJustifier<C, ? extends Set<? extends A>> buildJustifier() {
-		return new BaseInferenceJustifier<C, Set<? extends A>>(
-				inferenceJustifications_, Collections.<A> emptySet());
+		return justifier_;
 	}
 
 	public ThisInferenceBuilder conclusion(C conclusion) {
@@ -69,14 +80,45 @@ public class InferenceSetAndJustifierBuilder<C, A>
 		}
 
 		public ThisInferenceBuilder axiom(final A axiom) {
+			Preconditions.checkNotNull(axiom);
 			axioms_.add(axiom);
 			return this;
 		}
 
-		public Inference<C> add() {
-			final Inference<C> inference = super.add();
-			inferenceJustifications_.put(inference, axioms_);
-			return inference;
+		@Override
+		Inference<C> build() {
+			return new ThisInference(getName(), getConclusion(), getPremises(),
+					axioms_);
+		}
+
+	}
+
+	public class ThisInference extends BaseInference<C> {
+
+		private final Set<A> axioms_;
+
+		public ThisInference(final String name, final C conclusion,
+				final List<? extends C> premises, final Set<A> axioms) {
+			super(name, conclusion, premises);
+			this.axioms_ = axioms;
+		}
+
+		@Override
+		public boolean equals(final Object o) {
+			if (o instanceof InferenceSetAndJustifierBuilder.ThisInference) {
+				return super.equals(o) && axioms_.equals(
+						((InferenceSetAndJustifierBuilder<?, ?>.ThisInference) o).axioms_);
+			}
+			// else
+			return false;
+		}
+
+		@Override
+		public synchronized int hashCode() {
+			if (hash == 0) {
+				hash = Inferences.hashCode(this) + axioms_.hashCode();
+			}
+			return hash;
 		}
 
 	}

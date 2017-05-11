@@ -42,6 +42,18 @@ public class InferenceBuilder<C> {
 		return new InferenceBuilder<C>(name);
 	}
 
+	String getName() {
+		return name_;
+	}
+
+	C getConclusion() {
+		return conclusion_;
+	}
+
+	List<C> getPremises() {
+		return premises_;
+	}
+
 	InferenceBuilder<C> conclusion(C conclusion) {
 		Preconditions.checkNotNull(conclusion);
 		if (conclusion_ != null) {
