@@ -21,22 +21,12 @@
  */
 package org.liveontologies.puli.justifications;
 
-import java.util.Comparator;
-import java.util.Set;
-
 public abstract class AbstractMinimalSubsetEnumerator<E>
 		implements MinimalSubsetEnumerator<E> {
 
 	@Override
 	public void enumerate(final Listener<E> listener) {
-		enumerate(DEFAULT_ORDER, listener);
-	}
-
-	@Override
-	public void enumerate(final Comparator<? super Set<E>> order,
-			final Listener<E> listener) {
-		enumerate(new ComparatorComparableWrapper.Factory<Set<E>>(order),
-				listener);
+		enumerate(listener, PriorityComparators.<E> cardinality());
 	}
 
 }

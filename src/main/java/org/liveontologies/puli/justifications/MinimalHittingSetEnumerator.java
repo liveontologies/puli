@@ -66,9 +66,8 @@ public class MinimalHittingSetEnumerator<E> implements
 		}
 
 		@Override
-		public void enumerate(
-				final ComparableWrapper.Factory<Set<E>, ?> wrapper,
-				final Listener<E> listener) {
+		public void enumerate(final Listener<E> listener,
+				final PriorityComparator<? super Set<E>, ?> priorityComparator) {
 
 			final InferenceSet<Object> inferenceSet = new SetWrapperInferenceSet(
 					originalSets_);
@@ -78,7 +77,7 @@ public class MinimalHittingSetEnumerator<E> implements
 			final MinimalSubsetEnumerator<E> enumerator = computation
 					.newEnumerator(CONCLUSION_);
 
-			enumerator.enumerate(wrapper, listener);
+			enumerator.enumerate(listener, priorityComparator);
 		}
 
 	}

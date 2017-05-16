@@ -21,15 +21,25 @@
  */
 package org.liveontologies.puli.justifications;
 
-public interface ComparableWrapper<T, W extends ComparableWrapper<T, W>>
-		extends Comparable<W> {
+import java.util.Comparator;
 
-	public T getWrapped();
+/**
+ * Instead of comparing objects directly, compares their priorities provided by
+ * {@link #getPriority(Object)}.
+ * 
+ * @author Peter Skocovsky
+ *
+ * @param <T>
+ *            The type of the compared objects.
+ * @param <P>
+ *            The type of their priorities.
+ */
+public interface PriorityComparator<T, P> extends Comparator<P> {
 
-	public static interface Factory<T, W extends ComparableWrapper<T, W>> {
-
-		W wrap(T delegate);
-
-	}
+	/**
+	 * @param object
+	 * @return The priority, based on which the provided object is compared.
+	 */
+	P getPriority(T object);
 
 }

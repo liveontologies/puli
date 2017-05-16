@@ -52,7 +52,9 @@ public interface MinimalSubsetEnumerator<E> {
 	 * notified exactly once for every set. When the method returns, the
 	 * listener must be notified about all the subset-minimal sets. The listener
 	 * is notified about the sets in the order defined by the provided
-	 * {@link Comparator}.
+	 * {@link PriorityComparator}. The provided {@link PriorityComparator} does
+	 * not compare the sets directly, but it compares their priorities provided
+	 * by {@link PriorityComparator#getPriority(Object)}.
 	 * <p>
 	 * <strong>There is an additional constraint on the provided
 	 * comparator!</strong> It must be compatible with subset ordering,
@@ -60,44 +62,19 @@ public interface MinimalSubsetEnumerator<E> {
 	 * <blockquote>If {@link Set#containsAll(java.util.Collection)
 	 * set2.containsAll(set1) == true} and
 	 * {@link Set#containsAll(java.util.Collection) set1.containsAll(set2) ==
-	 * false} then {@link Comparator#compare(Object, Object) order.compare(set1,
-	 * set2) < 0}.</blockquote>
+	 * false}, then {@link Comparator#compare(Object, Object)
+	 * priorityComparator.compare(priorityComparator.getPriority(set1),
+	 * priorityComparator.getPriority(set2)) < 0}.</blockquote>
 	 * 
-	 * @param order
-	 *            The comparator that defines the order of justifications. The
-	 *            listener is notified about new justifications in this order.
 	 * @param listener
 	 *            The listener that is notified about new justifications.
+	 * @param priorityComparator
+	 *            The comparator that defines the order of justifications based
+	 *            on their priorities provided by this comparator. The listener
+	 *            is notified about new justifications in this order.
 	 */
-	void enumerate(Comparator<? super Set<E>> order, Listener<E> listener);
-
-	/**
-	 * Starts enumeration of subset-minimal sets and notifies the provided
-	 * listener about each new set as soon as it is computed. The listener is
-	 * notified exactly once for every set. When the method returns, the
-	 * listener must be notified about all the subset-minimal sets. The listener
-	 * is notified about the sets in the order following the natural ordering of
-	 * results of {@link ComparableWrapper.Factory#wrap(Object)
-	 * wrapper.wrap(set)}.
-	 * <p>
-	 * <strong>There is an additional constraint on the natural ordering of
-	 * results of {@link ComparableWrapper.Factory#wrap(Object)
-	 * wrapper.wrap(set)}!</strong> It must be compatible with subset ordering
-	 * of the sets passed as arguments, otherwise the results are not guaranteed
-	 * to be correct. Formally: <blockquote>If
-	 * {@link Set#containsAll(java.util.Collection) set2.containsAll(set1) ==
-	 * true} and {@link Set#containsAll(java.util.Collection)
-	 * set1.containsAll(set2) == false} then {@link Comparable#compareTo(Object)
-	 * wrapper.wrap(set1).compareTo(wrapper.wrap(set2)) < 0}.</blockquote>
-	 * 
-	 * @param wrapper
-	 *            The wrapper used to wrap the sets before they are compared
-	 *            with each other.
-	 * @param listener
-	 *            The listener that is notified about new justifications.
-	 */
-	void enumerate(ComparableWrapper.Factory<Set<E>, ?> wrapper,
-			Listener<E> listener);
+	void enumerate(Listener<E> listener,
+			PriorityComparator<? super Set<E>, ?> priorityComparator);
 
 	public static interface Listener<E> {
 
@@ -113,15 +90,6 @@ public interface MinimalSubsetEnumerator<E> {
 		};
 
 	}
-
-	public static Comparator<? super Set<?>> DEFAULT_ORDER = new Comparator<Set<?>>() {
-		@Override
-		public int compare(final Set<?> set1, final Set<?> set2) {
-			final int size1 = set1.size();
-			final int size2 = set2.size();
-			return (size1 < size2) ? -1 : ((size1 == size2) ? 0 : 1);
-		}
-	};
 
 	/**
 	 * Factory that creates {@link MinimalSubsetEnumerator}s for the provided
