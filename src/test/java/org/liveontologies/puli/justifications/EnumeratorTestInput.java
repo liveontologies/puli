@@ -25,13 +25,13 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.liveontologies.puli.InferenceJustifier;
-import org.liveontologies.puli.InferenceSet;
+import org.liveontologies.puli.Proof;
 
 public interface EnumeratorTestInput<C, A> {
 
 	C getQuery();
 
-	InferenceSet<C> getInferenceSet();
+	Proof<C> getInferenceSet();
 
 	InferenceJustifier<C, ? extends Set<? extends A>> getJustifier();
 

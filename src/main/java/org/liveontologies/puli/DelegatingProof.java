@@ -21,26 +21,18 @@
  */
 package org.liveontologies.puli;
 
-public class DelegatingDynamicInferenceSet<C, S extends DynamicInferenceSet<C>>
-		extends DelegatingInferenceSet<C, S> implements DynamicInferenceSet<C> {
+import java.util.Collection;
 
-	public DelegatingDynamicInferenceSet(S delegate) {
+public class DelegatingProof<C, S extends Proof<C>> extends Delegator<S>
+		implements Proof<C> {
+
+	public DelegatingProof(S delegate) {
 		super(delegate);
 	}
 
 	@Override
-	public void addListener(DynamicInferenceSet.ChangeListener listener) {
-		getDelegate().addListener(listener);
-	}
-
-	@Override
-	public void removeListener(DynamicInferenceSet.ChangeListener listener) {
-		getDelegate().removeListener(listener);
-	}
-
-	@Override
-	public void dispose() {
-		getDelegate().dispose();
+	public Collection<? extends Inference<C>> getInferences(C conclusion) {
+		return getDelegate().getInferences(conclusion);
 	}
 
 }

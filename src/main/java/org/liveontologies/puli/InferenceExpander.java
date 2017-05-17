@@ -1,5 +1,3 @@
-package org.liveontologies.puli;
-
 /*-
  * #%L
  * Proof Utility Library
@@ -21,6 +19,7 @@ package org.liveontologies.puli;
  * limitations under the License.
  * #L%
  */
+package org.liveontologies.puli;
 
 import java.util.ArrayDeque;
 import java.util.List;
@@ -34,7 +33,7 @@ public class InferenceExpander<C> implements Producer<Inference<C>> {
 
 	private final Set<C> derivable_;
 
-	private final InferenceSet<C> inferences_;
+	private final Proof<C> inferences_;
 
 	private final ListMultimap<C, Inference<C>> watchInferences_ = ArrayListMultimap
 			.create();
@@ -45,7 +44,7 @@ public class InferenceExpander<C> implements Producer<Inference<C>> {
 
 	private final Producer<Inference<C>> producer_;
 
-	InferenceExpander(Set<C> derivable, InferenceSet<C> inferences, C goal,
+	InferenceExpander(Set<C> derivable, Proof<C> inferences, C goal,
 			Producer<Inference<C>> producer) {
 		this.inferences_ = inferences;
 		this.derivable_ = derivable;
@@ -53,13 +52,13 @@ public class InferenceExpander<C> implements Producer<Inference<C>> {
 		process(goal);
 	}
 
-	public static <C> void expand(Set<C> derivable, InferenceSet<C> inferences,
-			C goal, Producer<Inference<C>> producer) {
+	public static <C> void expand(Set<C> derivable, Proof<C> inferences, C goal,
+			Producer<Inference<C>> producer) {
 		new InferenceExpander<C>(derivable, inferences, goal, producer);
 	}
 
 	void process(C goal) {
-		InferenceSets.unfoldRecursively(inferences_, goal, this);
+		Proofs.unfoldRecursively(inferences_, goal, this);
 	}
 
 	@Override

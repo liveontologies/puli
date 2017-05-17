@@ -34,8 +34,8 @@ public class JustificationEnumeratorTest<C, A>
 
 	public static final String TEST_INPUT_SUBPKG = "input.justifications";
 
-	public static List<MinimalSubsetsFromInferences.Factory<?, ?>> getJustificationEnumeratorFactories() {
-		final List<MinimalSubsetsFromInferences.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromInferences.Factory<?, ?>>();
+	public static List<MinimalSubsetsFromProofs.Factory<?, ?>> getJustificationEnumeratorFactories() {
+		final List<MinimalSubsetsFromProofs.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromProofs.Factory<?, ?>>();
 		factories.add(ResolutionJustificationComputation.getFactory());
 		return factories;
 	}

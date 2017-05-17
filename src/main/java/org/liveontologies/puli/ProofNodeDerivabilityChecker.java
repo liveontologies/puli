@@ -23,13 +23,13 @@ package org.liveontologies.puli;
 
 import org.liveontologies.puli.InferenceDerivabilityChecker;
 import org.liveontologies.puli.ProofNode;
-import org.liveontologies.puli.ProofNodeInferenceSet;
+import org.liveontologies.puli.ProofNodeProof;
 
 public class ProofNodeDerivabilityChecker<C>
 		extends InferenceDerivabilityChecker<ProofNode<C>> {
 
 	public ProofNodeDerivabilityChecker() {
-		super(ProofNodeInferenceSet.<C> get());
+		super(ProofNodeProof.<C> get());
 	}
 
 }

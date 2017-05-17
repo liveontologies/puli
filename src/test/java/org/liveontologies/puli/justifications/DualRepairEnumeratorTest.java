@@ -32,8 +32,8 @@ import org.junit.runners.Parameterized.Parameters;
 public class DualRepairEnumeratorTest<C, A>
 		extends BaseDualEnumeratorTest<C, A> {
 
-	public static List<MinimalSubsetsFromInferences.Factory<?, ?>> getRepairEnumeratorFactories() {
-		final List<MinimalSubsetsFromInferences.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromInferences.Factory<?, ?>>();
+	public static List<MinimalSubsetsFromProofs.Factory<?, ?>> getRepairEnumeratorFactories() {
+		final List<MinimalSubsetsFromProofs.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromProofs.Factory<?, ?>>();
 		factories.add(TopDownRepairComputation.getFactory());
 		return factories;
 	}

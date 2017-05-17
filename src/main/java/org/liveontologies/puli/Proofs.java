@@ -26,54 +26,51 @@ import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
 
-public class InferenceSets {
+public class Proofs {
 
 	@SuppressWarnings("rawtypes")
-	public static GenericDynamicInferenceSet EMPTY_INFERENCE_SET = new EmptyInferenceSet();
+	public static GenericDynamicProof EMPTY_PROOF = new EmptyProof();
 
 	@SuppressWarnings("unchecked")
-	public static <C, I extends Inference<C>> GenericDynamicInferenceSet<C, I> emptyInferenceSet() {
-		return (GenericDynamicInferenceSet<C, I>) EMPTY_INFERENCE_SET;
+	public static <C, I extends Inference<C>> GenericDynamicProof<C, I> emptyProof() {
+		return (GenericDynamicProof<C, I>) EMPTY_PROOF;
 	}
 
-	public static <C> boolean isDerivable(InferenceSet<C> inferenceSet,
-			C conclusion) {
-		return ProofNodes
-				.isDerivable(ProofNodes.create(inferenceSet, conclusion));
+	public static <C> boolean isDerivable(Proof<C> proof, C conclusion) {
+		return ProofNodes.isDerivable(ProofNodes.create(proof, conclusion));
 	}
 
-	public static <C> boolean isDerivable(InferenceSet<C> inferenceSet,
-			C conclusion, Set<C> statedAxioms) {
-		return ProofNodes.isDerivable(
-				ProofNodes.create(inferenceSet, conclusion), statedAxioms);
+	public static <C> boolean isDerivable(Proof<C> proof, C conclusion,
+			Set<C> statedAxioms) {
+		return ProofNodes.isDerivable(ProofNodes.create(proof, conclusion),
+				statedAxioms);
 	}
 
-	public static <C, I extends Inference<C>> GenericInferenceSet<C, I> combine(
-			final Iterable<? extends GenericInferenceSet<C, I>> inferenceSets) {
-		return new CombinedInferenceSet<C, I>(inferenceSets);
+	public static <C, I extends Inference<C>> GenericProof<C, I> combine(
+			final Iterable<? extends GenericProof<C, I>> proofs) {
+		return new CombinedProof<C, I>(proofs);
 	}
 
-	public static <C, I extends Inference<C>> GenericInferenceSet<C, I> combine(
-			final GenericInferenceSet<C, I>... inferenceSets) {
-		return new CombinedInferenceSet<C, I>(inferenceSets);
+	public static <C, I extends Inference<C>> GenericProof<C, I> combine(
+			final GenericProof<C, I>... proofs) {
+		return new CombinedProof<C, I>(proofs);
 	}
 
-	public static <C> InferenceSet<C> addAssertedInferences(
-			final InferenceSet<C> inferences, final Set<? extends C> asserted) {
-		return new AddAssertedInferenceSet<C>(inferences, asserted);
+	public static <C> Proof<C> addAssertedInferences(final Proof<C> inferences,
+			final Set<? extends C> asserted) {
+		return new AddAssertedProof<C>(inferences, asserted);
 	}
 
-	public static <C> DynamicInferenceSet<C> cache(
-			DynamicInferenceSet<C> inferences) {
-		return new CachingInferenceSet<C>(inferences);
+	public static <C> DynamicProof<C> cache(DynamicProof<C> inferences) {
+		return new CachingProofs<C>(inferences);
 	}
 
 	public static <C> InferenceJustifier<C, ? extends Set<? extends C>> justifyAssertedInferences() {
 		return AssertedConclusionInferenceJustifier.getInstance();
 	}
 
-	public static <C> Set<C> unfoldRecursively(InferenceSet<C> inferences,
-			C goal, Producer<Inference<C>> producer) {
+	public static <C> Set<C> unfoldRecursively(Proof<C> inferences, C goal,
+			Producer<Inference<C>> producer) {
 		Set<C> result = new HashSet<C>();
 		Queue<C> toExpand = new ArrayDeque<C>();
 		result.add(goal);
@@ -102,7 +99,7 @@ public class InferenceSets {
 	 *         derivable using the given inferences; i.e., every derivation
 	 *         using the inferences must use at least one essential conclusion
 	 */
-	public static <C> Set<C> getEssentialConclusions(InferenceSet<C> inferences,
+	public static <C> Set<C> getEssentialConclusions(Proof<C> inferences,
 			C goal) {
 		Set<C> result = new HashSet<C>();
 		DerivabilityCheckerWithBlocking<C> checker = new InferenceDerivabilityChecker<C>(
@@ -128,8 +125,8 @@ public class InferenceSets {
 	 * @param goal
 	 * @param producer
 	 */
-	public static <C> void expand(Set<C> derivable, InferenceSet<C> inferences,
-			C goal, Producer<Inference<C>> producer) {
+	public static <C> void expand(Set<C> derivable, Proof<C> inferences, C goal,
+			Producer<Inference<C>> producer) {
 		InferenceExpander.expand(derivable, inferences, goal, producer);
 	}
 
@@ -137,17 +134,16 @@ public class InferenceSets {
 	 * @param inferences
 	 * @param goal
 	 * @param asserted
-	 * @return an inference set obtained from the given inference sets by
-	 *         removing some inferences that do not have effect on the
-	 *         derivation relation between subsets of the given asserted
-	 *         conclusion and the goal conclusion; i.e., if the goal conclusion
-	 *         was derivable from some subset of asserted conclusions using
-	 *         original inferences, then it is also derivable using the returned
-	 *         inferences
+	 * @return a proof obtained from the given proofs by removing some
+	 *         inferences that do not have effect on the derivation relation
+	 *         between subsets of the given asserted conclusion and the goal
+	 *         conclusion; i.e., if the goal conclusion was derivable from some
+	 *         subset of asserted conclusions using original inferences, then it
+	 *         is also derivable using the returned inferences
 	 */
-	public static <C> InferenceSet<C> prune(InferenceSet<C> inferences, C goal,
+	public static <C> Proof<C> prune(Proof<C> inferences, C goal,
 			Set<C> asserted) {
-		return new PrunedInferenceSet<C>(inferences, goal, asserted);
+		return new PrunedProof<C>(inferences, goal, asserted);
 	}
 
 }

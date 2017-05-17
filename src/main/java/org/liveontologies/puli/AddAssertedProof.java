@@ -28,12 +28,11 @@ import java.util.Set;
 
 import com.google.common.collect.Iterators;
 
-class AddAssertedInferenceSet<C>
-		extends DelegatingInferenceSet<C, InferenceSet<C>> {
+class AddAssertedProof<C> extends DelegatingProof<C, Proof<C>> {
 
 	private final Set<? extends C> assertedConclusions_;
 
-	AddAssertedInferenceSet(final InferenceSet<C> delegate,
+	AddAssertedProof(final Proof<C> delegate,
 			final Set<? extends C> assertedConclusions) {
 		super(delegate);
 		this.assertedConclusions_ = assertedConclusions;

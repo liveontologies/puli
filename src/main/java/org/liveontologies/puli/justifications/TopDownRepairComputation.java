@@ -34,7 +34,7 @@ import java.util.Set;
 import org.liveontologies.puli.Delegator;
 import org.liveontologies.puli.Inference;
 import org.liveontologies.puli.InferenceJustifier;
-import org.liveontologies.puli.InferenceSet;
+import org.liveontologies.puli.Proof;
 import org.liveontologies.puli.collections.BloomTrieCollection2;
 import org.liveontologies.puli.collections.Collection2;
 import org.liveontologies.puli.statistics.NestedStats;
@@ -55,22 +55,22 @@ import com.google.common.collect.Iterators;
  *            the type of axioms used by the inferences
  */
 public class TopDownRepairComputation<C, A>
-		extends MinimalSubsetsFromInferences<C, A> {
+		extends MinimalSubsetsFromProofs<C, A> {
 
 	private static final TopDownRepairComputation.Factory<?, ?> FACTORY_ = new Factory<Object, Object>();
 
 	@SuppressWarnings("unchecked")
-	public static <C, A> MinimalSubsetsFromInferences.Factory<C, A> getFactory() {
+	public static <C, A> MinimalSubsetsFromProofs.Factory<C, A> getFactory() {
 		return (Factory<C, A>) FACTORY_;
 	}
 
 	// Statistics
 	private int producedJobsCount_ = 0;
 
-	private TopDownRepairComputation(final InferenceSet<C> inferenceSet,
+	private TopDownRepairComputation(final Proof<C> proof,
 			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor) {
-		super(inferenceSet, justifier, monitor);
+		super(proof, justifier, monitor);
 	}
 
 	@Override
@@ -115,7 +115,7 @@ public class TopDownRepairComputation<C, A>
 			}
 			// else
 			this.listener_ = listener;
-			this.jobFactory_ = JobFactory.create(getInferenceSet(),
+			this.jobFactory_ = JobFactory.create(getProof(),
 					getInferenceJustifier(), priorityComparator);
 			this.toDoJobs_ = new PriorityQueue<JobFactory<C, A, ?>.Job>();
 			this.minimalRepairs_.clear();
@@ -190,23 +190,22 @@ public class TopDownRepairComputation<C, A>
 
 	private static class JobFactory<C, A, P> {
 
-		private final InferenceSet<C> inferenceSet_;
+		private final Proof<C> proof_;
 		private final InferenceJustifier<C, ? extends Set<? extends A>> justifier_;
 		private final PriorityComparator<? super Set<A>, P> priorityComparator_;
 
-		public JobFactory(final InferenceSet<C> inferenceSet,
+		public JobFactory(final Proof<C> proof,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				final PriorityComparator<? super Set<A>, P> priorityComparator) {
-			this.inferenceSet_ = inferenceSet;
+			this.proof_ = proof;
 			this.justifier_ = justifier;
 			this.priorityComparator_ = priorityComparator;
 		}
 
-		public static <C, A, P> JobFactory<C, A, P> create(
-				final InferenceSet<C> inferenceSet,
+		public static <C, A, P> JobFactory<C, A, P> create(final Proof<C> proof,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				final PriorityComparator<? super Set<A>, P> priorityComparator) {
-			return new JobFactory<C, A, P>(inferenceSet, justifier,
+			return new JobFactory<C, A, P>(proof, justifier,
 					priorityComparator);
 		}
 
@@ -234,7 +233,7 @@ public class TopDownRepairComputation<C, A>
 					newToBreak.add(inf);
 				}
 			}
-			infLoop: for (final Inference<C> inf : inferenceSet_
+			infLoop: for (final Inference<C> inf : proof_
 					.getInferences(conclusion)) {
 				for (final C premise : inf.getPremises()) {
 					if (broken.contains(premise)) {
@@ -413,14 +412,14 @@ public class TopDownRepairComputation<C, A>
 	 *            the type of axioms used by the inferences
 	 */
 	private static class Factory<C, A>
-			implements MinimalSubsetsFromInferences.Factory<C, A> {
+			implements MinimalSubsetsFromProofs.Factory<C, A> {
 
 		@Override
 		public MinimalSubsetEnumerator.Factory<C, A> create(
-				final InferenceSet<C> inferenceSet,
+				final Proof<C> proof,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor) {
-			return new TopDownRepairComputation<C, A>(inferenceSet, justifier,
+			return new TopDownRepairComputation<C, A>(proof, justifier,
 					monitor);
 		}
 

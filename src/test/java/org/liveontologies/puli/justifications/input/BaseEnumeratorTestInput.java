@@ -24,7 +24,7 @@ package org.liveontologies.puli.justifications.input;
 import java.util.Set;
 
 import org.liveontologies.puli.InferenceJustifier;
-import org.liveontologies.puli.InferenceSet;
+import org.liveontologies.puli.Proof;
 import org.liveontologies.puli.InferenceSetAndJustifierBuilder;
 import org.liveontologies.puli.justifications.EnumeratorTestInput;
 
@@ -39,7 +39,7 @@ public abstract class BaseEnumeratorTestInput<C, A>
 	}
 
 	@Override
-	public InferenceSet<C> getInferenceSet() {
+	public Proof<C> getInferenceSet() {
 		return builder_.build();
 	}
 

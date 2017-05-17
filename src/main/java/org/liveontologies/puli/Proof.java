@@ -21,25 +21,22 @@
  */
 package org.liveontologies.puli;
 
-public interface ModifiableInferenceSet<C, I extends Inference<C>>
-		extends GenericInferenceSet<C, I>, Producer<I> {
+import java.util.Collection;
+
+/**
+ * An object from which one can retrieve inferences deriving conclusions.
+ * 
+ * @author Yevgeny Kazakov
+ *
+ * @param <C>
+ *            the type of conclusion and premises used by the inferences
+ */
+public interface Proof<C> {
 
 	/**
-	 * Add the given inference to this {@link InferenceSet}
-	 * 
-	 * @param inference
+	 * @param conclusion
+	 * @return the inferences from this proof that derive the given conclusion
 	 */
-	@Override
-	void produce(I inference);
-
-	/**
-	 * Remove all inferences from this {@link InferenceSet}
-	 */
-	void clear();
-
-	public static interface Projection<C>
-			extends ModifiableInferenceSet<C, Inference<C>> {
-		// Empty.
-	}
+	Collection<? extends Inference<C>> getInferences(C conclusion);
 
 }

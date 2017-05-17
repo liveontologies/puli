@@ -21,14 +21,27 @@
  */
 package org.liveontologies.puli;
 
-public interface GenericDynamicInferenceSet<C, I extends Inference<C>>
-		extends GenericInferenceSet<C, I>, DynamicInferenceSet<C> {
+import java.util.Collection;
 
-	// Combined interface.
+import org.liveontologies.puli.Proof;
+import org.liveontologies.puli.ProofNode;
+import org.liveontologies.puli.ProofNodeProof;
+import org.liveontologies.puli.ProofStep;
 
-	public static interface Projection<C>
-			extends GenericDynamicInferenceSet<C, Inference<C>> {
-		// Empty.
+public class ProofNodeProof<C> implements Proof<ProofNode<C>> {
+
+	@SuppressWarnings("rawtypes")
+	private final static ProofNodeProof INSTANCE_ = new ProofNodeProof();
+
+	@SuppressWarnings("unchecked")
+	public static <C> ProofNodeProof<C> get() {
+		return INSTANCE_;
+	}
+
+	@Override
+	public Collection<? extends ProofStep<C>> getInferences(
+			ProofNode<C> conclusion) {
+		return conclusion.getInferences();
 	}
 
 }

@@ -22,21 +22,21 @@
 package org.liveontologies.puli;
 
 /**
- * An {@link InferenceSet}, changes in which can be monitored
+ * An {@link Proof}, changes in which can be monitored
  * 
  * @author Yevgeny Kazakov
  *
  * @param <C>
  */
-public interface DynamicInferenceSet<C> extends InferenceSet<C> {
+public interface DynamicProof<C> extends Proof<C> {
 
 	public void addListener(ChangeListener listener);
 
 	public void removeListener(ChangeListener listener);
 
 	/**
-	 * Release external resources occupied by this {@link InferenceSet}. This
-	 * {@link InferenceSet} should not be used after calling of this method
+	 * Release external resources occupied by this {@link Proof}. This
+	 * {@link Proof} should not be used after calling of this method
 	 */
 	public void dispose();
 
@@ -50,7 +50,7 @@ public interface DynamicInferenceSet<C> extends InferenceSet<C> {
 
 		/**
 		 * called whenever the inferences already returned for some conclusions
-		 * by {@link InferenceSet#getInferences(Object)} may have changed, i.e.,
+		 * by {@link Proof#getInferences(Object)} may have changed, i.e.,
 		 * calling this method again with the same input may produce a different
 		 * result
 		 */

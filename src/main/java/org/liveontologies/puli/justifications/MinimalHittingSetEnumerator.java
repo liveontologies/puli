@@ -29,7 +29,7 @@ import java.util.Set;
 
 import org.liveontologies.puli.Inference;
 import org.liveontologies.puli.InferenceJustifier;
-import org.liveontologies.puli.InferenceSet;
+import org.liveontologies.puli.Proof;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -39,12 +39,12 @@ public class MinimalHittingSetEnumerator<E> implements
 
 	private static final Object CONCLUSION_ = new Object();
 
-	private final MinimalSubsetsFromInferences.Factory<Object, E> repairComputationFactory_;
+	private final MinimalSubsetsFromProofs.Factory<Object, E> repairComputationFactory_;
 
 	private final InterruptMonitor monitor_;
 
 	public MinimalHittingSetEnumerator(
-			final MinimalSubsetsFromInferences.Factory<Object, E> repairComputationFactory,
+			final MinimalSubsetsFromProofs.Factory<Object, E> repairComputationFactory,
 			final InterruptMonitor monitor) {
 		this.repairComputationFactory_ = repairComputationFactory;
 		this.monitor_ = monitor;
@@ -69,11 +69,11 @@ public class MinimalHittingSetEnumerator<E> implements
 		public void enumerate(final Listener<E> listener,
 				final PriorityComparator<? super Set<E>, ?> priorityComparator) {
 
-			final InferenceSet<Object> inferenceSet = new SetWrapperInferenceSet(
+			final Proof<Object> proof = new SetWrapperProof(
 					originalSets_);
 
 			final MinimalSubsetEnumerator.Factory<Object, E> computation = repairComputationFactory_
-					.create(inferenceSet, setWrapperJustifier_, monitor_);
+					.create(proof, setWrapperJustifier_, monitor_);
 			final MinimalSubsetEnumerator<E> enumerator = computation
 					.newEnumerator(CONCLUSION_);
 
@@ -82,11 +82,11 @@ public class MinimalHittingSetEnumerator<E> implements
 
 	}
 
-	private class SetWrapperInferenceSet implements InferenceSet<Object> {
+	private class SetWrapperProof implements Proof<Object> {
 
 		private final Collection<? extends Set<? extends E>> originalSets_;
 
-		private SetWrapperInferenceSet(
+		private SetWrapperProof(
 				final Collection<? extends Set<? extends E>> originalSets) {
 			this.originalSets_ = originalSets;
 		}

@@ -1,5 +1,3 @@
-package org.liveontologies.puli;
-
 /*-
  * #%L
  * Proof Utility Library
@@ -21,6 +19,7 @@ package org.liveontologies.puli;
  * limitations under the License.
  * #L%
  */
+package org.liveontologies.puli;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -28,20 +27,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class PrunedInferenceSet<C>
-		extends DelegatingInferenceSet<C, InferenceSet<C>>
-		implements InferenceSet<C>, Producer<Inference<C>> {
+public class PrunedProof<C> extends DelegatingProof<C, Proof<C>>
+		implements Proof<C>, Producer<Inference<C>> {
 
 	private final Map<C, Inference<C>> expanded_ = new HashMap<C, Inference<C>>();
 
-	public PrunedInferenceSet(InferenceSet<C> delegate, C goal,
-			Set<C> asserted) {
+	public PrunedProof(Proof<C> delegate, C goal, Set<C> asserted) {
 		super(delegate);
-		InferenceSet<C> extended = InferenceSets.addAssertedInferences(delegate,
-				asserted);
-		Set<C> essential = InferenceSets.getEssentialConclusions(extended,
-				goal);
-		InferenceSets.expand(essential, delegate, goal, this);
+		Proof<C> extended = Proofs.addAssertedInferences(delegate, asserted);
+		Set<C> essential = Proofs.getEssentialConclusions(extended, goal);
+		Proofs.expand(essential, delegate, goal, this);
 	}
 
 	@Override

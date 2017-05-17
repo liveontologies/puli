@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A base implementation for inference sets
+ * A base implementation for proofs.
  * 
  * @author Yevgeny Kazakov
  * @author Peter Skocovsky
@@ -44,11 +44,11 @@ import org.slf4j.LoggerFactory;
  * @param <I>
  *            The type of the inferences.
  */
-public class BaseInferenceSet<C, I extends Inference<C>> implements
-		ModifiableInferenceSet<C, I>, GenericDynamicInferenceSet<C, I> {
+public class BaseProof<C, I extends Inference<C>>
+		implements ModifiableProof<C, I>, GenericDynamicProof<C, I> {
 
 	private static final Logger LOGGER_ = LoggerFactory
-			.getLogger(BaseInferenceSet.class);
+			.getLogger(BaseProof.class);
 
 	private final Map<C, Collection<I>> inferences_ = new HashMap<C, Collection<I>>();
 
@@ -119,8 +119,7 @@ public class BaseInferenceSet<C, I extends Inference<C>> implements
 		// no-op
 	}
 
-	public static class Projection<C>
-			extends BaseInferenceSet<C, Inference<C>> {
+	public static class Projection<C> extends BaseProof<C, Inference<C>> {
 		// Empty.
 	}
 

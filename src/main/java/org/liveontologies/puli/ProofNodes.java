@@ -36,8 +36,7 @@ import java.util.Set;
  */
 public class ProofNodes {
 
-	public static <C> ProofNode<C> create(InferenceSet<C> inferences,
-			C member) {
+	public static <C> ProofNode<C> create(Proof<C> inferences, C member) {
 		return new BaseProofNode<C>(inferences, member);
 	}
 

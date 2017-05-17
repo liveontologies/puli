@@ -23,21 +23,16 @@ package org.liveontologies.puli;
 
 import java.util.Collection;
 
-/**
- * An object from which one can retrieve inferences deriving conclusions.
- * 
- * @author Yevgeny Kazakov
- *
- * @param <C>
- *            the type of conclusion and premises used by the inferences
- */
-public interface InferenceSet<C> {
+public class GenericDelegatingProof<C, I extends Inference<C>, S extends GenericProof<C, I>>
+		extends DelegatingProof<C, S> implements GenericProof<C, I> {
 
-	/**
-	 * @param conclusion
-	 * @return the inferences from this inference set that derive the given
-	 *         conclusion
-	 */
-	Collection<? extends Inference<C>> getInferences(C conclusion);
+	public GenericDelegatingProof(final S delegate) {
+		super(delegate);
+	}
+
+	@Override
+	public Collection<? extends I> getInferences(final C conclusion) {
+		return getDelegate().getInferences(conclusion);
+	}
 
 }

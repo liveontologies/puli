@@ -21,18 +21,25 @@
  */
 package org.liveontologies.puli;
 
-import java.util.Collection;
+public interface ModifiableProof<C, I extends Inference<C>>
+		extends GenericProof<C, I>, Producer<I> {
 
-public class DelegatingInferenceSet<C, S extends InferenceSet<C>>
-		extends Delegator<S> implements InferenceSet<C> {
-
-	public DelegatingInferenceSet(S delegate) {
-		super(delegate);
-	}
-
+	/**
+	 * Add the given inference to this {@link Proof}
+	 * 
+	 * @param inference
+	 */
 	@Override
-	public Collection<? extends Inference<C>> getInferences(C conclusion) {
-		return getDelegate().getInferences(conclusion);
+	void produce(I inference);
+
+	/**
+	 * Remove all inferences from this {@link Proof}
+	 */
+	void clear();
+
+	public static interface Projection<C>
+			extends ModifiableProof<C, Inference<C>> {
+		// Empty.
 	}
 
 }

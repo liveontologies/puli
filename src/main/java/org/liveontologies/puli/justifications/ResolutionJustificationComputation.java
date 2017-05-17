@@ -37,7 +37,7 @@ import java.util.Set;
 import org.liveontologies.puli.Delegator;
 import org.liveontologies.puli.Inference;
 import org.liveontologies.puli.InferenceJustifier;
-import org.liveontologies.puli.InferenceSet;
+import org.liveontologies.puli.Proof;
 import org.liveontologies.puli.collections.BloomTrieCollection2;
 import org.liveontologies.puli.collections.Collection2;
 import org.liveontologies.puli.statistics.NestedStats;
@@ -68,7 +68,7 @@ import com.google.common.collect.Sets;
  *            the type of axioms used by the inferences
  */
 public class ResolutionJustificationComputation<C, A>
-		extends MinimalSubsetsFromInferences<C, A> {
+		extends MinimalSubsetsFromProofs<C, A> {
 
 	private static final ResolutionJustificationComputation.Factory<?, ?> FACTORY_ = new Factory<Object, Object>();
 
@@ -111,12 +111,11 @@ public class ResolutionJustificationComputation<C, A>
 	// Statistics
 	private int producedInferenceCount_ = 0, minimalInferenceCount_ = 0;
 
-	private ResolutionJustificationComputation(
-			final InferenceSet<C> inferenceSet,
+	private ResolutionJustificationComputation(final Proof<C> proof,
 			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor,
 			final SelectionFactory<C, A> selectionFactory) {
-		super(inferenceSet, justifier, monitor);
+		super(proof, justifier, monitor);
 		this.selection_ = selectionFactory.createSelection(this);
 	}
 
@@ -474,7 +473,7 @@ public class ResolutionJustificationComputation<C, A>
 					minimalInferences.add(inf);
 					minimalInferenceCount_++;
 				}
-				C selected = selection_.getResolvingAtom(inf, getInferenceSet(),
+				C selected = selection_.getResolvingAtom(inf, getProof(),
 						getInferenceJustifier(), goal_);
 				if (selected == null) {
 					// resolve on the conclusions
@@ -743,8 +742,7 @@ public class ResolutionJustificationComputation<C, A>
 		 * @return {@code null} if the conclusion is selected or the selected
 		 *         premise
 		 */
-		C getResolvingAtom(DerivedInference<C, A> inference,
-				InferenceSet<C> inferenceSet,
+		C getResolvingAtom(DerivedInference<C, A> inference, Proof<C> proof,
 				InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				C goal);
 
@@ -761,7 +759,7 @@ public class ResolutionJustificationComputation<C, A>
 
 		@Override
 		public C getResolvingAtom(DerivedInference<C, A> inference,
-				final InferenceSet<C> inferenceSet,
+				final Proof<C> proof,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				C goal) {
 			// select the premise that is derived by the fewest inferences;
@@ -769,7 +767,7 @@ public class ResolutionJustificationComputation<C, A>
 			C result = null;
 			int minInferenceCount = Integer.MAX_VALUE;
 			for (C c : inference.getPremises()) {
-				int inferenceCount = inferenceSet.getInferences(c).size();
+				int inferenceCount = proof.getInferences(c).size();
 				if (inferenceCount < minInferenceCount) {
 					result = c;
 					minInferenceCount = inferenceCount;
@@ -784,7 +782,7 @@ public class ResolutionJustificationComputation<C, A>
 
 		@Override
 		public C getResolvingAtom(DerivedInference<C, A> inference,
-				final InferenceSet<C> inferenceSet,
+				final Proof<C> proof,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				C goal) {
 			// select the conclusion, unless it is the goal conclusion and
@@ -794,7 +792,7 @@ public class ResolutionJustificationComputation<C, A>
 			if (goal.equals(inference.getConclusion())) {
 				int minInferenceCount = Integer.MAX_VALUE;
 				for (C c : inference.getPremises()) {
-					int inferenceCount = inferenceSet.getInferences(c).size();
+					int inferenceCount = proof.getInferences(c).size();
 					if (inferenceCount < minInferenceCount) {
 						result = c;
 						minInferenceCount = inferenceCount;
@@ -820,7 +818,7 @@ public class ResolutionJustificationComputation<C, A>
 
 		@Override
 		public C getResolvingAtom(DerivedInference<C, A> inference,
-				final InferenceSet<C> inferenceSet,
+				final Proof<C> proof,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				C goal) {
 			// select the premise derived by the fewest inferences
@@ -830,7 +828,7 @@ public class ResolutionJustificationComputation<C, A>
 			int minInferenceCount = Integer.MAX_VALUE;
 			C result = null;
 			for (C c : inference.getPremises()) {
-				int inferenceCount = inferenceSet.getInferences(c).size();
+				int inferenceCount = proof.getInferences(c).size();
 				if (inferenceCount < minInferenceCount) {
 					result = c;
 					minInferenceCount = inferenceCount;
@@ -857,14 +855,14 @@ public class ResolutionJustificationComputation<C, A>
 	 *            the type of axioms used by the inferences
 	 */
 	public static class Factory<C, A>
-			implements MinimalSubsetsFromInferences.Factory<C, A> {
+			implements MinimalSubsetsFromProofs.Factory<C, A> {
 
 		@Override
 		public MinimalSubsetEnumerator.Factory<C, A> create(
-				final InferenceSet<C> inferenceSet,
+				final Proof<C> proof,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor) {
-			return create(inferenceSet, justifier, monitor,
+			return create(proof, justifier, monitor,
 					new SelectionFactory<C, A>() {
 
 						@Override
@@ -877,11 +875,11 @@ public class ResolutionJustificationComputation<C, A>
 		}
 
 		public MinimalSubsetEnumerator.Factory<C, A> create(
-				final InferenceSet<C> inferenceSet,
+				final Proof<C> proof,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor,
 				final SelectionFactory<C, A> selectionFactory) {
-			return new ResolutionJustificationComputation<C, A>(inferenceSet,
+			return new ResolutionJustificationComputation<C, A>(proof,
 					justifier, monitor, selectionFactory);
 		}
 

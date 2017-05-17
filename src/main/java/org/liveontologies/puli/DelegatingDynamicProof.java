@@ -21,20 +21,26 @@
  */
 package org.liveontologies.puli;
 
-import java.util.Collection;
+public class DelegatingDynamicProof<C, S extends DynamicProof<C>>
+		extends DelegatingProof<C, S> implements DynamicProof<C> {
 
-/**
- * @author Peter Skocovsky
- *
- * @param <C>
- *            The type of conclusion and premises used by the inferences.
- * @param <I>
- *            The type of the inferences.
- */
-public interface GenericInferenceSet<C, I extends Inference<C>>
-		extends InferenceSet<C> {
+	public DelegatingDynamicProof(S delegate) {
+		super(delegate);
+	}
 
 	@Override
-	Collection<? extends I> getInferences(C conclusion);
+	public void addListener(DynamicProof.ChangeListener listener) {
+		getDelegate().addListener(listener);
+	}
+
+	@Override
+	public void removeListener(DynamicProof.ChangeListener listener) {
+		getDelegate().removeListener(listener);
+	}
+
+	@Override
+	public void dispose() {
+		getDelegate().dispose();
+	}
 
 }

@@ -1,5 +1,3 @@
-package org.liveontologies.puli;
-
 /*-
  * #%L
  * Proof Utility Library
@@ -21,14 +19,15 @@ package org.liveontologies.puli;
  * limitations under the License.
  * #L%
  */
+package org.liveontologies.puli;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A {@link DynamicInferenceSet} that caches the inferences returned by the
- * input {@link DynamicInferenceSet} by {@link #getInferences(Object)}. When
+ * A {@link DynamicProof} that caches the inferences returned by the
+ * input {@link DynamicProof} by {@link #getInferences(Object)}. When
  * this method is called for the second time with the same input, the cached
  * version is used.
  * 
@@ -36,13 +35,13 @@ import java.util.Map;
  *
  * @param <C>
  */
-public class CachingInferenceSet<C>
-		extends DelegatingDynamicInferenceSet<C, DynamicInferenceSet<C>>
-		implements DynamicInferenceSet.ChangeListener {
+public class CachingProofs<C>
+		extends DelegatingDynamicProof<C, DynamicProof<C>>
+		implements DynamicProof.ChangeListener {
 
 	private final Map<C, Collection<? extends Inference<C>>> inferenceCache_ = new HashMap<C, Collection<? extends Inference<C>>>();
 
-	public CachingInferenceSet(DynamicInferenceSet<C> delegate) {
+	public CachingProofs(DynamicProof<C> delegate) {
 		super(delegate);
 		addListener(this);
 	}

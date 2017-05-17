@@ -25,7 +25,7 @@ public class InferenceSetBuilder<C> {
 
 	static final String INF_NAME = "inf";
 
-	private final BaseInferenceSet.Projection<C> inferenceSet_ = new BaseInferenceSet.Projection<C>();
+	private final BaseProof.Projection<C> inferenceSet_ = new BaseProof.Projection<C>();
 
 	/**
 	 * use {@link #create()}
@@ -37,7 +37,7 @@ public class InferenceSetBuilder<C> {
 		return new InferenceSetBuilder<C>();
 	}
 
-	public BaseInferenceSet.Projection<C> build() {
+	public BaseProof.Projection<C> build() {
 		return inferenceSet_;
 	}
 

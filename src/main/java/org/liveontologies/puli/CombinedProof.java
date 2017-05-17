@@ -29,9 +29,9 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 /**
- * Combination of multiple inference sets. Inferences from this inference set
- * deriving some conclusion are union of inferences from the supplied inference
- * sets deriving that conclusion.
+ * Combination of multiple proofs. Inferences from this proof deriving some
+ * conclusion are union of inferences from the supplied proofs deriving that
+ * conclusion.
  * 
  * @author Peter Skocovsky
  *
@@ -40,20 +40,18 @@ import com.google.common.base.Preconditions;
  * @param <I>
  *            The type of the inferences.
  */
-public class CombinedInferenceSet<C, I extends Inference<C>>
-		implements GenericInferenceSet<C, I> {
+public class CombinedProof<C, I extends Inference<C>>
+		implements GenericProof<C, I> {
 
-	private final Iterable<? extends GenericInferenceSet<C, I>> inferenceSets_;
+	private final Iterable<? extends GenericProof<C, I>> proofs_;
 
-	public CombinedInferenceSet(
-			final Iterable<? extends GenericInferenceSet<C, I>> inferenceSets) {
-		Preconditions.checkNotNull(inferenceSets);
-		this.inferenceSets_ = inferenceSets;
+	public CombinedProof(final Iterable<? extends GenericProof<C, I>> proofs) {
+		Preconditions.checkNotNull(proofs);
+		this.proofs_ = proofs;
 	}
 
-	public CombinedInferenceSet(
-			final GenericInferenceSet<C, I>... inferenceSets) {
-		this(Arrays.asList(inferenceSets));
+	public CombinedProof(final GenericProof<C, I>... proofs) {
+		this(Arrays.asList(proofs));
 	}
 
 	@Override
@@ -61,8 +59,8 @@ public class CombinedInferenceSet<C, I extends Inference<C>>
 
 		final List<I> result = new ArrayList<I>();
 
-		for (final GenericInferenceSet<C, I> inferenceSet : inferenceSets_) {
-			final Collection<? extends I> infs = inferenceSet
+		for (final GenericProof<C, I> proof : proofs_) {
+			final Collection<? extends I> infs = proof
 					.getInferences(conclusion);
 			if (infs != null) {
 				result.addAll(infs);

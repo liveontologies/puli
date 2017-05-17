@@ -26,14 +26,14 @@ import java.util.Set;
 
 import org.liveontologies.puli.Inference;
 import org.liveontologies.puli.InferenceJustifier;
-import org.liveontologies.puli.InferenceSet;
+import org.liveontologies.puli.Proof;
 
 import com.google.common.base.Preconditions;
 
 /**
- * A skeleton implementation of enumerator factories that use inference sets.
- * Enumerated sets are over axioms with which the inferences are justified and
- * the query for enumerator is one of the conclusions.
+ * A skeleton implementation of enumerator factories that use proofs. Enumerated
+ * sets are over axioms with which the inferences are justified and the query
+ * for enumerator is one of the conclusions.
  * 
  * @author Yevgeny Kazakov
  *
@@ -42,28 +42,28 @@ import com.google.common.base.Preconditions;
  * @param <A>
  *            the type of axioms used by the inferences
  */
-public abstract class MinimalSubsetsFromInferences<C, A>
+public abstract class MinimalSubsetsFromProofs<C, A>
 		implements MinimalSubsetEnumerator.Factory<C, A> {
 
-	private final InferenceSet<C> inferenceSet_;
+	private final Proof<C> proof_;
 
 	private final InferenceJustifier<C, ? extends Set<? extends A>> justifier_;
 
 	private final InterruptMonitor monitor_;
 
-	public MinimalSubsetsFromInferences(final InferenceSet<C> inferenceSet,
+	public MinimalSubsetsFromProofs(final Proof<C> proof,
 			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor) {
-		Preconditions.checkNotNull(inferenceSet);
+		Preconditions.checkNotNull(proof);
 		Preconditions.checkNotNull(justifier);
 		Preconditions.checkNotNull(monitor);
-		this.inferenceSet_ = inferenceSet;
+		this.proof_ = proof;
 		this.justifier_ = justifier;
 		this.monitor_ = monitor;
 	}
 
-	public InferenceSet<C> getInferenceSet() {
-		return inferenceSet_;
+	public Proof<C> getProof() {
+		return proof_;
 	}
 
 	public InferenceJustifier<C, ? extends Set<? extends A>> getInferenceJustifier() {
@@ -72,7 +72,7 @@ public abstract class MinimalSubsetsFromInferences<C, A>
 
 	public Collection<? extends Inference<C>> getInferences(
 			final C conclusion) {
-		return inferenceSet_.getInferences(conclusion);
+		return proof_.getInferences(conclusion);
 	}
 
 	public Set<? extends A> getJustification(final Inference<C> inference) {
@@ -97,14 +97,13 @@ public abstract class MinimalSubsetsFromInferences<C, A>
 	public static interface Factory<C, A> {
 
 		/**
-		 * @param inferenceSet
+		 * @param proof
 		 * @param justifier
 		 * @param monitor
 		 * @return a new {@link MinimalSubsetEnumerator.Factory} which uses the
-		 *         given inference set and inference justifier
+		 *         given proof and inference justifier
 		 */
-		MinimalSubsetEnumerator.Factory<C, A> create(
-				InferenceSet<C> inferenceSet,
+		MinimalSubsetEnumerator.Factory<C, A> create(Proof<C> proof,
 				InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				InterruptMonitor monitor);
 

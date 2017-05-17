@@ -28,19 +28,19 @@ import com.google.common.base.Preconditions;
 
 class BaseProofStep<C> extends AbstractProofStep<C> {
 
-	private final InferenceSet<C> inferenceSet_;
+	private final Proof<C> proof_;
 
 	private final Inference<C> inference_;
 
-	BaseProofStep(InferenceSet<C> inferences, Inference<C> inference) {
-		Preconditions.checkNotNull(inferences);
+	BaseProofStep(Proof<C> proof, Inference<C> inference) {
+		Preconditions.checkNotNull(proof);
 		Preconditions.checkNotNull(inference);
-		this.inferenceSet_ = inferences;
+		this.proof_ = proof;
 		this.inference_ = inference;
 	}
 
-	public InferenceSet<C> getInferenceSet() {
-		return inferenceSet_;
+	public Proof<C> getProof() {
+		return proof_;
 	}
 
 	@Override
@@ -76,7 +76,7 @@ class BaseProofStep<C> extends AbstractProofStep<C> {
 	}
 
 	ProofNode<C> convert(C member) {
-		return new BaseProofNode<C>(inferenceSet_, member);
+		return new BaseProofNode<C>(proof_, member);
 	}
 
 }

@@ -28,24 +28,24 @@ import com.google.common.base.Preconditions;
 
 class BaseProofNode<C> extends AbstractProofNode<C> {
 
-	private final InferenceSet<C> inferenceSet_;
+	private final Proof<C> proof_;
 
 	private Collection<ProofStep<C>> steps_ = null;
 
-	BaseProofNode(InferenceSet<C> inferences, C member) {
+	BaseProofNode(Proof<C> proof, C member) {
 		super(member);
-		Preconditions.checkNotNull(inferences);
-		this.inferenceSet_ = inferences;
+		Preconditions.checkNotNull(proof);
+		this.proof_ = proof;
 	}
 
-	public InferenceSet<C> getInferenceSet() {
-		return inferenceSet_;
+	public Proof<C> getProof() {
+		return proof_;
 	}
 
 	@Override
 	public Collection<? extends ProofStep<C>> getInferences() {
 		if (steps_ == null) {
-			Collection<? extends Inference<C>> original = inferenceSet_
+			Collection<? extends Inference<C>> original = proof_
 					.getInferences(getMember());
 			steps_ = new ArrayList<ProofStep<C>>(original.size());
 			for (Inference<C> inf : original) {
@@ -56,7 +56,7 @@ class BaseProofNode<C> extends AbstractProofNode<C> {
 	}
 
 	void convert(Inference<C> inf) {
-		steps_.add(new BaseProofStep<C>(inferenceSet_, inf));
+		steps_.add(new BaseProofStep<C>(proof_, inf));
 	}
 
 	@Override
@@ -64,7 +64,7 @@ class BaseProofNode<C> extends AbstractProofNode<C> {
 		if (o instanceof BaseProofNode) {
 			BaseProofNode<?> other = (BaseProofNode<?>) o;
 			return getMember().equals(other.getMember())
-					&& inferenceSet_.equals(other.inferenceSet_);
+					&& proof_.equals(other.proof_);
 		}
 		// else
 		return false;
@@ -73,7 +73,7 @@ class BaseProofNode<C> extends AbstractProofNode<C> {
 	@Override
 	public int hashCode() {
 		return BaseProofNode.class.hashCode() + getMember().hashCode()
-				+ inferenceSet_.hashCode();
+				+ proof_.hashCode();
 	}
 
 }

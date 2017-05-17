@@ -40,7 +40,7 @@ public abstract class BaseDualEnumeratorTest<C, A> {
 	public EnumeratorTestInput<C, A> input;
 
 	@Parameter(2)
-	public MinimalSubsetsFromInferences.Factory<C, A> factory;
+	public MinimalSubsetsFromProofs.Factory<C, A> factory;
 
 	@Test
 	public void testJustifications() {

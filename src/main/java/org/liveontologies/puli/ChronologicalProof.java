@@ -22,9 +22,9 @@
 package org.liveontologies.puli;
 
 /**
- * An implementation of modifiable inference set that forbids production of
- * inferences whose premises are not conclusions of some inferences stored in
- * this {@link InferenceSet}.
+ * An implementation of modifiable proof that forbids production of inferences
+ * whose premises are not conclusions of some inferences stored in this
+ * {@link Proof}.
  * 
  * @author Peter Skocovsky
  *
@@ -33,8 +33,8 @@ package org.liveontologies.puli;
  * @param <I>
  *            The type of the inferences.
  */
-public class ChronologicalInferenceSet<C, I extends Inference<C>>
-		extends BaseInferenceSet<C, I> {
+public class ChronologicalProof<C, I extends Inference<C>>
+		extends BaseProof<C, I> {
 
 	@Override
 	public void produce(final I inference) {
@@ -44,8 +44,8 @@ public class ChronologicalInferenceSet<C, I extends Inference<C>>
 
 	/**
 	 * Checks whether all premises of the given {@link Inference} are
-	 * conclusions of some inferences stored in this {@link InferenceSet} and
-	 * throws a {@link RuntimeException} if not.
+	 * conclusions of some inferences stored in this {@link Proof} and throws a
+	 * {@link RuntimeException} if not.
 	 * 
 	 * @param inference
 	 */
@@ -59,7 +59,7 @@ public class ChronologicalInferenceSet<C, I extends Inference<C>>
 	}
 
 	public static class Projection<C>
-			extends ChronologicalInferenceSet<C, Inference<C>> {
+			extends ChronologicalProof<C, Inference<C>> {
 		// Empty.
 	}
 

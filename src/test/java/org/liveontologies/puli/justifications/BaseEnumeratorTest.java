@@ -46,7 +46,7 @@ public abstract class BaseEnumeratorTest<C, A> {
 	public EnumeratorTestInput<C, A> input;
 
 	@Parameter(2)
-	public MinimalSubsetsFromInferences.Factory<C, A> factory;
+	public MinimalSubsetsFromProofs.Factory<C, A> factory;
 
 	@Test
 	public void testJustifications() {
@@ -64,14 +64,14 @@ public abstract class BaseEnumeratorTest<C, A> {
 	}
 
 	public static Iterable<Object[]> getParameters(
-			final List<MinimalSubsetsFromInferences.Factory<?, ?>> factories,
+			final List<MinimalSubsetsFromProofs.Factory<?, ?>> factories,
 			final String testInputSubpkg) throws Exception {
 
 		final List<EnumeratorTestInput<?, ?>> inputs = getEnumeratorTestInputs(
 				testInputSubpkg);
 
 		final List<Object[]> parameters = new ArrayList<Object[]>();
-		for (final MinimalSubsetsFromInferences.Factory<?, ?> factory : factories) {
+		for (final MinimalSubsetsFromProofs.Factory<?, ?> factory : factories) {
 			for (final EnumeratorTestInput<?, ?> input : inputs) {
 				final String name = input.getClass().getSimpleName() + ", "
 						+ factory.getClass().getName();

@@ -60,7 +60,7 @@ public class InferenceDerivabilityChecker<C>
 	/**
 	 * the inferences that can be used for deriving conclusions
 	 */
-	private final InferenceSet<C> inferences_;
+	private final Proof<C> inferences_;
 
 	/**
 	 * conclusions that cannot be used in the derivations
@@ -131,7 +131,7 @@ public class InferenceDerivabilityChecker<C>
 	 */
 	private final Queue<C> toPropagate_ = new LinkedList<C>();
 
-	public InferenceDerivabilityChecker(InferenceSet<C> inferences) {
+	public InferenceDerivabilityChecker(Proof<C> inferences) {
 		Preconditions.checkNotNull(inferences);
 		this.inferences_ = inferences;
 	}

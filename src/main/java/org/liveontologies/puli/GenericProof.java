@@ -23,17 +23,17 @@ package org.liveontologies.puli;
 
 import java.util.Collection;
 
-public class GenericDelegatingInferenceSet<C, I extends Inference<C>, S extends GenericInferenceSet<C, I>>
-		extends DelegatingInferenceSet<C, S>
-		implements GenericInferenceSet<C, I> {
-
-	public GenericDelegatingInferenceSet(final S delegate) {
-		super(delegate);
-	}
+/**
+ * @author Peter Skocovsky
+ *
+ * @param <C>
+ *            The type of conclusion and premises used by the inferences.
+ * @param <I>
+ *            The type of the inferences.
+ */
+public interface GenericProof<C, I extends Inference<C>> extends Proof<C> {
 
 	@Override
-	public Collection<? extends I> getInferences(final C conclusion) {
-		return getDelegate().getInferences(conclusion);
-	}
+	Collection<? extends I> getInferences(C conclusion);
 
 }
