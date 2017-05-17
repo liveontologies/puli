@@ -22,7 +22,6 @@
 package org.liveontologies.puli.justifications;
 
 import java.util.Collection;
-import java.util.Comparator;
 
 public class PriorityComparators {
 
@@ -30,24 +29,12 @@ public class PriorityComparators {
 		// Forbid instantiation.
 	}
 
-	private static final Comparator<Integer> INTEGER_COMPARATOR_ = new Comparator<Integer>() {
-		@Override
-		public int compare(final Integer i1, final Integer i2) {
-			return (i1 < i2) ? -1 : ((i1 == i2) ? 0 : 1);
-		}
-	};
-
 	/**
 	 * @return {@link PriorityComparator} that compares collections based on
 	 *         their cardinality.
 	 */
 	public static <E> PriorityComparator<Collection<E>, Integer> cardinality() {
-		return new PriorityComparator<Collection<E>, Integer>() {
-
-			@Override
-			public int compare(final Integer o1, final Integer o2) {
-				return INTEGER_COMPARATOR_.compare(o1, o2);
-			}
+		return new NaturalPriorityComparator<Collection<E>, Integer>() {
 
 			@Override
 			public Integer getPriority(final Collection<E> original) {
@@ -62,12 +49,7 @@ public class PriorityComparators {
 	 *         length of their {@link Object#toString()}.
 	 */
 	public static <T> PriorityComparator<T, Integer> toStringLength() {
-		return new PriorityComparator<T, Integer>() {
-
-			@Override
-			public int compare(final Integer o1, final Integer o2) {
-				return INTEGER_COMPARATOR_.compare(o1, o2);
-			}
+		return new NaturalPriorityComparator<T, Integer>() {
 
 			@Override
 			public Integer getPriority(final T original) {
