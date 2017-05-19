@@ -23,8 +23,6 @@ package org.liveontologies.puli;
 
 public class ProofBuilder<C> {
 
-	static final String INF_NAME = "inf";
-
 	private final BaseProof.Projection<C> proof_ = new BaseProof.Projection<C>();
 
 	/**
@@ -42,15 +40,15 @@ public class ProofBuilder<C> {
 	}
 
 	public ThisInferenceBuilder conclusion(C conclusion) {
-		ThisInferenceBuilder result = new ThisInferenceBuilder(INF_NAME);
+		ThisInferenceBuilder result = new ThisInferenceBuilder();
 		result.conclusion(conclusion);
 		return result;
 	}
 
 	public class ThisInferenceBuilder extends InferenceBuilder<C> {
 
-		protected ThisInferenceBuilder(String name) {
-			super(name);
+		protected ThisInferenceBuilder() {
+			super(INF_NAME);
 		}
 
 		@Override

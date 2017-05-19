@@ -28,6 +28,8 @@ import com.google.common.base.Preconditions;
 
 public class InferenceBuilder<C> {
 
+	static final String INF_NAME = "inf";
+
 	private final String name_;
 
 	private C conclusion_;
@@ -40,6 +42,10 @@ public class InferenceBuilder<C> {
 
 	public static <C> InferenceBuilder<C> create(String name) {
 		return new InferenceBuilder<C>(name);
+	}
+
+	public static <C> InferenceBuilder<C> create() {
+		return create(INF_NAME);
 	}
 
 	String getName() {

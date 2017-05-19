@@ -52,7 +52,7 @@ public class ProofAndJustifierBuilder<C, A> extends ProofBuilder<C> {
 	}
 
 	public ThisInferenceBuilder conclusion(C conclusion) {
-		ThisInferenceBuilder result = new ThisInferenceBuilder(INF_NAME);
+		ThisInferenceBuilder result = new ThisInferenceBuilder();
 		result.conclusion(conclusion);
 		return result;
 	}
@@ -62,8 +62,8 @@ public class ProofAndJustifierBuilder<C, A> extends ProofBuilder<C> {
 
 		private final Set<A> axioms_ = new HashSet<A>();
 
-		protected ThisInferenceBuilder(String name) {
-			super(name);
+		protected ThisInferenceBuilder() {
+			super();
 		}
 
 		@Override

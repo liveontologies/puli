@@ -62,6 +62,7 @@ public class BaseProof<C, I extends Inference<C>>
 
 	@Override
 	public Collection<? extends I> getInferences(C conclusion) {
+		queried_.add(conclusion);
 		Collection<? extends I> result = inferences_.get(conclusion);
 		if (result == null) {
 			result = Collections.emptyList();
