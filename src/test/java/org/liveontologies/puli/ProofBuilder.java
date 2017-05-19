@@ -21,24 +21,24 @@
  */
 package org.liveontologies.puli;
 
-public class InferenceSetBuilder<C> {
+public class ProofBuilder<C> {
 
 	static final String INF_NAME = "inf";
 
-	private final BaseProof.Projection<C> inferenceSet_ = new BaseProof.Projection<C>();
+	private final BaseProof.Projection<C> proof_ = new BaseProof.Projection<C>();
 
 	/**
 	 * use {@link #create()}
 	 */
-	InferenceSetBuilder() {
+	ProofBuilder() {
 	}
 
-	public static <C> InferenceSetBuilder<C> create() {
-		return new InferenceSetBuilder<C>();
+	public static <C> ProofBuilder<C> create() {
+		return new ProofBuilder<C>();
 	}
 
 	public BaseProof.Projection<C> build() {
-		return inferenceSet_;
+		return proof_;
 	}
 
 	public ThisInferenceBuilder conclusion(C conclusion) {
@@ -67,7 +67,7 @@ public class InferenceSetBuilder<C> {
 
 		public Inference<C> add() {
 			Inference<C> inference = build();
-			inferenceSet_.produce(inference);
+			proof_.produce(inference);
 			return inference;
 		}
 

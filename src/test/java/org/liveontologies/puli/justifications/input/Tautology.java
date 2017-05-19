@@ -21,14 +21,14 @@
  */
 package org.liveontologies.puli.justifications.input;
 
-import org.liveontologies.puli.InferenceSetAndJustifierBuilder;
+import org.liveontologies.puli.ProofAndJustifierBuilder;
 
 public abstract class Tautology
 		extends BaseEnumeratorTestInput<String, Integer> {
 
-	private static InferenceSetAndJustifierBuilder<String, Integer> getBuilder() {
+	private static ProofAndJustifierBuilder<String, Integer> getBuilder() {
 
-		final InferenceSetAndJustifierBuilder<String, Integer> builder = new InferenceSetAndJustifierBuilder<String, Integer>();
+		final ProofAndJustifierBuilder<String, Integer> builder = new ProofAndJustifierBuilder<String, Integer>();
 
 		builder.conclusion("A").axiom(1).axiom(2).add();
 

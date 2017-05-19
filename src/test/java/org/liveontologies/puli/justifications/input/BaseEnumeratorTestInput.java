@@ -25,21 +25,20 @@ import java.util.Set;
 
 import org.liveontologies.puli.InferenceJustifier;
 import org.liveontologies.puli.Proof;
-import org.liveontologies.puli.InferenceSetAndJustifierBuilder;
+import org.liveontologies.puli.ProofAndJustifierBuilder;
 import org.liveontologies.puli.justifications.EnumeratorTestInput;
 
 public abstract class BaseEnumeratorTestInput<C, A>
 		implements EnumeratorTestInput<C, A> {
 
-	private final InferenceSetAndJustifierBuilder<C, A> builder_;
+	private final ProofAndJustifierBuilder<C, A> builder_;
 
-	BaseEnumeratorTestInput(
-			final InferenceSetAndJustifierBuilder<C, A> builder) {
+	BaseEnumeratorTestInput(final ProofAndJustifierBuilder<C, A> builder) {
 		this.builder_ = builder;
 	}
 
 	@Override
-	public Proof<C> getInferenceSet() {
+	public Proof<C> getProof() {
 		return builder_.build();
 	}
 

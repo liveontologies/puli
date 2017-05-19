@@ -28,10 +28,9 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
-public class InferenceSetAndJustifierBuilder<C, A>
-		extends InferenceSetBuilder<C> {
+public class ProofAndJustifierBuilder<C, A> extends ProofBuilder<C> {
 
-	public InferenceSetAndJustifierBuilder() {
+	public ProofAndJustifierBuilder() {
 		// Empty.
 	}
 
@@ -39,8 +38,8 @@ public class InferenceSetAndJustifierBuilder<C, A>
 
 		@Override
 		public Set<? extends A> getJustification(final Inference<C> inference) {
-			if (inference instanceof InferenceSetAndJustifierBuilder.ThisInference) {
-				return ((InferenceSetAndJustifierBuilder<C, A>.ThisInference) inference).axioms_;
+			if (inference instanceof ProofAndJustifierBuilder.ThisInference) {
+				return ((ProofAndJustifierBuilder<C, A>.ThisInference) inference).axioms_;
 			}
 			// else
 			return Collections.emptySet();
@@ -59,7 +58,7 @@ public class InferenceSetAndJustifierBuilder<C, A>
 	}
 
 	public class ThisInferenceBuilder
-			extends InferenceSetBuilder<C>.ThisInferenceBuilder {
+			extends ProofBuilder<C>.ThisInferenceBuilder {
 
 		private final Set<A> axioms_ = new HashSet<A>();
 
@@ -105,9 +104,9 @@ public class InferenceSetAndJustifierBuilder<C, A>
 
 		@Override
 		public boolean equals(final Object o) {
-			if (o instanceof InferenceSetAndJustifierBuilder.ThisInference) {
+			if (o instanceof ProofAndJustifierBuilder.ThisInference) {
 				return super.equals(o) && axioms_.equals(
-						((InferenceSetAndJustifierBuilder<?, ?>.ThisInference) o).axioms_);
+						((ProofAndJustifierBuilder<?, ?>.ThisInference) o).axioms_);
 			}
 			// else
 			return false;

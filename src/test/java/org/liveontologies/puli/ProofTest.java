@@ -44,34 +44,34 @@ import org.junit.Test;
 public class ProofTest {
 
 	@Test
-	public void inferenceSetTest() {
-		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
+	public void proofTest() {
+		ProofBuilder<Integer> b = ProofBuilder.create();
 		b.conclusion(1).premise(2).add();
 		b.conclusion(2).premise(3).premise(4).add();
 		b.conclusion(2).premise(5).premise(6).add();
-		Proof<Integer> is = b.build();
-		assertEquals(1, is.getInferences(1).size());
-		assertEquals(2, is.getInferences(2).size());
-		assertEquals(0, is.getInferences(3).size());
+		Proof<Integer> p = b.build();
+		assertEquals(1, p.getInferences(1).size());
+		assertEquals(2, p.getInferences(2).size());
+		assertEquals(0, p.getInferences(3).size());
 	}
 
 	@Test
 	public void blockCyclicProof() throws Exception {
-		InferenceSetBuilder<String> b = InferenceSetBuilder.create();
+		ProofBuilder<String> b = ProofBuilder.create();
 		b.conclusion("A ⊑ B").premise("A ⊑ B ⊓ C").add();
 		b.conclusion("A ⊑ B").premise("A ⊑ C").premise("C ⊑ B").add();
 		b.conclusion("A ⊑ C").premise("A ⊑ D").premise("D ⊑ C").add();
 		b.conclusion("A ⊑ D").premise("A ⊑ B").premise("B ⊑ D").add();
-		Proof<String> is = b.build();
+		Proof<String> p = b.build();
 
 		Set<String> stated = new HashSet<String>(
 				Arrays.asList("A ⊑ B ⊓ C", "B ⊑ D", "D ⊑ C", "C ⊑ B"));
 
 		assertTrue(
-				ProofNodes.isDerivable(ProofNodes.create(is, "A ⊑ C"), stated));
+				ProofNodes.isDerivable(ProofNodes.create(p, "A ⊑ C"), stated));
 
 		ProofNode<String> root = ProofNodes
-				.addAssertedInferences(ProofNodes.create(is, "A ⊑ B"), stated);
+				.addAssertedInferences(ProofNodes.create(p, "A ⊑ B"), stated);
 
 		assertTrue(ProofNodes.isDerivable(root));
 
@@ -84,7 +84,7 @@ public class ProofTest {
 
 		// testing the same but using derivability "from" methods
 
-		root = ProofNodes.create(is, "A ⊑ B");
+		root = ProofNodes.create(p, "A ⊑ B");
 		assertTrue(ProofNodes.isDerivable(root, stated));
 
 		assertEquals(2, ProofNodes.eliminateNotDerivable(root, stated)
@@ -98,14 +98,14 @@ public class ProofTest {
 
 	@Test
 	public void testDerivabilityCheckerWithBlocking0() throws Exception {
-		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
+		ProofBuilder<Integer> b = ProofBuilder.create();
 		b.conclusion(0).premise(1).add();
 		b.conclusion(1).premise(2).add();
 		b.conclusion(11).premise(2).add();
 		b.conclusion(2).add();
-		BaseProof.Projection<Integer> is = b.build();
+		BaseProof.Projection<Integer> p = b.build();
 		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
-				is);
+				p);
 		checker.block(2);
 		assertFalse(checker.isDerivable(0));
 		checker.block(1);
@@ -118,15 +118,15 @@ public class ProofTest {
 
 	@Test
 	public void testDerivabilityCheckerWithBlocking1() throws Exception {
-		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
+		ProofBuilder<Integer> b = ProofBuilder.create();
 		b.conclusion(0).premise(11).premise(22).add();
 		b.conclusion(11).premise(1).add();
 		b.conclusion(22).premise(2).add();
 		b.conclusion(1).add();
 		b.conclusion(2).add();
-		BaseProof.Projection<Integer> is = b.build();
+		BaseProof.Projection<Integer> p = b.build();
 		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
-				is);
+				p);
 		assertTrue(checker.isDerivable(0));
 		checker.block(2);
 		assertFalse(checker.isDerivable(0));
@@ -139,16 +139,16 @@ public class ProofTest {
 
 	@Test
 	public void testDerivabilityCheckerWithBlocking2() throws Exception {
-		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
+		ProofBuilder<Integer> b = ProofBuilder.create();
 		b.conclusion(0).premise(1).premise(2).add();
 		b.conclusion(0).premise(3).premise(4).add();
 		b.conclusion(2).premise(0).premise(0).add();
 		b.conclusion(1).premise(3).premise(4).add();
 		b.conclusion(3).add();
 		b.conclusion(4).add();
-		BaseProof.Projection<Integer> is = b.build();
+		BaseProof.Projection<Integer> p = b.build();
 		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
-				is);
+				p);
 		assertTrue(checker.isDerivable(0));
 		checker.block(1);
 		assertTrue(checker.isDerivable(0));
@@ -169,14 +169,14 @@ public class ProofTest {
 
 	@Test
 	public void testDerivabilityCheckerWithBlocking3() throws Exception {
-		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
+		ProofBuilder<Integer> b = ProofBuilder.create();
 		b.conclusion(0).premise(1).add();
 		b.conclusion(0).premise(2).add();
 		b.conclusion(1).add();
 		b.conclusion(2).add();
-		BaseProof.Projection<Integer> is = b.build();
+		BaseProof.Projection<Integer> p = b.build();
 		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
-				is);
+				p);
 		checker.block(1);
 		assertTrue(checker.isDerivable(0));
 		checker.unblock(1);
@@ -188,19 +188,19 @@ public class ProofTest {
 		checker.unblock(2);
 		assertTrue(checker.isDerivable(0));
 	}
-	
+
 	@Test
 	public void blockCyclicProof2() throws Exception {
-		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
+		ProofBuilder<Integer> b = ProofBuilder.create();
 		b.conclusion(0).premise(1).premise(2).add();
 		b.conclusion(0).premise(3).premise(4).add();
 		b.conclusion(2).premise(0).premise(0).add();
-		BaseProof.Projection<Integer> is = b.build();
+		BaseProof.Projection<Integer> p = b.build();
 
 		Set<Integer> stated = new HashSet<Integer>(Arrays.asList(1, 3, 4));
 
 		ProofNode<Integer> root = ProofNodes
-				.addAssertedInferences(ProofNodes.create(is, 0), stated);
+				.addAssertedInferences(ProofNodes.create(p, 0), stated);
 
 		assertTrue(ProofNodes.isDerivable(root));
 
@@ -214,7 +214,7 @@ public class ProofTest {
 
 		// the same using derivability "from"
 
-		root = ProofNodes.create(is, 0);
+		root = ProofNodes.create(p, 0);
 
 		assertTrue(ProofNodes.isDerivable(root, stated));
 
@@ -229,18 +229,18 @@ public class ProofTest {
 
 	@Test
 	public void recursiveBlocking() throws Exception {
-		InferenceSetBuilder<Integer> b = InferenceSetBuilder.create();
+		ProofBuilder<Integer> b = ProofBuilder.create();
 		b.conclusion(0).premise(1).premise(2).add();
 		b.conclusion(1).premise(3).premise(4).premise(5).add();
 		b.conclusion(3).premise(6).premise(7).add();
 		b.conclusion(4).premise(8).premise(9).add();
-		BaseProof.Projection<Integer> is = b.build();
+		BaseProof.Projection<Integer> p = b.build();
 
 		Set<Integer> stated = new HashSet<Integer>(
 				Arrays.asList(2, 5, 6, 7, 8, 9));
 
 		ProofNode<Integer> root = ProofNodes
-				.addAssertedInferences(ProofNodes.create(is, 0), stated);
+				.addAssertedInferences(ProofNodes.create(p, 0), stated);
 
 		assertEquals(1,
 				ProofNodes.eliminateNotDerivable(root).getInferences().size());
@@ -254,7 +254,7 @@ public class ProofTest {
 
 		stated.add(6);
 
-		root = ProofNodes.create(is, 0);
+		root = ProofNodes.create(p, 0);
 
 		assertEquals(1, ProofNodes.eliminateNotDerivable(root, stated)
 				.getInferences().size());

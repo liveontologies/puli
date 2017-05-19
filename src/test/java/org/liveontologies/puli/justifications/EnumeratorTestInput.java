@@ -31,7 +31,7 @@ public interface EnumeratorTestInput<C, A> {
 
 	C getQuery();
 
-	Proof<C> getInferenceSet();
+	Proof<C> getProof();
 
 	InferenceJustifier<C, ? extends Set<? extends A>> getJustifier();
 

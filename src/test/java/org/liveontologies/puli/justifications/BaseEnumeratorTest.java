@@ -52,7 +52,7 @@ public abstract class BaseEnumeratorTest<C, A> {
 	public void testJustifications() {
 
 		final MinimalSubsetEnumerator.Factory<C, A> computation = factory
-				.create(input.getInferenceSet(), input.getJustifier(),
+				.create(input.getProof(), input.getJustifier(),
 						InterruptMonitor.DUMMY);
 
 		final Set<Set<? extends A>> actualResult = new HashSet<Set<? extends A>>();
