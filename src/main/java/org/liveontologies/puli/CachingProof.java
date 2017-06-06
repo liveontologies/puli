@@ -35,13 +35,13 @@ import java.util.Map;
  *
  * @param <C>
  */
-public class CachingProofs<C>
+public class CachingProof<C>
 		extends DelegatingDynamicProof<C, DynamicProof<C>>
 		implements DynamicProof.ChangeListener {
 
 	private final Map<C, Collection<? extends Inference<C>>> inferenceCache_ = new HashMap<C, Collection<? extends Inference<C>>>();
 
-	public CachingProofs(DynamicProof<C> delegate) {
+	public CachingProof(DynamicProof<C> delegate) {
 		super(delegate);
 		addListener(this);
 	}

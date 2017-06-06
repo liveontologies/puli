@@ -62,7 +62,7 @@ public class Proofs {
 	}
 
 	public static <C> DynamicProof<C> cache(DynamicProof<C> inferences) {
-		return new CachingProofs<C>(inferences);
+		return new CachingProof<C>(inferences);
 	}
 
 	public static <C> InferenceJustifier<C, ? extends Set<? extends C>> justifyAssertedInferences() {
