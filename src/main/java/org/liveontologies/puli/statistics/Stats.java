@@ -25,13 +25,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -39,6 +39,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 public class Stats {
+
+	public static final String STAT_NAME_SEPARATOR = ".";
 
 	private Stats() {
 		// Forbid instantiation of a utility class.
@@ -62,59 +64,71 @@ public class Stats {
 
 	public static Iterable<Map.Entry<String, Object>> getStats(
 			final Object hasStats) {
+		return getStats(hasStats, "");
+	}
+
+	public static Iterable<Map.Entry<String, Object>> getStats(
+			final Object hasStats, final String statNamePrefix) {
 		Preconditions.checkNotNull(hasStats);
+		Preconditions.checkNotNull(statNamePrefix);
 		if (hasStats instanceof Class) {
-			return getStats((Class<?>) hasStats, null);
+			return getStats((Class<?>) hasStats, null, statNamePrefix);
 		} else {
-			return getStats(hasStats.getClass(), hasStats);
+			return getStats(hasStats.getClass(), hasStats, statNamePrefix);
 		}
 	}
 
 	public static Iterable<Map.Entry<String, Object>> getStats(
-			final Class<?> hasStatsClass, final Object hasStats) {
+			final Class<?> hasStatsClass, final Object hasStats,
+			final String statNamePrefix) {
 		Preconditions.checkNotNull(hasStatsClass);
+		Preconditions.checkNotNull(statNamePrefix);
 
 		final Iterable<Field> statFields = getAnnotatedElements(Stat.class,
 				hasStatsClass.getFields());
-		final Iterable<Entry<String, Object>> fieldStats = Iterables.transform(
-				statFields, new Function<Field, Map.Entry<String, Object>>() {
+		final Iterable<Map.Entry<String, Object>> fieldStats = Iterables
+				.transform(statFields,
+						new Function<Field, Map.Entry<String, Object>>() {
 
-					@Override
-					public Map.Entry<String, Object> apply(final Field field) {
-						return new AbstractMap.SimpleImmutableEntry<String, Object>(
-								hasStatsClass.getName() + "." + field.getName(),
-								checkedGet(field, hasStats));
-					}
+							@Override
+							public Map.Entry<String, Object> apply(
+									final Field field) {
+								return new AbstractMap.SimpleImmutableEntry<String, Object>(
+										statNamePrefix + getStatName(field),
+										checkedGet(field, hasStats));
+							}
 
-				});
+						});
 
 		final Iterable<Method> statMethods = getAnnotatedElements(Stat.class,
 				hasStatsClass.getMethods());
-		final Iterable<Entry<String, Object>> methodStats = Iterables.transform(
-				statMethods, new Function<Method, Map.Entry<String, Object>>() {
+		final Iterable<Map.Entry<String, Object>> methodStats = Iterables
+				.transform(statMethods,
+						new Function<Method, Map.Entry<String, Object>>() {
 
-					@Override
-					public Map.Entry<String, Object> apply(
-							final Method method) {
-						return new AbstractMap.SimpleImmutableEntry<String, Object>(
-								hasStatsClass.getName() + "."
-										+ method.getName(),
-								checkedInvoke(method, hasStats));
-					}
+							@Override
+							public Map.Entry<String, Object> apply(
+									final Method method) {
+								return new AbstractMap.SimpleImmutableEntry<String, Object>(
+										statNamePrefix + getStatName(method),
+										checkedInvoke(method, hasStats));
+							}
 
-				});
+						});
 
 		// Recursion into nested stats
 
-		final Iterable<Object> nesteds = getNested(hasStatsClass, hasStats);
-		final Iterable<Entry<String, Object>> nestedStats = Iterables
+		final Iterable<Map.Entry<String, Object>> nesteds = getNested(
+				hasStatsClass, hasStats, statNamePrefix);
+		final Iterable<Map.Entry<String, Object>> nestedStats = Iterables
 				.concat(Iterables.transform(nesteds,
-						new Function<Object, Iterable<Map.Entry<String, Object>>>() {
+						new Function<Map.Entry<String, Object>, Iterable<Map.Entry<String, Object>>>() {
 
 							@Override
 							public Iterable<Map.Entry<String, Object>> apply(
-									final Object nested) {
-								return getStats(nested);
+									final Map.Entry<String, Object> entry) {
+								return getStats(entry.getValue(),
+										entry.getKey() + STAT_NAME_SEPARATOR);
 							}
 
 						}));
@@ -143,40 +157,58 @@ public class Stats {
 
 		// Recursion into nested stats
 
-		final Iterable<Object> nesteds = getNested(hasStatsClass, hasStats);
-		for (final Object nested : nesteds) {
-			resetStats(nested);
+		final Iterable<Map.Entry<String, Object>> nesteds = getNested(
+				hasStatsClass, hasStats);
+		for (final Map.Entry<String, Object> entry : nesteds) {
+			resetStats(entry.getValue());
 		}
 
 	}
 
-	private static Iterable<Object> getNested(final Class<?> hasStatsClass,
-			final Object hasStats) {
+	private static Iterable<Map.Entry<String, Object>> getNested(
+			final Class<?> hasStatsClass, final Object hasStats) {
+		return getNested(hasStatsClass, hasStats, "");
+	}
+
+	private static Iterable<Map.Entry<String, Object>> getNested(
+			final Class<?> hasStatsClass, final Object hasStats,
+			final String statNamePrefix) {
 		Preconditions.checkNotNull(hasStatsClass);
+		Preconditions.checkNotNull(statNamePrefix);
 
 		final Iterable<Field> nestedFields = getAnnotatedElements(
 				NestedStats.class, hasStatsClass.getFields());
-		final Iterable<Object> fieldNesteds = Iterables.transform(nestedFields,
-				new Function<Field, Object>() {
+		final Iterable<Map.Entry<String, Object>> fieldNesteds = Iterables
+				.transform(nestedFields,
+						new Function<Field, Map.Entry<String, Object>>() {
 
-					@Override
-					public Object apply(final Field field) {
-						return checkedGet(field, hasStats);
-					}
+							@Override
+							public Map.Entry<String, Object> apply(
+									final Field field) {
+								return new AbstractMap.SimpleImmutableEntry<String, Object>(
+										statNamePrefix
+												+ getNestedStatsName(field),
+										checkedGet(field, hasStats));
+							}
 
-				});
+						});
 
 		final Iterable<Method> nestedMethods = getAnnotatedElements(
 				NestedStats.class, hasStatsClass.getMethods());
-		final Iterable<Object> methodNesteds = Iterables
-				.transform(nestedMethods, new Function<Method, Object>() {
+		final Iterable<Map.Entry<String, Object>> methodNesteds = Iterables
+				.transform(nestedMethods,
+						new Function<Method, Map.Entry<String, Object>>() {
 
-					@Override
-					public Object apply(final Method method) {
-						return checkedInvoke(method, hasStats);
-					}
+							@Override
+							public Map.Entry<String, Object> apply(
+									final Method method) {
+								return new AbstractMap.SimpleImmutableEntry<String, Object>(
+										statNamePrefix
+												+ getNestedStatsName(method),
+										checkedInvoke(method, hasStats));
+							}
 
-				});
+						});
 
 		return Iterables.concat(fieldNesteds, methodNesteds);
 	}
@@ -226,6 +258,18 @@ public class Stats {
 			}
 
 		});
+	}
+
+	private static <E extends AnnotatedElement & Member> String getStatName(
+			final E element) {
+		final String name = element.getAnnotation(Stat.class).name();
+		return name.isEmpty() ? element.getName() : name;
+	}
+
+	private static <E extends AnnotatedElement & Member> String getNestedStatsName(
+			final E element) {
+		final String name = element.getAnnotation(NestedStats.class).name();
+		return name.isEmpty() ? element.getName() : name;
 	}
 
 }
