@@ -65,6 +65,15 @@ public class Proofs {
 		return new CachingProof<C>(inferences);
 	}
 
+	/**
+	 * @return An {@link InferenceJustifier} that justifies inferences by a set
+	 *         containing the conclusion if the inference is an
+	 *         {@link AssertedConclusionInference}, and by an empty set
+	 *         otherwise.
+	 * @see Proofs#addAssertedInferences(Proof, Set)
+	 * @deprecated Use {@link InferenceJustifiers#justifyAssertedInferences()}
+	 */
+	@Deprecated
 	public static <C> InferenceJustifier<C, ? extends Set<? extends C>> justifyAssertedInferences() {
 		return AssertedConclusionInferenceJustifier.getInstance();
 	}
