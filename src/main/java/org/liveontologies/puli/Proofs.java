@@ -21,6 +21,7 @@
  */
 package org.liveontologies.puli;
 
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Queue;
@@ -153,6 +154,27 @@ public class Proofs {
 	public static <C> Proof<C> prune(Proof<C> inferences, C goal,
 			Set<C> asserted) {
 		return new PrunedProof<C>(inferences, goal, asserted);
+	}
+
+	/**
+	 * Recursively prints all inferences for the derived goal and the premises
+	 * of such inferences to the standard output using ASCII characters. Due to
+	 * potential cycles, inferences for every conclusion are printed only once
+	 * upon their first occurrence in the proof. Every following occurrence of
+	 * the same conclusion is labeled by {@code *}.
+	 * 
+	 * @param proof
+	 *            the {@link Proof} from which to take the inferences
+	 * @param goal
+	 *            the conclusion starting from which the inferences are printed
+	 */
+	public static <C> void print(Proof<C> proof, C goal) {
+		try {
+			ProofPrinter.print(proof, goal);
+		} catch (IOException e) {
+			throw new RuntimeException("Exception while printing the proof", e);
+		}
+
 	}
 
 }
