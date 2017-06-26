@@ -24,16 +24,17 @@ package org.liveontologies.puli.justifications.input.justifications;
 import java.util.Collection;
 import java.util.Set;
 
+import org.liveontologies.puli.justifications.input.Tautology;
+
 import com.google.common.collect.ImmutableSet;
 
-public class Minimization
-		extends org.liveontologies.puli.justifications.input.Minimization {
+public class TautologyJustifications extends Tautology {
 
 	@Override
 	public Collection<? extends Set<? extends Integer>> getExpectedResult() {
 		// @formatter:off
 		return ImmutableSet.of(
-				ImmutableSet.of(1, 2)
+				ImmutableSet.<Integer>of()
 			);
 		// @formatter:on
 	}

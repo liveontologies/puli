@@ -24,16 +24,18 @@ package org.liveontologies.puli.justifications.input.justifications;
 import java.util.Collection;
 import java.util.Set;
 
+import org.liveontologies.puli.justifications.input.Tautologies;
+
 import com.google.common.collect.ImmutableSet;
 
-public class Linear
-		extends org.liveontologies.puli.justifications.input.Linear {
+public class TautologiesJustifications extends Tautologies {
 
 	@Override
 	public Collection<? extends Set<? extends Integer>> getExpectedResult() {
 		// @formatter:off
 		return ImmutableSet.of(
-				ImmutableSet.of(1, 2, 3, 4)
+				ImmutableSet.of(1, 2),
+				ImmutableSet.of(3)
 			);
 		// @formatter:on
 	}

@@ -24,19 +24,17 @@ package org.liveontologies.puli.justifications.input.justifications;
 import java.util.Collection;
 import java.util.Set;
 
+import org.liveontologies.puli.justifications.input.Minimization;
+
 import com.google.common.collect.ImmutableSet;
 
-public class Exponential
-		extends org.liveontologies.puli.justifications.input.Exponential {
+public class MinimizationJustifications extends Minimization {
 
 	@Override
 	public Collection<? extends Set<? extends Integer>> getExpectedResult() {
 		// @formatter:off
 		return ImmutableSet.of(
-				ImmutableSet.of(0, 1, 3),
-				ImmutableSet.of(0, 1, 4),
-				ImmutableSet.of(0, 2, 3),
-				ImmutableSet.of(0, 2, 4)
+				ImmutableSet.of(1, 2)
 			);
 		// @formatter:on
 	}

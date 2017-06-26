@@ -45,11 +45,11 @@ class DerivableFromProofNode<C> extends DerivableProofNode<C> {
 		Preconditions.checkArgument(!result.isEmpty());
 		return result;
 	}
-	
+
 	@Override
 	final void convert(DerivableProofStep<C> step) {
 		ProofStep<C> delegate = step.getDelegate();
-		if (delegate.getName() == AssertedConclusionInference.NAME) {
+		if (AssertedConclusionInference.NAME.equals(delegate.getName())) {
 			return;
 		}
 		// else

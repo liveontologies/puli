@@ -29,7 +29,7 @@ class RemoveAssertedProofNode<C> extends ConvertedProofNode<C> {
 
 	@Override
 	protected final void convert(ConvertedProofStep<C> step) {
-		if (step.getName() == AssertedConclusionInference.NAME) {
+		if (AssertedConclusionInference.NAME.equals(step.getName())) {
 			// ignore asserted inferences
 			return;
 		}

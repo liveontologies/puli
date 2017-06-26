@@ -40,6 +40,8 @@ public class Collection2Test {
 	private final static Logger LOGGER_ = LoggerFactory
 			.getLogger(Collection2Test.class);
 
+	private final static Random SEED_PROVIDER_ = new Random();
+	
 	public void testCollection2(Random rnd, Collection2<Set<Integer>> tested,
 			int rounds, int noElements, int minSetSize, int maxSetSize) {
 		Collection2<Set<Integer>> expected = new MockListCollection2<Set<Integer>>();
@@ -112,7 +114,7 @@ public class Collection2Test {
 	}
 
 	void runTestSuit(Collection2<Set<Integer>> tested) {
-		long seed = new Random().nextLong();
+		long seed = SEED_PROVIDER_.nextLong();
 		LOGGER_.debug("seed: {}", seed);
 		Random rnd = new Random(seed);
 		try {

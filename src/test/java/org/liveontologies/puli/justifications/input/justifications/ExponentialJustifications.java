@@ -24,19 +24,20 @@ package org.liveontologies.puli.justifications.input.justifications;
 import java.util.Collection;
 import java.util.Set;
 
+import org.liveontologies.puli.justifications.input.Exponential;
+
 import com.google.common.collect.ImmutableSet;
 
-public class ComplexCycle
-		extends org.liveontologies.puli.justifications.input.ComplexCycle {
+public class ExponentialJustifications extends Exponential {
 
 	@Override
 	public Collection<? extends Set<? extends Integer>> getExpectedResult() {
 		// @formatter:off
 		return ImmutableSet.of(
-				ImmutableSet.of(1, 8, 9),
-				ImmutableSet.of(1, 3, 4, 6, 7),
-				ImmutableSet.of(2, 4, 6, 7),
-				ImmutableSet.of(2, 4, 5, 8, 9)
+				ImmutableSet.of(0, 1, 3),
+				ImmutableSet.of(0, 1, 4),
+				ImmutableSet.of(0, 2, 3),
+				ImmutableSet.of(0, 2, 4)
 			);
 		// @formatter:on
 	}

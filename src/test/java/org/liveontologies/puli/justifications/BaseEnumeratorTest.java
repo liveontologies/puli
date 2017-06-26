@@ -97,12 +97,16 @@ public abstract class BaseEnumeratorTest<C, A> {
 		final URI inputsUri = BaseEnumeratorTest.class.getClassLoader()
 				.getResource(inputsLocation).toURI();
 		final File inputsDir = new File(inputsUri);
-		for (final String filename : inputsDir.list(new FilenameFilter() {
+		String[] fileNames = inputsDir.list(new FilenameFilter() {
 			@Override
 			public boolean accept(final File dir, final String name) {
 				return name.endsWith(CLASS_FILE_EXT);
 			}
-		})) {
+		});
+		if (fileNames == null) {
+			throw new RuntimeException("Cannot find test files");
+		}
+		for (final String filename : fileNames) {
 			final String inputClassName = pkgName + "." + testInputSubpkg + "."
 					+ filename.substring(0,
 							filename.length() - CLASS_FILE_EXT.length());
