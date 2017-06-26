@@ -28,19 +28,19 @@ import com.google.common.base.Preconditions;
 
 class AddAssertedProofNode<C> extends ConvertedProofNode<C> {
 
-	private final Set<? extends C> assertedAxioms_;
+	private final Set<? extends C> assertedConclusions_;
 
 	AddAssertedProofNode(ProofNode<C> delegate,
-			Set<? extends C> assertedAxioms) {
+			Set<? extends C> assertedConclusions) {
 		super(delegate);
-		Preconditions.checkNotNull(assertedAxioms);
-		this.assertedAxioms_ = assertedAxioms;
+		Preconditions.checkNotNull(assertedConclusions);
+		this.assertedConclusions_ = assertedConclusions;
 	}
 
 	@Override
 	public Collection<ProofStep<C>> getInferences() {
 		Collection<ProofStep<C>> result = super.getInferences();
-		if (assertedAxioms_.contains(getMember())) {
+		if (assertedConclusions_.contains(getMember())) {
 			result.add(new AssertedProofStep<C>(this));
 		}
 		return result;
@@ -49,7 +49,7 @@ class AddAssertedProofNode<C> extends ConvertedProofNode<C> {
 	@Override
 	protected final void convert(ConvertedProofStep<C> step) {
 		convert(new AddAssertedProofStep<C>(step.getDelegate(),
-				assertedAxioms_));
+				assertedConclusions_));
 	}
 
 	void convert(AddAssertedProofStep<C> step) {

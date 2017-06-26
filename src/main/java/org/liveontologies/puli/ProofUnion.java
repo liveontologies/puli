@@ -29,7 +29,7 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 /**
- * Combination of multiple proofs. Inferences from this proof deriving some
+ * The union of multiple proofs. Inferences from this proof deriving some
  * conclusion are union of inferences from the supplied proofs deriving that
  * conclusion.
  * 
@@ -40,17 +40,17 @@ import com.google.common.base.Preconditions;
  * @param <I>
  *            The type of the inferences.
  */
-public class CombinedProof<C, I extends Inference<C>>
+public class ProofUnion<C, I extends Inference<C>>
 		implements GenericProof<C, I> {
 
 	private final Iterable<? extends GenericProof<C, I>> proofs_;
 
-	public CombinedProof(final Iterable<? extends GenericProof<C, I>> proofs) {
+	public ProofUnion(final Iterable<? extends GenericProof<C, I>> proofs) {
 		Preconditions.checkNotNull(proofs);
 		this.proofs_ = proofs;
 	}
 
-	public CombinedProof(final GenericProof<C, I>... proofs) {
+	public ProofUnion(final GenericProof<C, I>... proofs) {
 		this(Arrays.asList(proofs));
 	}
 

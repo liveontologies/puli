@@ -41,8 +41,8 @@ public class ProofNodes {
 	}
 
 	public static <C> ProofNode<C> addAssertedInferences(ProofNode<C> node,
-			Set<C> assertedAxioms) {
-		return new AddAssertedProofNode<C>(node, assertedAxioms);
+			Set<C> assertedConclusions) {
+		return new AddAssertedProofNode<C>(node, assertedConclusions);
 	}
 
 	public static <C> ProofNode<C> removeAssertedInferences(ProofNode<C> node) {
@@ -103,8 +103,8 @@ public class ProofNodes {
 	}
 
 	public static <C> boolean isDerivable(ProofNode<C> node,
-			Set<C> assertedAxioms) {
-		node = addAssertedInferences(node, assertedAxioms);
+			Set<C> assertedConclusions) {
+		node = addAssertedInferences(node, assertedConclusions);
 		return isDerivable(node);
 	}
 
