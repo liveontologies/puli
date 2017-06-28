@@ -172,6 +172,23 @@ public class Proofs {
 	/**
 	 * @param proof
 	 * @param goal
+	 * @return the number of inferences in the proof that is used for deriving
+	 *         the given goal
+	 */
+	public static <C> int countInferences(Proof<C> proof, C goal) {
+		final int[] counter = { 0 };
+		unfoldRecursively(proof, goal, new Producer<Inference<C>>() {
+			@Override
+			public void produce(Inference<C> object) {
+				counter[0]++;
+			}
+		});
+		return counter[0];
+	}
+
+	/**
+	 * @param proof
+	 * @param goal
 	 * @return the set of conclusions without which the goal would not be
 	 *         derivable using the given inferences; i.e., every derivation
 	 *         using the inferences must use at least one essential conclusion
