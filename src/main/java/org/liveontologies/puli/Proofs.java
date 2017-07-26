@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
 
+import com.google.common.base.Function;
+
 public class Proofs {
 
 	@SuppressWarnings("rawtypes")
@@ -42,6 +44,25 @@ public class Proofs {
 	@SuppressWarnings("unchecked")
 	public static <C, I extends Inference<C>> GenericDynamicProof<C, I> emptyProof() {
 		return (GenericDynamicProof<C, I>) EMPTY_PROOF;
+	}
+
+	/**
+	 * Returns a {@link Proof} obtained from the supplied one by replacing
+	 * conclusions according to the provided functions.
+	 * <p>
+	 * <strong>{@code inverse} must be an inverse function to
+	 * {@code function}!</strong>
+	 * 
+	 * @param proof
+	 * @param function
+	 * @param inverse
+	 * @return a {@link Proof} obtained from the supplied one by replacing
+	 *         conclusions according to the provided functions.
+	 */
+	public static <F, T> Proof<T> transform(final Proof<F> proof,
+			final Function<? super F, ? extends T> function,
+			final Function<? super T, ? extends F> inverse) {
+		return new TransformedProof<F, T>(proof, function, inverse);
 	}
 
 	/**

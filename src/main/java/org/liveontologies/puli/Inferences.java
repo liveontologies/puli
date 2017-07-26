@@ -23,6 +23,7 @@ package org.liveontologies.puli;
 
 import java.util.List;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
 public class Inferences {
@@ -30,6 +31,17 @@ public class Inferences {
 	public static <C> Inference<C> create(String name, C conclusion,
 			List<? extends C> premises) {
 		return new BaseInference<C>(name, conclusion, premises);
+	}
+
+	/**
+	 * @param inference
+	 * @param function
+	 * @return an {@link Inference} obtained from the supplied one by replacing
+	 *         conclusion and premises according to the provided function.
+	 */
+	public static <F, T> Inference<T> transform(final Inference<F> inference,
+			final Function<? super F, ? extends T> function) {
+		return new TransformedInference<F, T>(inference, function);
 	}
 
 	public static <C> boolean equals(Inference<C> inference, Object o) {
