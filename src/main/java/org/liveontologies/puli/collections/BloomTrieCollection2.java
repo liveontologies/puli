@@ -512,7 +512,13 @@ public class BloomTrieCollection2<C extends Collection<?>>
 
 	static class LeafNode<C extends Collection<?>> implements Node<C> {
 
-		private final static int INIT_CAPACITY_ = 32;
+		private final static int INIT_CAPACITY_ = 8;
+
+		/**
+		 * the maximal number of element in a node after which it is split to an
+		 * internal node, if possible
+		 */
+		private final static int SPLIT_CAPACITY_ = 64;
 
 		private final Object[] collections_;
 
@@ -533,6 +539,22 @@ public class BloomTrieCollection2<C extends Collection<?>>
 			collections_ = new Object[capacity];
 			fragments_ = mask == 0L ? null : new long[capacity];
 			filters2_ = new long[capacity];
+		}
+
+		LeafNode(LeafNode<C> from) {
+			// resize
+			int capacity = from.collections_.length << 1;
+			size_ = from.size_;
+			collections_ = new Object[capacity];
+			System.arraycopy(from.collections_, 0, collections_, 0, size_);
+			filters2_ = new long[capacity];
+			System.arraycopy(from.filters2_, 0, filters2_, 0, size_);
+			if (from.fragments_ != null) {
+				fragments_ = new long[capacity];
+				System.arraycopy(from.fragments_, 0, fragments_, 0, size_);
+			} else {
+				fragments_ = null;
+			}
 		}
 
 		@SuppressWarnings("unchecked")
@@ -560,12 +582,15 @@ public class BloomTrieCollection2<C extends Collection<?>>
 				return null;
 			}
 			// else
-			Node<C> replacement = (mask == 0L)
-					? new LeafNode<C>(mask, collections_.length << 1)
-					: new InternalNode<C>(mask);
-			for (int i = 0; i < collections_.length; i++) {
-				replacement.add(getCollection(i), mask, getFragment(i),
-						filters2_[i]);
+			Node<C> replacement;
+			if (mask == 0L || size_ < SPLIT_CAPACITY_) {
+				replacement = new LeafNode<C>(this);
+			} else {
+				replacement = new InternalNode<C>(mask);
+				for (int i = 0; i < collections_.length; i++) {
+					replacement.add(getCollection(i), mask, getFragment(i),
+							filters2_[i]);
+				}
 			}
 			replacement.add(s, mask, fragment, filter2);
 			return replacement;
@@ -600,8 +625,8 @@ public class BloomTrieCollection2<C extends Collection<?>>
 		public boolean isMinimal(Collection<?> s, long mask, long fragment,
 				long filter2) {
 			for (int i = 0; i < size_; i++) {
-				if ((filter2 | filters2_[i]) == filter2
-						// && (fragment | getFragment(i)) == fragment
+				if ((fragment | getFragment(i)) == fragment
+						&& (filter2 | filters2_[i]) == filter2
 						&& s.containsAll(getCollection(i))) {
 					return false;
 				}
@@ -614,8 +639,8 @@ public class BloomTrieCollection2<C extends Collection<?>>
 		public boolean isMaximal(Collection<?> s, long mask, long fragment,
 				long filter2) {
 			for (int i = 0; i < size_; i++) {
-				if ((filter2 & filters2_[i]) == filter2
-						// && (fragment & getFragment(i)) == fragment
+				if ((fragment & getFragment(i)) == fragment
+						&& (filter2 & filters2_[i]) == filter2
 						&& getCollection(i).containsAll(s)) {
 					return false;
 				}
