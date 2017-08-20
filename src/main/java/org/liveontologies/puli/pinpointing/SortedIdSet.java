@@ -68,7 +68,17 @@ public class SortedIdSet<E> extends AbstractSet<E>
 
 	// TODO: move to some utilities
 
-	static <E> int[] getIds(Set<E> set, IdMap<E> idMap) {
+	static int[] getIds(Collection<? extends Integer> set) {
+		int[] ids = new int[set.size()];
+		int pos = 0;
+		for (int e : set) {
+			ids[pos++] = e;
+		}
+		Arrays.sort(ids);
+		return ids;
+	}
+
+	static <E> int[] getIds(Collection<? extends E> set, IdMap<E> idMap) {
 		int[] ids = new int[set.size()];
 		int pos = 0;
 		for (E e : set) {
@@ -148,7 +158,11 @@ public class SortedIdSet<E> extends AbstractSet<E>
 			return second;
 		}
 		// else
-		return tmp;
+		if (pos == tmp.length) {
+			return tmp;
+		}
+		// else
+		return Arrays.copyOf(tmp, pos);
 	}
 
 }
