@@ -179,8 +179,7 @@ public class ResolutionJustificationComputation<C, A>
 	 * @author Peter Skocovsky
 	 * @author Yevgeny Kazakov
 	 */
-	private static class DerivedInference
-			extends AbstractSet<DerivedInferenceMember> {
+	static class DerivedInference extends AbstractSet<DerivedInferenceMember> {
 
 		private final int conclusionId_;
 		private final int[] premiseIds_;
@@ -294,7 +293,7 @@ public class ResolutionJustificationComputation<C, A>
 
 	}
 
-	private interface DerivedInferenceMember {
+	interface DerivedInferenceMember {
 
 		<O> O accept(Visitor<O> visitor);
 
@@ -309,7 +308,7 @@ public class ResolutionJustificationComputation<C, A>
 
 	}
 
-	private static final class Axiom extends Delegator<Integer>
+	static final class Axiom extends Delegator<Integer>
 			implements DerivedInferenceMember {
 
 		public Axiom(Integer id) {
@@ -323,7 +322,7 @@ public class ResolutionJustificationComputation<C, A>
 
 	}
 
-	private static final class Conclusion extends Delegator<Integer>
+	static final class Conclusion extends Delegator<Integer>
 			implements DerivedInferenceMember {
 
 		public Conclusion(Integer id) {
@@ -337,7 +336,7 @@ public class ResolutionJustificationComputation<C, A>
 
 	}
 
-	private static final class Premise extends Delegator<Integer>
+	static final class Premise extends Delegator<Integer>
 			implements DerivedInferenceMember {
 
 		public Premise(Integer id) {
@@ -351,8 +350,7 @@ public class ResolutionJustificationComputation<C, A>
 
 	}
 
-	private class JustificationEnumerator
-			extends AbstractMinimalSubsetEnumerator<A> {
+	class JustificationEnumerator extends AbstractMinimalSubsetEnumerator<A> {
 
 		/**
 		 * the conclusion for which to enumerate justifications
@@ -424,7 +422,7 @@ public class ResolutionJustificationComputation<C, A>
 			return new JustificationProcessor<P>(listener, priorityComparator);
 		}
 
-		private class JustificationProcessor<P> {
+		class JustificationProcessor<P> {
 
 			/**
 			 * the listener through which to report the justifications
@@ -436,12 +434,16 @@ public class ResolutionJustificationComputation<C, A>
 			 */
 			private final Queue<QueueElement<P>> producedInferences_;
 
+			private final QueueElementResolver<P> resolver_;
+
 			private final QueueElementFactory<P> queueElementFactory_;
 
 			JustificationProcessor(final Listener<A> listener,
 					PriorityComparator<? super Set<A>, P> priorityComparator) {
 				this.listener_ = listener;
 				this.queueElementFactory_ = new QueueElementFactory<P>(
+						priorityComparator);
+				this.resolver_ = new QueueElementResolver<P>(
 						priorityComparator);
 				this.producedInferences_ = new PriorityQueue<QueueElement<P>>(
 						new QueueElementCompatator<P>(priorityComparator));
@@ -488,11 +490,11 @@ public class ResolutionJustificationComputation<C, A>
 					if (isInterrupted()) {
 						break;
 					}
-					QueueElement<?> next = producedInferences_.poll();
+					QueueElement<P> next = producedInferences_.poll();
 					if (next == null) {
 						break;
 					}
-					DerivedInference inf = next.getInference();
+					DerivedInference inf = next.accept(resolver_);
 					if (!minimalJustifications_
 							.isMinimal(inf.getJustification())) {
 						block(inf);
@@ -563,9 +565,9 @@ public class ResolutionJustificationComputation<C, A>
 	interface QueueElement<P> {
 
 		/**
-		 * @return the inference represented by this object
+		 * @return the priority based on which the elements are compared
 		 */
-		DerivedInference getInference();
+		P getPriority();
 
 		/**
 		 * @return the number of premises of for the result of
@@ -580,14 +582,19 @@ public class ResolutionJustificationComputation<C, A>
 		 */
 		boolean isATautology();
 
-		/**
-		 * @return the priority based on which the elements are compared
-		 */
-		P getPriority();
+		<O> O accept(QueueElementVisitor<P, O> visitor);
 
 	}
 
-	private static class ComparableDerivedInference<P> extends DerivedInference
+	interface QueueElementVisitor<P, O> {
+
+		O visit(ComparableDerivedInference<P> inference);
+
+		O visit(Resolvent<P> inference);
+
+	}
+
+	static class ComparableDerivedInference<P> extends DerivedInference
 			implements QueueElement<P> {
 
 		private final P priority_;
@@ -610,18 +617,18 @@ public class ResolutionJustificationComputation<C, A>
 		}
 
 		@Override
-		public DerivedInference getInference() {
-			return this;
-		}
-
-		@Override
 		public P getPriority() {
 			return priority_;
 		}
 
+		@Override
+		public <O> O accept(QueueElementVisitor<P, O> visitor) {
+			return visitor.visit(this);
+		}
+
 	}
 
-	private static class QueueElementCompatator<P>
+	static class QueueElementCompatator<P>
 			implements Comparator<QueueElement<P>> {
 
 		private final Comparator<P> priorityComparator_;
@@ -646,7 +653,99 @@ public class ResolutionJustificationComputation<C, A>
 
 	};
 
-	private class QueueElementFactory<P> {
+	class QueueElementResolver<P>
+			implements QueueElementVisitor<P, DerivedInference> {
+
+		private final PriorityComparator<? super Set<A>, P> priorityComparator_;
+
+		QueueElementResolver(
+				PriorityComparator<? super Set<A>, P> priorityComparator) {
+			this.priorityComparator_ = priorityComparator;
+		}
+
+		@Override
+		public DerivedInference visit(ComparableDerivedInference<P> inference) {
+			return inference;
+		}
+
+		@Override
+		public DerivedInference visit(Resolvent<P> inference) {
+			int[] newPremiseIds;
+			DerivedInference first = inference.firstInference_;
+			DerivedInference second = inference.secondInference_;
+			if (second.getPremises().size() == 1) {
+				newPremiseIds = first.premiseIds_;
+			} else {
+				newPremiseIds = getIds(Sets.union(first.getPremises(),
+						Sets.difference(second.getPremises(),
+								Collections.singleton(first.conclusionId_))));
+			}
+			int[] newJustificationIds = SortedIdSet
+					.union(first.justificationIds_, second.justificationIds_);
+			return new ComparableDerivedInference<P>(second.conclusionId_,
+					newPremiseIds, newJustificationIds,
+					priorityComparator_.getPriority(
+							getJustification(newJustificationIds)));
+		}
+
+	}
+
+	/**
+	 * The result of resolution applied to two {@link DerivedInference}s. The
+	 * resulting inference returned by {@link #getInference()} is computed on
+	 * demand to prevent unnecessary memory consumption when this object is
+	 * stored in the produced inference queue.
+	 * 
+	 * @author Yevgeny Kazakov
+	 *
+	 */
+	static class Resolvent<P> implements QueueElement<P> {
+
+		private final DerivedInference firstInference_, secondInference_;
+
+		private final P priority_;
+
+		private final int premiseCount_;
+
+		Resolvent(DerivedInference firstInference,
+				DerivedInference secondInference, P priority) {
+			if (firstInference.isATautology()
+					|| secondInference.isATautology()) {
+				throw new IllegalArgumentException(
+						"Cannot resolve on tautologies!");
+			}
+			this.firstInference_ = firstInference;
+			this.secondInference_ = secondInference;
+			this.priority_ = priority;
+			this.premiseCount_ = Sets.union(firstInference_.getPremises(),
+					secondInference_.getPremises()).size() - 1;
+		}
+
+		@Override
+		public int getPremiseCount() {
+			return premiseCount_;
+		}
+
+		@Override
+		public boolean isATautology() {
+			// correct when the second inference is not a tautology
+			return Arrays.binarySearch(firstInference_.premiseIds_,
+					secondInference_.conclusionId_) >= 0;
+		}
+
+		@Override
+		public P getPriority() {
+			return priority_;
+		}
+
+		@Override
+		public <O> O accept(QueueElementVisitor<P, O> visitor) {
+			return visitor.visit(this);
+		}
+
+	}
+
+	class QueueElementFactory<P> {
 
 		private final PriorityComparator<? super Set<A>, P> priorityComparator_;
 
@@ -674,88 +773,13 @@ public class ResolutionJustificationComputation<C, A>
 							.getPriority(getJustification(justificationIds)));
 		}
 
-		public DerivedInference resolve(final DerivedInference first,
-				final DerivedInference second) {
-			int[] newPremiseIds;
-			if (second.getPremises().size() == 1) {
-				newPremiseIds = first.premiseIds_;
-			} else {
-				newPremiseIds = getIds(Sets.union(first.getPremises(),
-						Sets.difference(second.getPremises(),
-								Collections.singleton(first.conclusionId_))));
-			}
-			int[] newJustificationIds = SortedIdSet
-					.union(first.justificationIds_, second.justificationIds_);
-			return new ComparableDerivedInference<P>(second.conclusionId_,
-					newPremiseIds, newJustificationIds,
-					priorityComparator_.getPriority(
-							getJustification(newJustificationIds)));
-		}
-
 		public QueueElement<P> newResolvent(
 				final DerivedInference firstInference,
 				final DerivedInference secondInference) {
-			return new Resolvent(firstInference, secondInference);
-		}
-
-		/**
-		 * The result of resolution applied to two {@link DerivedInference}s.
-		 * The resulting inference returned by {@link #getInference()} is
-		 * computed on demand to prevent unnecessary memory consumption when
-		 * this object is stored in the produced inference queue.
-		 * 
-		 * @author Yevgeny Kazakov
-		 *
-		 */
-		private class Resolvent implements QueueElement<P> {
-
-			private final DerivedInference firstInference_, secondInference_;
-
-			private final P priority_;
-
-			private final int premiseCount_;
-
-			public Resolvent(final DerivedInference firstInference,
-					final DerivedInference secondInference) {
-				if (firstInference.isATautology()
-						|| secondInference.isATautology()) {
-					throw new IllegalArgumentException(
-							"Cannot resolve on tautologies!");
-				}
-				this.firstInference_ = firstInference;
-				this.secondInference_ = secondInference;
-				final int[] justificationIds = SortedIdSet
-						.getIds(Sets.union(firstInference.getJustification(),
-								secondInference.getJustification()));
-				this.priority_ = priorityComparator_
-						.getPriority(getJustification(justificationIds));
-				// correct when the first resolving inference is not a tautology
-				this.premiseCount_ = Sets.union(firstInference_.getPremises(),
-						secondInference_.getPremises()).size() - 1;
-			}
-
-			@Override
-			public DerivedInference getInference() {
-				return resolve(firstInference_, secondInference_);
-			}
-
-			@Override
-			public int getPremiseCount() {
-				return premiseCount_;
-			}
-
-			@Override
-			public boolean isATautology() {
-				// correct when the second inference is not a tautology
-				return Arrays.binarySearch(firstInference_.premiseIds_,
-						secondInference_.conclusionId_) >= 0;
-			}
-
-			@Override
-			public P getPriority() {
-				return priority_;
-			}
-
+			return new Resolvent<P>(firstInference, secondInference,
+					priorityComparator_.getPriority(getJustification(
+							SortedIdSet.union(firstInference.justificationIds_,
+									secondInference.justificationIds_))));
 		}
 
 	}
