@@ -41,6 +41,7 @@ import org.liveontologies.puli.InferenceJustifier;
 import org.liveontologies.puli.Proof;
 import org.liveontologies.puli.collections.BloomTrieCollection2;
 import org.liveontologies.puli.collections.Collection2;
+import org.liveontologies.puli.pinpointing.MinimalSubsetEnumerator.Listener;
 import org.liveontologies.puli.statistics.NestedStats;
 import org.liveontologies.puli.statistics.ResetStats;
 import org.liveontologies.puli.statistics.Stat;
@@ -77,7 +78,12 @@ public class ResolutionJustificationComputation<C, A>
 		return (Factory<C, A>) FACTORY_;
 	}
 
-	private final SelectionFactory<C, A> selectionFactory_;
+	public enum SelectionType {
+		TOP_DOWN, BOTTOM_UP, THRESHOLD
+		// TODO: switch to class hierarchy to support threshold with parameter
+	}
+
+	private final SelectionType selectionType_;
 
 	/**
 	 * Conclusions for which computation of justifications has been initialized
@@ -103,8 +109,8 @@ public class ResolutionJustificationComputation<C, A>
 
 	/**
 	 * inferences that are not necessary for computing the justifications for
-	 * the current goal; these are (possibly minimal) inferences whose
-	 * justification is a superset of a justification for the goal
+	 * the current query; these are (possibly minimal) inferences whose
+	 * justification is a superset of a justification for the query
 	 */
 	private Queue<DerivedInference> blockedInferences_ = new ArrayDeque<DerivedInference>();
 
@@ -113,10 +119,9 @@ public class ResolutionJustificationComputation<C, A>
 
 	private ResolutionJustificationComputation(final Proof<C> proof,
 			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
-			final InterruptMonitor monitor,
-			final SelectionFactory<C, A> selectionFactory) {
+			final InterruptMonitor monitor, final SelectionType selectionType) {
 		super(proof, justifier, monitor);
-		this.selectionFactory_ = selectionFactory;
+		this.selectionType_ = selectionType;
 	}
 
 	private Collection2<DerivedInference> getMinimalInferences(
@@ -162,14 +167,6 @@ public class ResolutionJustificationComputation<C, A>
 
 	Set<A> getJustification(int[] ids) {
 		return new SortedIdSet<A>(ids, axiomIds_);
-	}
-
-	int[] getConclusionIds(Collection<? extends C> conclusions) {
-		return SortedIdSet.getIds(conclusions, conclusionIds_);
-	}
-
-	int[] getAxiomIds(Collection<? extends A> axioms) {
-		return SortedIdSet.getIds(axioms, axiomIds_);
 	}
 
 	/**
@@ -355,49 +352,10 @@ public class ResolutionJustificationComputation<C, A>
 		/**
 		 * the conclusion for which to enumerate justifications
 		 */
-		private final C goal_;
+		private final C query_;
 
-		private final int goalId_;
-
-		/**
-		 * a function used for selecting conclusions in inferences on which to
-		 * resolve
-		 */
-		private final Selection selection_;
-
-		/**
-		 * to check minimality of justifications
-		 */
-		private final Collection2<Set<Integer>> minimalJustifications_ = new BloomTrieCollection2<Set<Integer>>();
-
-		/**
-		 * a temporary queue used to initialize computation of justifications
-		 * for conclusions that are not yet {@link #initialized_}
-		 */
-		private final Queue<C> toInitialize_ = new ArrayDeque<C>();
-
-		public JustificationEnumerator(final C goal) {
-			this.goal_ = goal;
-			this.goalId_ = conclusionIds_.getId(goal);
-			this.selection_ = selectionFactory_.createSelection(this);
-		}
-
-		Proof<C> getProof() {
-			return ResolutionJustificationComputation.this.getProof();
-		}
-
-		IdMap<C> getConclusionIds() {
-			return conclusionIds_;
-		}
-
-		private void toInitialize(C conclusion) {
-			if (initialized_.add(conclusion)) {
-				toInitialize_.add(conclusion);
-			}
-		}
-
-		private void block(DerivedInference inf) {
-			blockedInferences_.add(inf);
+		public JustificationEnumerator(C query) {
+			this.query_ = query;
 		}
 
 		@Override
@@ -419,193 +377,375 @@ public class ResolutionJustificationComputation<C, A>
 
 		<P> JustificationProcessor<P> createProcessor(Listener<A> listener,
 				PriorityComparator<? super Set<A>, P> priorityComparator) {
-			return new JustificationProcessor<P>(listener, priorityComparator);
-		}
-
-		class JustificationProcessor<P> {
-
-			/**
-			 * the listener through which to report the justifications
-			 */
-			private Listener<A> listener_;
-
-			/**
-			 * newly computed inferences to be resolved upon
-			 */
-			private final Queue<QueueElement<P>> producedInferences_;
-
-			private final QueueElementResolver<P> resolver_;
-
-			private final QueueElementFactory<P> queueElementFactory_;
-
-			JustificationProcessor(final Listener<A> listener,
-					PriorityComparator<? super Set<A>, P> priorityComparator) {
-				this.listener_ = listener;
-				this.queueElementFactory_ = new QueueElementFactory<P>(
-						priorityComparator);
-				this.resolver_ = new QueueElementResolver<P>(
-						priorityComparator);
-				this.producedInferences_ = new PriorityQueue<QueueElement<P>>(
-						new QueueElementCompatator<P>(priorityComparator));
-			}
-
-			private void initialize() {
-				toInitialize(goal_);
-				for (;;) {
-					C next = toInitialize_.poll();
-					if (next == null) {
-						return;
-					}
-					for (final Inference<C> inf : getInferences(next)) {
-						produce(queueElementFactory_.newDerivedInference(inf,
-								getInferenceJustifier()));
-						for (C premise : inf.getPremises()) {
-							toInitialize(premise);
-						}
-					}
-				}
-			}
-
-			private void unblockJobs() {
-				for (;;) {
-					DerivedInference inf = blockedInferences_.poll();
-					if (inf == null) {
-						return;
-					}
-					// else
-					produce(queueElementFactory_.newDerivedInference(inf));
-				}
-			}
-
-			private void changeSelection() {
-				// selection for inferences with selected goal must change
-				for (DerivedInference inf : inferencesBySelectedConclusionIds_
-						.removeAll(goal_)) {
-					produce(queueElementFactory_.newDerivedInference(inf));
-				}
-			}
-
-			private void process() {
-				for (;;) {
-					if (isInterrupted()) {
-						break;
-					}
-					QueueElement<P> next = producedInferences_.poll();
-					if (next == null) {
-						break;
-					}
-					DerivedInference inf = next.accept(resolver_);
-					if (!minimalJustifications_
-							.isMinimal(inf.getJustification())) {
-						block(inf);
-						continue;
-					}
-					// else
-					if (inf.premiseIds_.length == 0
-							&& goalId_ == inf.conclusionId_) {
-						minimalJustifications_.add(inf.getJustification());
-						listener_.newMinimalSubset(
-								getJustification(inf.justificationIds_));
-						block(inf);
-						continue;
-					}
-					// else
-					if (!inf.isMinimal_) {
-						Collection2<DerivedInference> minimalInferences = getMinimalInferences(
-								inf.conclusionId_);
-						if (!minimalInferences.isMinimal(inf)) {
-							continue;
-						}
-						// else
-						inf.isMinimal_ = true;
-						minimalInferences.add(inf);
-						minimalInferenceCount_++;
-					}
-					Integer selected = selection_.getResolvingAtomId(inf);
-					if (selected == null) {
-						// resolve on the conclusions
-						selected = inf.conclusionId_;
-						if (goal_.equals(selected)) {
-							throw new RuntimeException(
-									"Goal conclusion cannot be selected if the inference has premises: "
-											+ inf);
-						}
-						inferencesBySelectedConclusionIds_.put(selected, inf);
-						for (DerivedInference other : inferencesBySelectedPremiseIds_
-								.get(selected)) {
-							produce(queueElementFactory_.newResolvent(inf,
-									other));
-						}
-					} else {
-						// resolve on the selected premise
-						inferencesBySelectedPremiseIds_.put(selected, inf);
-						for (DerivedInference other : inferencesBySelectedConclusionIds_
-								.get(selected)) {
-							produce(queueElementFactory_.newResolvent(other,
-									inf));
-						}
-					}
-				}
-
-			}
-
-			private void produce(final QueueElement<P> resolvent) {
-				if (resolvent.isATautology()) {
-					// skip tautologies
-					return;
-				}
-				producedInferenceCount_++;
-				producedInferences_.add(resolvent);
-			}
-
+			return new JustificationProcessor<P>(query_, listener,
+					priorityComparator);
 		}
 
 	}
 
-	interface QueueElement<P> {
+	class JustificationProcessor<P> {
 
 		/**
-		 * @return the priority based on which the elements are compared
+		 * the conclusion for which to enumerate justifications
+		 */
+		private final C query_;
+
+		private final int queryId_;
+
+		/**
+		 * a function used for selecting conclusions in inferences on which to
+		 * resolve
+		 */
+		private final SelectionFunction selectionFunction_;
+
+		/**
+		 * to check minimality of justifications
+		 */
+		private final Collection2<Set<Integer>> minimalJustifications_ = new BloomTrieCollection2<Set<Integer>>();
+
+		/**
+		 * a temporary queue used to initialize computation of justifications
+		 * for conclusions that are not yet {@link #initialized_}
+		 */
+		private final Queue<C> toInitialize_ = new ArrayDeque<C>();
+
+		/**
+		 * the listener through which to report the justifications
+		 */
+		private Listener<A> listener_;
+
+		private final PriorityComparator<? super Set<A>, P> priorityComparator_;
+
+		/**
+		 * newly computed inferences to be resolved upon
+		 */
+		private final Queue<UnprocessedInference<P>> unprocessedInferences_;
+
+		private final InferenceProcessor<P> resolver_;
+
+		JustificationProcessor(C query, final Listener<A> listener,
+				PriorityComparator<? super Set<A>, P> priorityComparator) {
+			this.query_ = query;
+			this.queryId_ = conclusionIds_.getId(query);
+			this.priorityComparator_ = priorityComparator;
+			this.selectionFunction_ = getSelectionFunction(selectionType_);
+			this.listener_ = listener;
+			this.resolver_ = new InferenceProcessor<P>(priorityComparator);
+			this.unprocessedInferences_ = new PriorityQueue<UnprocessedInference<P>>(
+					256,
+					new UnprocessedInferenceCompatator<P>(priorityComparator));
+		}
+
+		Proof<C> getProof() {
+			return ResolutionJustificationComputation.this.getProof();
+		}
+
+		IdMap<C> getConclusionIds() {
+			return conclusionIds_;
+		}
+
+		private void toInitialize(C conclusion) {
+			if (initialized_.add(conclusion)) {
+				toInitialize_.add(conclusion);
+			}
+		}
+
+		private void block(DerivedInference inf) {
+			blockedInferences_.add(inf);
+		}
+
+		private void initialize() {
+			toInitialize(query_);
+			for (;;) {
+				C next = toInitialize_.poll();
+				if (next == null) {
+					return;
+				}
+				for (final Inference<C> inf : getInferences(next)) {
+					produce(newDerivedInference(inf, getInferenceJustifier()));
+					for (C premise : inf.getPremises()) {
+						toInitialize(premise);
+					}
+				}
+			}
+		}
+
+		private void unblockJobs() {
+			for (;;) {
+				DerivedInference inf = blockedInferences_.poll();
+				if (inf == null) {
+					return;
+				}
+				// else
+				produce(newDerivedInference(inf));
+			}
+		}
+
+		private void changeSelection() {
+			// selection for inferences with selected query must change
+			for (DerivedInference inf : inferencesBySelectedConclusionIds_
+					.removeAll(query_)) {
+				produce(newDerivedInference(inf));
+			}
+		}
+
+		private void process() {
+			for (;;) {
+				if (isInterrupted()) {
+					break;
+				}
+				UnprocessedInference<P> next = unprocessedInferences_.poll();
+				if (next == null) {
+					break;
+				}
+				DerivedInference inf = next.accept(resolver_);
+				if (!minimalJustifications_.isMinimal(inf.getJustification())) {
+					block(inf);
+					continue;
+				}
+				// else
+				if (inf.premiseIds_.length == 0
+						&& queryId_ == inf.conclusionId_) {
+					minimalJustifications_.add(inf.getJustification());
+					listener_.newMinimalSubset(
+							getJustification(inf.justificationIds_));
+					block(inf);
+					continue;
+				}
+				// else
+				if (!inf.isMinimal_) {
+					Collection2<DerivedInference> minimalInferences = getMinimalInferences(
+							inf.conclusionId_);
+					if (!minimalInferences.isMinimal(inf)) {
+						continue;
+					}
+					// else
+					inf.isMinimal_ = true;
+					minimalInferences.add(inf);
+					minimalInferenceCount_++;
+				}
+				Integer selected = selectionFunction_.getResolvingAtomId(inf);
+				if (selected == null) {
+					// resolve on the conclusions
+					selected = inf.conclusionId_;
+					if (query_.equals(selected)) {
+						throw new RuntimeException(
+								"Goal conclusion cannot be selected if the inference has premises: "
+										+ inf);
+					}
+					inferencesBySelectedConclusionIds_.put(selected, inf);
+					for (DerivedInference other : inferencesBySelectedPremiseIds_
+							.get(selected)) {
+						produce(newResolvent(inf, other));
+					}
+				} else {
+					// resolve on the selected premise
+					inferencesBySelectedPremiseIds_.put(selected, inf);
+					for (DerivedInference other : inferencesBySelectedConclusionIds_
+							.get(selected)) {
+						produce(newResolvent(other, inf));
+					}
+				}
+			}
+
+		}
+
+		private void produce(final UnprocessedInference<P> resolvent) {
+			if (resolvent.isATautology()) {
+				// skip tautologies
+				return;
+			}
+			producedInferenceCount_++;
+			unprocessedInferences_.add(resolvent);
+		}
+
+		UnprocessedInference<P> newDerivedInference(
+				DerivedInference inference) {
+			return new InitialInference<P>(inference.conclusionId_,
+					inference.premiseIds_, inference.justificationIds_,
+					priorityComparator_.getPriority(
+							getJustification(inference.justificationIds_)),
+					inference.isMinimal_);
+		}
+
+		UnprocessedInference<P> newDerivedInference(Inference<C> inference,
+				InferenceJustifier<C, ? extends Set<? extends A>> justifier) {
+			int[] justificationIds = getAxiomIds(
+					justifier.getJustification(inference));
+			return new InitialInference<P>(
+					conclusionIds_.getId(inference.getConclusion()),
+					getConclusionIds(inference.getPremises()), justificationIds,
+					priorityComparator_
+							.getPriority(getJustification(justificationIds)));
+		}
+
+		UnprocessedInference<P> newResolvent(
+				final DerivedInference firstInference,
+				final DerivedInference secondInference) {
+			return new Resolvent<P>(firstInference, secondInference,
+					priorityComparator_.getPriority(getJustification(
+							SortedIdSet.union(firstInference.justificationIds_,
+									secondInference.justificationIds_))));
+		}
+
+		int[] getConclusionIds(Collection<? extends C> conclusions) {
+			return SortedIdSet.getIds(conclusions, conclusionIds_);
+		}
+
+		int[] getAxiomIds(Collection<? extends A> axioms) {
+			return SortedIdSet.getIds(axioms, axiomIds_);
+		}
+
+		SelectionFunction getSelectionFunction(SelectionType type) {
+			switch (type) {
+			case BOTTOM_UP:
+				return new SelectionFunction() {
+
+					@Override
+					public Integer getResolvingAtomId(
+							DerivedInference inference) {
+						// select the premise that is derived by the fewest
+						// inferences;
+						// if there are no premises, select the conclusion
+						Integer result = null;
+						int minInferenceCount = Integer.MAX_VALUE;
+						for (int premiseId : inference.premiseIds_) {
+							int inferenceCount = getProof().getInferences(
+									conclusionIds_.getElement(premiseId))
+									.size();
+							if (inferenceCount < minInferenceCount) {
+								result = premiseId;
+								minInferenceCount = inferenceCount;
+							}
+						}
+						return result;
+					}
+				};
+			case THRESHOLD:
+				return new SelectionFunction() {
+
+					static final int THRESHOLD_ = 2;
+
+					@Override
+					public Integer getResolvingAtomId(
+							DerivedInference inference) {
+						// select the premise derived by the fewest inferences
+						// unless the number of such inferences is larger than
+						// the give threshold and the conclusion is not the
+						// query; in this case select the conclusion
+						int minInferenceCount = Integer.MAX_VALUE;
+						Integer result = null;
+						for (int premiseId : inference.premiseIds_) {
+							int inferenceCount = getProof().getInferences(
+									conclusionIds_.getElement(premiseId))
+									.size();
+							if (inferenceCount < minInferenceCount) {
+								result = premiseId;
+								minInferenceCount = inferenceCount;
+							}
+						}
+						if (minInferenceCount > THRESHOLD_
+								&& queryId_ != inference.conclusionId_) {
+							// resolve on the conclusion
+							result = null;
+						}
+						return result;
+					}
+
+				};
+
+			case TOP_DOWN:
+				return new SelectionFunction() {
+
+					@Override
+					public Integer getResolvingAtomId(
+							DerivedInference inference) {
+						// select the conclusion, unless it is the query
+						// conclusion and there are premises, in which case
+						// select the premise derived by the fewest inferences
+						Integer result = null;
+						if (queryId_ == inference.conclusionId_) {
+							int minInferenceCount = Integer.MAX_VALUE;
+							for (int premiseId : inference.premiseIds_) {
+								int inferenceCount = getProof().getInferences(
+										conclusionIds_.getElement(premiseId))
+										.size();
+								if (inferenceCount < minInferenceCount) {
+									result = premiseId;
+									minInferenceCount = inferenceCount;
+								}
+							}
+						}
+						return result;
+					}
+				};
+
+			default:
+				throw new RuntimeException(
+						"Unsupported selection type: " + type);
+			}
+		}
+
+	}
+
+	/**
+	 * An object representing unprocessed {@link DerivedInference}
+	 * 
+	 * @author Yevgeny Kazakov
+	 *
+	 * @param <P>
+	 */
+	interface UnprocessedInference<P> {
+
+		/**
+		 * @return the priority in which this inference should be processed
 		 */
 		P getPriority();
 
 		/**
-		 * @return the number of premises of for the result of
-		 *         {@link #getInference()} (without computing the latter)
+		 * @return the number of premises of for the inference represented by
+		 *         this element
 		 */
 		int getPremiseCount();
 
 		/**
-		 * @return {@code true} if {@link #getInference()} returns a
-		 *         tautological inference, i.e. its conclusion is one of the
-		 *         premises.
+		 * @return {@code true} if the inference represented by this element is
+		 *         a tautology, i.e. its conclusion is one of the premises.
 		 */
 		boolean isATautology();
 
-		<O> O accept(QueueElementVisitor<P, O> visitor);
+		<O> O accept(UnprocessedInference.Visitor<P, O> visitor);
+
+		interface Visitor<P, O> {
+
+			O visit(InitialInference<P> inference);
+
+			O visit(Resolvent<P> inference);
+
+		}
 
 	}
 
-	interface QueueElementVisitor<P, O> {
-
-		O visit(ComparableDerivedInference<P> inference);
-
-		O visit(Resolvent<P> inference);
-
-	}
-
-	static class ComparableDerivedInference<P> extends DerivedInference
-			implements QueueElement<P> {
+	/**
+	 * An {@link UnprocessedInference} representing the initial inference, from
+	 * which the resolution computation starts
+	 * 
+	 * @author Yevgeny Kazakov
+	 *
+	 * @param <P>
+	 */
+	static class InitialInference<P> extends DerivedInference
+			implements UnprocessedInference<P> {
 
 		private final P priority_;
 
-		private ComparableDerivedInference(int conclusionId, int[] premiseIds,
+		private InitialInference(int conclusionId, int[] premiseIds,
 				int[] justificationIds, P priority) {
 			super(conclusionId, premiseIds, justificationIds);
 			this.priority_ = priority;
 		}
 
-		private ComparableDerivedInference(int conclusionId, int[] premiseIds,
+		private InitialInference(int conclusionId, int[] premiseIds,
 				int[] justificationIds, P priority, boolean isMinimal) {
 			this(conclusionId, premiseIds, justificationIds, priority);
 			this.isMinimal_ = isMinimal;
@@ -622,84 +762,22 @@ public class ResolutionJustificationComputation<C, A>
 		}
 
 		@Override
-		public <O> O accept(QueueElementVisitor<P, O> visitor) {
+		public <O> O accept(UnprocessedInference.Visitor<P, O> visitor) {
 			return visitor.visit(this);
-		}
-
-	}
-
-	static class QueueElementCompatator<P>
-			implements Comparator<QueueElement<P>> {
-
-		private final Comparator<P> priorityComparator_;
-
-		QueueElementCompatator(Comparator<P> priorityComparator) {
-			this.priorityComparator_ = priorityComparator;
-		}
-
-		@Override
-		public int compare(QueueElement<P> first, QueueElement<P> second) {
-			final int result = priorityComparator_.compare(first.getPriority(),
-					second.getPriority());
-			if (result != 0) {
-				return result;
-			}
-			// else
-			final int firstPremiseCount = first.getPremiseCount();
-			final int secondPremiseCount = second.getPremiseCount();
-			return (firstPremiseCount < secondPremiseCount) ? -1
-					: ((firstPremiseCount == secondPremiseCount) ? 0 : 1);
-		}
-
-	};
-
-	class QueueElementResolver<P>
-			implements QueueElementVisitor<P, DerivedInference> {
-
-		private final PriorityComparator<? super Set<A>, P> priorityComparator_;
-
-		QueueElementResolver(
-				PriorityComparator<? super Set<A>, P> priorityComparator) {
-			this.priorityComparator_ = priorityComparator;
-		}
-
-		@Override
-		public DerivedInference visit(ComparableDerivedInference<P> inference) {
-			return inference;
-		}
-
-		@Override
-		public DerivedInference visit(Resolvent<P> inference) {
-			int[] newPremiseIds;
-			DerivedInference first = inference.firstInference_;
-			DerivedInference second = inference.secondInference_;
-			if (second.getPremises().size() == 1) {
-				newPremiseIds = first.premiseIds_;
-			} else {
-				newPremiseIds = getIds(Sets.union(first.getPremises(),
-						Sets.difference(second.getPremises(),
-								Collections.singleton(first.conclusionId_))));
-			}
-			int[] newJustificationIds = SortedIdSet
-					.union(first.justificationIds_, second.justificationIds_);
-			return new ComparableDerivedInference<P>(second.conclusionId_,
-					newPremiseIds, newJustificationIds,
-					priorityComparator_.getPriority(
-							getJustification(newJustificationIds)));
 		}
 
 	}
 
 	/**
 	 * The result of resolution applied to two {@link DerivedInference}s. The
-	 * resulting inference returned by {@link #getInference()} is computed on
-	 * demand to prevent unnecessary memory consumption when this object is
-	 * stored in the produced inference queue.
+	 * resulting inference is computed only when this
+	 * {@link UnprocessedInference} is processed to prevent unnecessary memory
+	 * consumption when this object is stored in the queue.
 	 * 
 	 * @author Yevgeny Kazakov
 	 *
 	 */
-	static class Resolvent<P> implements QueueElement<P> {
+	static class Resolvent<P> implements UnprocessedInference<P> {
 
 		private final DerivedInference firstInference_, secondInference_;
 
@@ -739,52 +817,82 @@ public class ResolutionJustificationComputation<C, A>
 		}
 
 		@Override
-		public <O> O accept(QueueElementVisitor<P, O> visitor) {
+		public <O> O accept(UnprocessedInference.Visitor<P, O> visitor) {
 			return visitor.visit(this);
 		}
 
 	}
 
-	class QueueElementFactory<P> {
+	static class UnprocessedInferenceCompatator<P>
+			implements Comparator<UnprocessedInference<P>> {
 
-		private final PriorityComparator<? super Set<A>, P> priorityComparator_;
+		private final Comparator<P> priorityComparator_;
 
-		public QueueElementFactory(
-				final PriorityComparator<? super Set<A>, P> priorityComparator) {
+		UnprocessedInferenceCompatator(Comparator<P> priorityComparator) {
 			this.priorityComparator_ = priorityComparator;
 		}
 
-		public QueueElement<P> newDerivedInference(DerivedInference inference) {
-			return new ComparableDerivedInference<P>(inference.conclusionId_,
-					inference.premiseIds_, inference.justificationIds_,
-					priorityComparator_.getPriority(
-							getJustification(inference.justificationIds_)),
-					inference.isMinimal_);
+		@Override
+		public int compare(UnprocessedInference<P> first,
+				UnprocessedInference<P> second) {
+			final int result = priorityComparator_.compare(first.getPriority(),
+					second.getPriority());
+			if (result != 0) {
+				return result;
+			}
+			// else
+			final int firstPremiseCount = first.getPremiseCount();
+			final int secondPremiseCount = second.getPremiseCount();
+			return (firstPremiseCount < secondPremiseCount) ? -1
+					: ((firstPremiseCount == secondPremiseCount) ? 0 : 1);
 		}
 
-		public QueueElement<P> newDerivedInference(Inference<C> inference,
-				InferenceJustifier<C, ? extends Set<? extends A>> justifier) {
-			int[] justificationIds = getAxiomIds(
-					justifier.getJustification(inference));
-			return new ComparableDerivedInference<P>(
-					conclusionIds_.getId(inference.getConclusion()),
-					getConclusionIds(inference.getPremises()), justificationIds,
-					priorityComparator_
-							.getPriority(getJustification(justificationIds)));
+	};
+
+	/**
+	 * Converts {@link UnprocessedInference}s to {@link DerivedInference}s
+	 * 
+	 * @author Yevgeny Kazakov
+	 *
+	 * @param <P>
+	 */
+	class InferenceProcessor<P>
+			implements UnprocessedInference.Visitor<P, DerivedInference> {
+
+		private final PriorityComparator<? super Set<A>, P> priorityComparator_;
+
+		InferenceProcessor(
+				PriorityComparator<? super Set<A>, P> priorityComparator) {
+			this.priorityComparator_ = priorityComparator;
 		}
 
-		public QueueElement<P> newResolvent(
-				final DerivedInference firstInference,
-				final DerivedInference secondInference) {
-			return new Resolvent<P>(firstInference, secondInference,
-					priorityComparator_.getPriority(getJustification(
-							SortedIdSet.union(firstInference.justificationIds_,
-									secondInference.justificationIds_))));
+		@Override
+		public DerivedInference visit(InitialInference<P> inference) {
+			return inference;
+		}
+
+		@Override
+		public DerivedInference visit(Resolvent<P> inference) {
+			int[] newPremiseIds;
+			DerivedInference first = inference.firstInference_;
+			DerivedInference second = inference.secondInference_;
+			if (second.getPremises().size() == 1) {
+				newPremiseIds = first.premiseIds_;
+			} else {
+				newPremiseIds = getIds(Sets.union(first.getPremises(),
+						Sets.difference(second.getPremises(),
+								Collections.singleton(first.conclusionId_))));
+			}
+			int[] newJustificationIds = SortedIdSet
+					.union(first.justificationIds_, second.justificationIds_);
+			return new InitialInference<P>(second.conclusionId_, newPremiseIds,
+					newJustificationIds, priorityComparator_.getPriority(
+							getJustification(newJustificationIds)));
 		}
 
 	}
 
-	public static interface Selection {
+	public interface SelectionFunction {
 
 		/**
 		 * @param inference
@@ -794,116 +902,6 @@ public class ResolutionJustificationComputation<C, A>
 		 *         inference
 		 */
 		Integer getResolvingAtomId(DerivedInference inference);
-
-	}
-
-	public static interface SelectionFactory<C, A> {
-
-		Selection createSelection(
-				ResolutionJustificationComputation<C, A>.JustificationEnumerator enumerator);
-
-	}
-
-	public class BottomUpSelection implements Selection {
-
-		@Override
-		public Integer getResolvingAtomId(DerivedInference inference) {
-			// select the premise that is derived by the fewest inferences;
-			// if there are no premises, select the conclusion
-			Integer result = null;
-			int minInferenceCount = Integer.MAX_VALUE;
-			for (int premiseId : inference.premiseIds_) {
-				int inferenceCount = getProof()
-						.getInferences(conclusionIds_.getElement(premiseId))
-						.size();
-				if (inferenceCount < minInferenceCount) {
-					result = premiseId;
-					minInferenceCount = inferenceCount;
-				}
-			}
-			return result;
-		}
-
-	}
-
-	public class TopDownSelection implements Selection {
-
-		private final int goalId_;
-
-		TopDownSelection(int goalId) {
-			this.goalId_ = goalId;
-		}
-
-		@Override
-		public Integer getResolvingAtomId(DerivedInference inference) {
-			// select the conclusion, unless it is the goal conclusion and
-			// there are premises, in which case select the premise derived
-			// by the fewest inferences
-			Integer result = null;
-			if (goalId_ == inference.conclusionId_) {
-				int minInferenceCount = Integer.MAX_VALUE;
-				for (int premiseId : inference.premiseIds_) {
-					int inferenceCount = getProof()
-							.getInferences(conclusionIds_.getElement(premiseId))
-							.size();
-					if (inferenceCount < minInferenceCount) {
-						result = premiseId;
-						minInferenceCount = inferenceCount;
-					}
-				}
-			}
-			return result;
-		}
-
-	}
-
-	public static class ThresholdSelection<C, A> implements Selection {
-
-		private final Proof<C> proof_;
-
-		private final IdMap<C> conclusionIds_;
-
-		private final int threshold_;
-
-		private final int goalId_;
-
-		public ThresholdSelection(int threshold, Proof<C> proof,
-				IdMap<C> conclusionIds, int goalId) {
-			this.threshold_ = threshold;
-			this.proof_ = proof;
-			this.conclusionIds_ = conclusionIds;
-			this.goalId_ = goalId;
-		}
-
-		public ThresholdSelection(final Proof<C> proof, IdMap<C> conclusionIds,
-				int goalId) {
-			this(2, proof, conclusionIds, goalId);
-		}
-
-		@Override
-		public Integer getResolvingAtomId(DerivedInference inference) {
-			// select the premise derived by the fewest inferences
-			// unless the number of such inferences is larger than the
-			// give threshold and the conclusion is not the goal;
-			// in this case select the conclusion
-			int minInferenceCount = Integer.MAX_VALUE;
-			Integer result = null;
-			for (int premiseId : inference.premiseIds_) {
-				int inferenceCount = proof_
-						.getInferences(conclusionIds_.getElement(premiseId))
-						.size();
-				if (inferenceCount < minInferenceCount) {
-					result = premiseId;
-					minInferenceCount = inferenceCount;
-				}
-			}
-			if (minInferenceCount > threshold_
-					&& goalId_ != inference.conclusionId_) {
-				// resolve on the conclusion
-				result = null;
-			}
-			return result;
-		}
 
 	}
 
@@ -925,28 +923,15 @@ public class ResolutionJustificationComputation<C, A>
 				final Proof<C> proof,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor) {
-			return create(proof, justifier, monitor,
-					new SelectionFactory<C, A>() {
-
-						@Override
-						public Selection createSelection(
-								final ResolutionJustificationComputation<C, A>.JustificationEnumerator enumerator) {
-							return new ThresholdSelection<C, A>(
-									enumerator.getProof(),
-									enumerator.getConclusionIds(),
-									enumerator.goalId_);
-						}
-
-					});
+			return create(proof, justifier, monitor, SelectionType.THRESHOLD);
 		}
 
 		public MinimalSubsetEnumerator.Factory<C, A> create(
 				final Proof<C> proof,
 				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
-				final InterruptMonitor monitor,
-				final SelectionFactory<C, A> selectionFactory) {
+				final InterruptMonitor monitor, final SelectionType selection) {
 			return new ResolutionJustificationComputation<C, A>(proof,
-					justifier, monitor, selectionFactory);
+					justifier, monitor, selection);
 		}
 
 	}
