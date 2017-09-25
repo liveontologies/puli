@@ -132,6 +132,17 @@ public class Proofs {
 
 	/**
 	 * @param proof
+	 * @return the {@link Proof} that has all inferences of the given
+	 *         {@link Proof} except for the asserted inferences, i.e., all
+	 *         inferences for which {@link Inferences#isAsserted(Inference)}
+	 *         returns {@code false}.
+	 */
+	public static <C> Proof<C> removeAssertedInferences(final Proof<C> proof) {
+		return new RemoveAssertedProof<C>(proof);
+	}
+
+	/**
+	 * @param proof
 	 * @return {@link DynamicProof} that caches all
 	 *         {@link DynamicProof#getInferences(Object)} requests of the input
 	 *         {@link DynamicProof}, until the input proof changes
