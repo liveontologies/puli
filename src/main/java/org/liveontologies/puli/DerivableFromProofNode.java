@@ -49,7 +49,7 @@ class DerivableFromProofNode<C> extends DerivableProofNode<C> {
 	@Override
 	final void convert(DerivableProofStep<C> step) {
 		ProofStep<C> delegate = step.getDelegate();
-		if (AssertedConclusionInference.NAME.equals(delegate.getName())) {
+		if (Inferences.isAsserted(delegate)) {
 			return;
 		}
 		// else

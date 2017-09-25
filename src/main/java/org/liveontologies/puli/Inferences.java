@@ -34,6 +34,17 @@ public class Inferences {
 	}
 
 	/**
+	 * Tests if the given {@link Inference} is asserted, i.e., its name equals
+	 * to {@link AssertedConclusionInference#NAME}
+	 * 
+	 * @param inference
+	 * @return {@code true}
+	 */
+	public static <C> boolean isAsserted(Inference<C> inference) {
+		return AssertedConclusionInference.NAME.equals(inference.getName());
+	}
+
+	/**
 	 * @param inference
 	 * @param function
 	 * @return an {@link Inference} obtained from the supplied one by replacing

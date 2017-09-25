@@ -30,6 +30,7 @@ import java.util.Set;
  * by an empty set otherwise.
  * 
  * @author Peter Skocovsky
+ * @author Yevgeny Kazakov
  *
  * @param <C>
  *            The type of conclusion and premises used by the inferences.
@@ -46,7 +47,7 @@ class AssertedConclusionInferenceJustifier<C>
 
 	@Override
 	public Set<? extends C> getJustification(final Inference<C> inference) {
-		if (inference instanceof AssertedConclusionInference<?>) {
+		if (Inferences.isAsserted(inference)) {
 			return Collections.singleton(inference.getConclusion());
 		}
 		// else
