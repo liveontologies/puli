@@ -241,9 +241,9 @@ public class Proofs {
 	}
 
 	/**
-	 * Adds to the set of conclusions all conclusions that are derived under the
-	 * inferences used for deriving the given goal; produces the applied
-	 * inferences using the given producer
+	 * Adds to the set of conclusions all conclusions that are derived from them
+	 * using the inferences of the given proof that can be used for proving the
+	 * given goal; produces the applied inferences using the given producer
 	 * 
 	 * @param derivable
 	 * @param proof
@@ -258,7 +258,6 @@ public class Proofs {
 	/**
 	 * @param proof
 	 * @param goal
-	 * @param asserted
 	 * @return a proof obtained from the given proofs by removing some
 	 *         inferences that do not have effect on the derivation relation
 	 *         between subsets of the given asserted conclusion and the goal
@@ -266,8 +265,8 @@ public class Proofs {
 	 *         subset of asserted conclusions using original inferences, then it
 	 *         is also derivable using the returned proof
 	 */
-	public static <C> Proof<C> prune(Proof<C> proof, C goal, Set<C> asserted) {
-		return new PrunedProof<C>(proof, goal, asserted);
+	public static <C> Proof<C> prune(Proof<C> proof, C goal) {
+		return new PrunedProof<C>(proof, goal);
 	}
 
 	/**

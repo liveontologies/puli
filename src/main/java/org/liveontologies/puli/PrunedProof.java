@@ -32,11 +32,11 @@ public class PrunedProof<C> extends DelegatingProof<C, Proof<C>>
 
 	private final Map<C, Inference<C>> expanded_ = new HashMap<C, Inference<C>>();
 
-	public PrunedProof(Proof<C> delegate, C goal, Set<C> asserted) {
+	public PrunedProof(Proof<C> delegate, C goal) {
 		super(delegate);
-		Proof<C> extended = Proofs.addAssertedInferences(delegate, asserted);
-		Set<C> essential = Proofs.getEssentialConclusions(extended, goal);
-		Proofs.expand(essential, delegate, goal, this);
+		Set<C> essential = Proofs.getEssentialConclusions(delegate, goal);
+		Proofs.expand(essential, Proofs.removeAssertedInferences(delegate),
+				goal, this);
 	}
 
 	@Override
