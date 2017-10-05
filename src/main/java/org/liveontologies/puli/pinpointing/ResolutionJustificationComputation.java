@@ -484,7 +484,7 @@ public class ResolutionJustificationComputation<C, A>
 		private void changeSelection() {
 			// selection for inferences with selected query must change
 			for (DerivedInference inf : inferencesBySelectedConclusionIds_
-					.removeAll(query_)) {
+					.removeAll(queryId_)) {
 				produce(newDerivedInference(inf));
 			}
 		}
@@ -528,7 +528,7 @@ public class ResolutionJustificationComputation<C, A>
 				if (selected == null) {
 					// resolve on the conclusions
 					selected = inf.conclusionId_;
-					if (query_.equals(selected)) {
+					if (queryId_ == selected) {
 						throw new RuntimeException(
 								"Goal conclusion cannot be selected if the inference has premises: "
 										+ inf);
