@@ -28,27 +28,28 @@ import java.util.Map;
  * provided default justification if the map does not contain the justification.
  * 
  * @author Peter Skocovsky
+ * @author Yevgeny Kazakov
  *
- * @param <C>
- *            The type of conclusion and premises used by the inferences.
+ * @param <I>
+ *            The type of inferences for which justifications are provided.
  * @param <J>
  *            The type of justifications of the inferences.
  */
-public class BaseInferenceJustifier<C, J> implements InferenceJustifier<C, J> {
+public class BaseInferenceJustifier<I extends Inference<?>, J>
+		implements InferenceJustifier<I, J> {
 
-	private final Map<Inference<C>, J> inferenceJustifications_;
+	private final Map<I, J> inferenceJustifications_;
 
 	private final J defaultJustification_;
 
-	public BaseInferenceJustifier(
-			final Map<Inference<C>, J> inferenceJustifications,
+	public BaseInferenceJustifier(final Map<I, J> inferenceJustifications,
 			final J defaultJustification) {
 		this.inferenceJustifications_ = inferenceJustifications;
 		this.defaultJustification_ = defaultJustification;
 	}
 
 	@Override
-	public J getJustification(final Inference<C> inference) {
+	public J getJustification(final I inference) {
 		final J result = inferenceJustifications_.get(inference);
 		if (result == null) {
 			return defaultJustification_;

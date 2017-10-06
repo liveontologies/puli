@@ -26,30 +26,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A {@link DynamicProof} that caches the inferences returned by the
- * input {@link DynamicProof} by {@link #getInferences(Object)}. When
- * this method is called for the second time with the same input, the cached
- * version is used.
+ * A {@link DynamicProof} that caches the inferences returned by the input
+ * {@link DynamicProof} by {@link #getInferences(Object)}. When this method is
+ * called for the second time with the same input, the cached version is used.
  * 
  * @author Yevgeny Kazakov
  *
- * @param <C>
+ * @param <I>
+ *            the type of inferences provided by this proof
  */
-public class CachingProof<C>
-		extends DelegatingDynamicProof<C, DynamicProof<C>>
+public class CachingProof<I extends Inference<?>>
+		extends DelegatingDynamicProof<I, DynamicProof<? extends I>>
 		implements DynamicProof.ChangeListener {
 
-	private final Map<C, Collection<? extends Inference<C>>> inferenceCache_ = new HashMap<C, Collection<? extends Inference<C>>>();
+	private final Map<Object, Collection<? extends I>> inferenceCache_ = new HashMap<Object, Collection<? extends I>>();
 
-	public CachingProof(DynamicProof<C> delegate) {
+	public CachingProof(DynamicProof<? extends I> delegate) {
 		super(delegate);
 		addListener(this);
 	}
 
 	@Override
-	public Collection<? extends Inference<C>> getInferences(C conclusion) {
-		Collection<? extends Inference<C>> result = inferenceCache_
-				.get(conclusion);
+	public Collection<? extends I> getInferences(Object conclusion) {
+		Collection<? extends I> result = inferenceCache_.get(conclusion);
 		if (result == null) {
 			result = super.getInferences(conclusion);
 			inferenceCache_.put(conclusion, result);

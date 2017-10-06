@@ -24,7 +24,7 @@ package org.liveontologies.puli;
 class DerivableFromProofStep<C> extends DerivableProofStep<C> {
 
 	DerivableFromProofStep(ProofStep<C> delegate,
-			DerivabilityChecker<ProofNode<C>> checker) {
+			DerivabilityChecker<ProofNode<?>> checker) {
 		super(delegate, checker);
 	}
 

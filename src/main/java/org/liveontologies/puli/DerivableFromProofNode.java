@@ -29,14 +29,14 @@ import com.google.common.base.Preconditions;
 class DerivableFromProofNode<C> extends DerivableProofNode<C> {
 
 	DerivableFromProofNode(ProofNode<C> delegate,
-			DerivabilityChecker<ProofNode<C>> checker) {
+			DerivabilityChecker<ProofNode<?>> checker) {
 		super(delegate, checker);
 	}
 
 	DerivableFromProofNode(ProofNode<C> delegate,
 			Set<? extends C> statedAxioms) {
 		this(new AddAssertedProofNode<C>(delegate, statedAxioms),
-				new ProofNodeDerivabilityChecker<C>());
+				new ProofNodeDerivabilityChecker());
 	}
 
 	@Override

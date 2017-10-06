@@ -21,8 +21,8 @@
  */
 package org.liveontologies.puli;
 
-public class DelegatingDynamicProof<C, S extends DynamicProof<C>>
-		extends DelegatingProof<C, S> implements DynamicProof<C> {
+public class DelegatingDynamicProof<I extends Inference<?>, S extends DynamicProof<? extends I>>
+		extends DelegatingProof<I, S> implements DynamicProof<I> {
 
 	public DelegatingDynamicProof(S delegate) {
 		super(delegate);

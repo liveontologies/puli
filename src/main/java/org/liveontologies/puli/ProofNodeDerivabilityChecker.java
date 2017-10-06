@@ -21,15 +21,11 @@
  */
 package org.liveontologies.puli;
 
-import org.liveontologies.puli.InferenceDerivabilityChecker;
-import org.liveontologies.puli.ProofNode;
-import org.liveontologies.puli.ProofNodeProof;
-
-public class ProofNodeDerivabilityChecker<C>
-		extends InferenceDerivabilityChecker<ProofNode<C>> {
+public class ProofNodeDerivabilityChecker
+		extends InferenceDerivabilityChecker<ProofNode<?>> {
 
 	public ProofNodeDerivabilityChecker() {
-		super(ProofNodeProof.<C> get());
+		super(ProofNodeProof.get());
 	}
 
 }

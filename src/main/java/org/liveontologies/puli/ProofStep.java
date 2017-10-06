@@ -38,6 +38,6 @@ public interface ProofStep<C> extends Inference<ProofNode<C>> {
 	 *         conclusion and premises of this {@link ProofStep}, and the name
 	 *         should be the same.
 	 */
-	Inference<C> getInference();
+	Inference<? extends C> getInference();
 
 }

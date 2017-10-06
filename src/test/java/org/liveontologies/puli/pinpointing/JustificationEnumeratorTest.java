@@ -27,12 +27,11 @@ import java.util.List;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.liveontologies.puli.pinpointing.MinimalSubsetsFromProofs;
-import org.liveontologies.puli.pinpointing.ResolutionJustificationComputation;
+import org.liveontologies.puli.Inference;
 
 @RunWith(Parameterized.class)
-public class JustificationEnumeratorTest<C, A>
-		extends BaseEnumeratorTest<C, A> {
+public class JustificationEnumeratorTest<I extends Inference<?>, A>
+		extends BaseEnumeratorTest<I, A> {
 
 	public static final String TEST_INPUT_SUBPKG = "input.justifications";
 

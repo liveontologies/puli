@@ -26,13 +26,13 @@ package org.liveontologies.puli;
  * 
  * @author Peter Skocovsky
  *
- * @param <C>
- *            The type of conclusion and premises used by the inferences.
+ * @param <I>
+ *            The type of inferences supported by this justifier
  * @param <J>
  *            The type of justifications of the inferences.
  */
-public interface InferenceJustifier<C, J> {
+public interface InferenceJustifier<I extends Inference<?>, J> {
 
-	J getJustification(Inference<C> inference);
+	J getJustification(I inference);
 
 }

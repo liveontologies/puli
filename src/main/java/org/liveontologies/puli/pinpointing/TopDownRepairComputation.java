@@ -49,43 +49,43 @@ import com.google.common.collect.Iterators;
  * 
  * @author Yevgeny Kazakov
  *
- * @param <C>
- *            the type of conclusion and premises used by the inferences
+ * @param <I>
+ *            the type of inferences used in the proof
  * @param <A>
  *            the type of axioms used by the inferences
  */
-public class TopDownRepairComputation<C, A>
-		extends MinimalSubsetsFromProofs<C, A> {
+public class TopDownRepairComputation<I extends Inference<?>, A>
+		extends MinimalSubsetsFromProofs<I, A> {
 
-	private static final TopDownRepairComputation.Factory<?, ?> FACTORY_ = new Factory<Object, Object>();
+	private static final TopDownRepairComputation.Factory<?, ?> FACTORY_ = new Factory<Inference<?>, Object>();
 
 	@SuppressWarnings("unchecked")
-	public static <C, A> MinimalSubsetsFromProofs.Factory<C, A> getFactory() {
-		return (Factory<C, A>) FACTORY_;
+	public static <I extends Inference<?>, A> MinimalSubsetsFromProofs.Factory<I, A> getFactory() {
+		return (Factory<I, A>) FACTORY_;
 	}
 
 	// Statistics
 	private int producedJobsCount_ = 0;
 
-	private TopDownRepairComputation(final Proof<C> proof,
-			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
+	private TopDownRepairComputation(final Proof<? extends I> proof,
+			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor) {
 		super(proof, justifier, monitor);
 	}
 
 	@Override
-	public MinimalSubsetEnumerator<A> newEnumerator(final C query) {
+	public MinimalSubsetEnumerator<A> newEnumerator(final Object query) {
 		return new Enumerator(query);
 	}
 
 	private class Enumerator extends AbstractMinimalSubsetEnumerator<A> {
 
-		private final C query_;
+		private final Object query_;
 
 		/**
 		 * jobs to be processed
 		 */
-		private Queue<JobFactory<C, A, ?>.Job> toDoJobs_;
+		private Queue<JobFactory<I, A, ?>.Job> toDoJobs_;
 
 		/**
 		 * Used to collect the result and prune jobs
@@ -95,13 +95,13 @@ public class TopDownRepairComputation<C, A>
 		/**
 		 * Used to filter out redundant jobs
 		 */
-		private final Collection2<JobFactory<C, A, ?>.Job> minimalJobs_ = new BloomTrieCollection2<JobFactory<C, A, ?>.Job>();
+		private final Collection2<JobFactory<I, A, ?>.Job> minimalJobs_ = new BloomTrieCollection2<JobFactory<I, A, ?>.Job>();
 
 		private Listener<A> listener_ = null;
 
-		private JobFactory<C, A, ?> jobFactory_ = null;
+		private JobFactory<I, A, ?> jobFactory_ = null;
 
-		Enumerator(final C query) {
+		Enumerator(final Object query) {
 			this.query_ = query;
 		}
 
@@ -117,7 +117,7 @@ public class TopDownRepairComputation<C, A>
 			this.listener_ = listener;
 			this.jobFactory_ = JobFactory.create(getProof(),
 					getInferenceJustifier(), priorityComparator);
-			this.toDoJobs_ = new PriorityQueue<JobFactory<C, A, ?>.Job>();
+			this.toDoJobs_ = new PriorityQueue<JobFactory<I, A, ?>.Job>();
 			this.minimalRepairs_.clear();
 
 			initialize(query_);
@@ -126,7 +126,7 @@ public class TopDownRepairComputation<C, A>
 			this.listener_ = null;
 		}
 
-		private void initialize(final C goal) {
+		private void initialize(final Object goal) {
 			produce(jobFactory_.newJob(goal));
 		}
 
@@ -135,7 +135,7 @@ public class TopDownRepairComputation<C, A>
 				if (isInterrupted()) {
 					break;
 				}
-				final JobFactory<C, A, ?>.Job job = toDoJobs_.poll();
+				final JobFactory<I, A, ?>.Job job = toDoJobs_.poll();
 				if (job == null) {
 					break;
 				}
@@ -149,7 +149,7 @@ public class TopDownRepairComputation<C, A>
 				}
 				// else
 				minimalJobs_.add(job);
-				final Inference<C> nextToBreak = chooseToBreak(job.toBreak_);
+				final I nextToBreak = chooseToBreak(job.toBreak_);
 				if (nextToBreak == null) {
 					minimalRepairs_.add(job.repair_);
 					if (listener_ != null) {
@@ -157,7 +157,7 @@ public class TopDownRepairComputation<C, A>
 					}
 					continue;
 				}
-				for (C premise : nextToBreak.getPremises()) {
+				for (Object premise : nextToBreak.getPremises()) {
 					produce(jobFactory_.doBreak(job.repair_, job.toBreak_,
 							job.broken_, premise));
 				}
@@ -168,11 +168,10 @@ public class TopDownRepairComputation<C, A>
 			}
 		}
 
-		private Inference<C> chooseToBreak(
-				final Collection<Inference<C>> inferences) {
+		private I chooseToBreak(final Collection<I> inferences) {
 			// select the smallest conclusion according to the comparator
-			Inference<C> result = null;
-			for (Inference<C> inf : inferences) {
+			I result = null;
+			for (I inf : inferences) {
 				if (result == null
 						|| inferenceComparator.compare(inf, result) < 0) {
 					result = inf;
@@ -181,61 +180,60 @@ public class TopDownRepairComputation<C, A>
 			return result;
 		}
 
-		private void produce(final JobFactory<C, A, ?>.Job job) {
+		private void produce(final JobFactory<I, A, ?>.Job job) {
 			producedJobsCount_++;
 			toDoJobs_.add(job);
 		}
 
 	}
 
-	private static class JobFactory<C, A, P> {
+	private static class JobFactory<I extends Inference<?>, A, P> {
 
-		private final Proof<C> proof_;
-		private final InferenceJustifier<C, ? extends Set<? extends A>> justifier_;
+		private final Proof<? extends I> proof_;
+		private final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier_;
 		private final PriorityComparator<? super Set<A>, P> priorityComparator_;
 
-		public JobFactory(final Proof<C> proof,
-				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
+		public JobFactory(final Proof<? extends I> proof,
+				final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 				final PriorityComparator<? super Set<A>, P> priorityComparator) {
 			this.proof_ = proof;
 			this.justifier_ = justifier;
 			this.priorityComparator_ = priorityComparator;
 		}
 
-		public static <C, A, P> JobFactory<C, A, P> create(final Proof<C> proof,
-				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
+		public static <I extends Inference<?>, A, P> JobFactory<I, A, P> create(
+				final Proof<? extends I> proof,
+				final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 				final PriorityComparator<? super Set<A>, P> priorityComparator) {
-			return new JobFactory<C, A, P>(proof, justifier,
+			return new JobFactory<I, A, P>(proof, justifier,
 					priorityComparator);
 		}
 
-		public Job newJob(final C conclusion) {
+		public Job newJob(final Object conclusion) {
 			return doBreak(Collections.<A> emptySet(),
-					Collections.<Inference<C>> emptySet(),
-					Collections.<C> emptySet(), conclusion);
+					Collections.<I> emptySet(), Collections.<Object> emptySet(),
+					conclusion);
 		}
 
-		public Job doBreak(final Set<A> repair,
-				final Collection<Inference<C>> toBreak, final Set<C> broken,
-				final C conclusion) {
+		public Job doBreak(final Set<A> repair, final Collection<I> toBreak,
+				final Set<Object> broken, final Object conclusion) {
 
 			final Set<A> newRepair = repair.isEmpty() ? new HashSet<A>(1)
 					: new HashSet<A>(repair);
-			final Set<Inference<C>> newToBreak = toBreak.isEmpty()
-					? new HashSet<Inference<C>>(3)
-					: new HashSet<Inference<C>>(toBreak.size());
-			final Set<C> newBroken = broken.isEmpty() ? new HashSet<C>(1)
-					: new HashSet<C>(broken);
+			final Set<I> newToBreak = toBreak.isEmpty() ? new HashSet<I>(3)
+					: new HashSet<I>(toBreak.size());
+			final Set<Object> newBroken = broken.isEmpty()
+					? new HashSet<Object>(1)
+					: new HashSet<Object>(broken);
 
 			newBroken.add(conclusion);
-			for (final Inference<C> inf : toBreak) {
+			for (final I inf : toBreak) {
 				if (!inf.getPremises().contains(conclusion)) {
 					newToBreak.add(inf);
 				}
 			}
-			infLoop: for (final Inference<C> inf : proof_
-					.getInferences(conclusion)) {
-				for (final C premise : inf.getPremises()) {
+			infLoop: for (final I inf : proof_.getInferences(conclusion)) {
+				for (final Object premise : inf.getPremises()) {
 					if (broken.contains(premise)) {
 						continue infLoop;
 					}
@@ -251,17 +249,15 @@ public class TopDownRepairComputation<C, A>
 					priorityComparator_.getPriority(newRepair));
 		}
 
-		public Job repair(final Set<A> repair,
-				final Collection<Inference<C>> toBreak, final Set<C> broken,
-				final A axiom) {
+		public Job repair(final Set<A> repair, final Collection<I> toBreak,
+				final Set<Object> broken, final A axiom) {
 
 			final Set<A> newRepair = new HashSet<A>(repair);
-			final Set<Inference<C>> newToBreak = new HashSet<Inference<C>>(
-					toBreak.size());
-			final Set<C> newBroken = new HashSet<C>(broken);
+			final Set<I> newToBreak = new HashSet<I>(toBreak.size());
+			final Set<Object> newBroken = new HashSet<Object>(broken);
 
 			newRepair.add(axiom);
-			for (final Inference<C> inf : toBreak) {
+			for (final I inf : toBreak) {
 				if (!justifier_.getJustification(inf).contains(axiom)) {
 					newToBreak.add(inf);
 				}
@@ -276,20 +272,20 @@ public class TopDownRepairComputation<C, A>
 		 * @author Peter Skocovsky
 		 * @author Yevgeny Kazakov
 		 */
-		public class Job extends AbstractSet<JobMember<C, A>>
+		public class Job extends AbstractSet<JobMember<I, A>>
 				implements Comparable<Job> {
 
 			private final Set<A> repair_;
-			private final Set<Inference<C>> toBreak_;
+			private final Set<I> toBreak_;
 			/**
 			 * the cached set of conclusions not derivable without using
 			 * {@link #repair_} and {@link #toBreak_}
 			 */
-			private final Set<C> broken_;
+			private final Set<Object> broken_;
 			private final P priority_;
 
-			private Job(final Set<A> repair, final Set<Inference<C>> toBreak,
-					final Set<C> broken, final P priority) {
+			private Job(final Set<A> repair, final Set<I> toBreak,
+					final Set<Object> broken, final P priority) {
 				this.repair_ = repair;
 				this.toBreak_ = toBreak;
 				this.broken_ = broken;
@@ -314,21 +310,21 @@ public class TopDownRepairComputation<C, A>
 			}
 
 			@Override
-			public Iterator<JobMember<C, A>> iterator() {
-				return Iterators.<JobMember<C, A>> concat(Iterators.transform(
-						repair_.iterator(), new Function<A, Axiom<C, A>>() {
+			public Iterator<JobMember<I, A>> iterator() {
+				return Iterators.<JobMember<I, A>> concat(Iterators.transform(
+						repair_.iterator(), new Function<A, Axiom<I, A>>() {
 
 							@Override
-							public Axiom<C, A> apply(final A axiom) {
-								return new Axiom<C, A>(axiom);
+							public Axiom<I, A> apply(final A axiom) {
+								return new Axiom<I, A>(axiom);
 							}
 
 						}), Iterators.transform(toBreak_.iterator(),
-								new Function<Inference<C>, Inf<C, A>>() {
+								new Function<I, Inf<I, A>>() {
 
 									@Override
-									public Inf<C, A> apply(Inference<C> inf) {
-										return new Inf<C, A>(inf);
+									public Inf<I, A> apply(I inf) {
+										return new Inf<I, A>(inf);
 									}
 
 								}));
@@ -369,10 +365,10 @@ public class TopDownRepairComputation<C, A>
 		return BloomTrieCollection2.class;
 	}
 
-	private final Comparator<Inference<C>> inferenceComparator = new Comparator<Inference<C>>() {
+	private final Comparator<I> inferenceComparator = new Comparator<I>() {
 
 		@Override
-		public int compare(final Inference<C> inf1, final Inference<C> inf2) {
+		public int compare(final I inf1, final I inf2) {
 			return inf1.getPremises().size() + getJustification(inf1).size()
 					- inf2.getPremises().size() - getJustification(inf2).size();
 		}
@@ -383,10 +379,10 @@ public class TopDownRepairComputation<C, A>
 
 	}
 
-	private final static class Inf<C, A> extends Delegator<Inference<C>>
-			implements JobMember<C, A> {
+	private final static class Inf<I extends Inference<?>, A>
+			extends Delegator<I> implements JobMember<I, A> {
 
-		public Inf(Inference<C> delegate) {
+		public Inf(I delegate) {
 			super(delegate);
 		}
 
@@ -406,20 +402,20 @@ public class TopDownRepairComputation<C, A>
 	 * 
 	 * @author Peter Skocovsky
 	 *
-	 * @param <C>
-	 *            the type of conclusion and premises used by the inferences
+	 * @param <I>
+	 *            the type of inferences used in the proof
 	 * @param <A>
 	 *            the type of axioms used by the inferences
 	 */
-	private static class Factory<C, A>
-			implements MinimalSubsetsFromProofs.Factory<C, A> {
+	private static class Factory<I extends Inference<?>, A>
+			implements MinimalSubsetsFromProofs.Factory<I, A> {
 
 		@Override
-		public MinimalSubsetEnumerator.Factory<C, A> create(
-				final Proof<C> proof,
-				final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
+		public MinimalSubsetEnumerator.Factory<Object, A> create(
+				final Proof<? extends I> proof,
+				final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor) {
-			return new TopDownRepairComputation<C, A>(proof, justifier,
+			return new TopDownRepairComputation<I, A>(proof, justifier,
 					monitor);
 		}
 

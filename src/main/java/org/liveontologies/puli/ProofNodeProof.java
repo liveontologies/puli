@@ -22,26 +22,37 @@
 package org.liveontologies.puli;
 
 import java.util.Collection;
+import java.util.Collections;
 
-import org.liveontologies.puli.Proof;
-import org.liveontologies.puli.ProofNode;
-import org.liveontologies.puli.ProofNodeProof;
-import org.liveontologies.puli.ProofStep;
+public class ProofNodeProof implements Proof<ProofStep<?>> {
 
-public class ProofNodeProof<C> implements Proof<ProofNode<C>> {
-
-	@SuppressWarnings("rawtypes")
 	private final static ProofNodeProof INSTANCE_ = new ProofNodeProof();
 
-	@SuppressWarnings("unchecked")
-	public static <C> ProofNodeProof<C> get() {
+	public static ProofNodeProof get() {
 		return INSTANCE_;
 	}
 
 	@Override
-	public Collection<? extends ProofStep<C>> getInferences(
-			ProofNode<C> conclusion) {
-		return conclusion.getInferences();
+	public Collection<? extends ProofStep<?>> getInferences(Object conclusion) {
+		if (conclusion instanceof ProofNode<?>) {
+			ProofNode<?> proofNode = (ProofNode<?>) conclusion;
+			return proofNode.getInferences();
+		}
+		// else
+		return Collections.emptyList();
+	}
+
+	<C> ProofNode<?> get(ProofNode<C> object) {
+		return object;
+	}
+
+	Inference<? extends ProofNode<?>> get(ProofStep<?> object) {
+		return object;
+	}
+
+	Proof<? extends Inference<? extends ProofNode<?>>> get(
+			Proof<ProofStep<?>> object) {
+		return object;
 	}
 
 }

@@ -24,8 +24,7 @@ package org.liveontologies.puli;
 import java.util.Collection;
 import java.util.Collections;
 
-class EmptyProof<C, I extends Inference<C>>
-		implements GenericDynamicProof<C, I> {
+class EmptyProof<I extends Inference<?>> implements DynamicProof<I> {
 
 	@Override
 	public Collection<? extends I> getInferences(Object conclusion) {

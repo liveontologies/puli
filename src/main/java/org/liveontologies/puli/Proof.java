@@ -28,15 +28,15 @@ import java.util.Collection;
  * 
  * @author Yevgeny Kazakov
  *
- * @param <C>
- *            the type of conclusion and premises used by the inferences
+ * @param <I>
+ *            the type of inferences provided by this proof
  */
-public interface Proof<C> {
+public interface Proof<I extends Inference<?>> {
 
 	/**
 	 * @param conclusion
 	 * @return the inferences from this proof that derive the given conclusion
 	 */
-	Collection<? extends Inference<C>> getInferences(C conclusion);
+	Collection<? extends I> getInferences(Object conclusion);
 
 }

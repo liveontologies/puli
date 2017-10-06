@@ -27,20 +27,20 @@ import com.google.common.base.Preconditions;
 
 class DerivableProofNode<C> extends ConvertedProofNode<C> {
 
-	private final DerivabilityChecker<ProofNode<C>> checker_;
+	private final DerivabilityChecker<ProofNode<?>> checker_;
 
 	DerivableProofNode(ProofNode<C> delegate,
-			DerivabilityChecker<ProofNode<C>> checker) {
+			DerivabilityChecker<ProofNode<?>> checker) {
 		super(delegate);
 		Preconditions.checkNotNull(checker);
 		this.checker_ = checker;
 	}
 
 	DerivableProofNode(ProofNode<C> delegate) {
-		this(delegate, new ProofNodeDerivabilityChecker<C>());
+		this(delegate, new ProofNodeDerivabilityChecker());
 	}
 
-	DerivabilityChecker<ProofNode<C>> getDerivabilityChecker() {
+	DerivabilityChecker<ProofNode<?>> getDerivabilityChecker() {
 		return checker_;
 	}
 

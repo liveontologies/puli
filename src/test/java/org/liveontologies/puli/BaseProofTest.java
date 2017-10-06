@@ -32,7 +32,7 @@ public class BaseProofTest {
 	@Test
 	public void testAddingAndRemovingInferences() {
 
-		BaseProof.Projection<Integer> p = new BaseProof.Projection<Integer>();
+		BaseProof<Inference<Integer>> p = new BaseProof<Inference<Integer>>();
 		assertEquals(0, p.getInferences(1).size());
 		assertEquals(0, p.getInferences(2).size());
 
@@ -54,7 +54,7 @@ public class BaseProofTest {
 	@Test
 	public void testProofListenerAfterAppearence() {
 
-		BaseProof.Projection<Integer> p = new BaseProof.Projection<Integer>();
+		BaseProof<Inference<Integer>> p = new BaseProof<Inference<Integer>>();
 		p.produce(InferenceBuilder.<Integer> create().conclusion(1).premise(2)
 				.build());
 
@@ -76,7 +76,7 @@ public class BaseProofTest {
 	@Test
 	public void testProofListenerAfterDeletion() {
 
-		BaseProof.Projection<Integer> p = new BaseProof.Projection<Integer>();
+		BaseProof<Inference<Integer>> p = new BaseProof<Inference<Integer>>();
 		p.produce(InferenceBuilder.<Integer> create().conclusion(2).premise(3)
 				.premise(4).build());
 		p.produce(InferenceBuilder.<Integer> create().conclusion(2).premise(3)

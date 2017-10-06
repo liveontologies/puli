@@ -21,8 +21,8 @@
  */
 package org.liveontologies.puli;
 
-public interface ModifiableProof<C, I extends Inference<C>>
-		extends GenericProof<C, I>, Producer<I> {
+public interface ModifiableProof<I extends Inference<?>>
+		extends Proof<I>, Producer<I> {
 
 	/**
 	 * Add the given inference to this {@link Proof}
@@ -36,10 +36,5 @@ public interface ModifiableProof<C, I extends Inference<C>>
 	 * Remove all inferences from this {@link Proof}
 	 */
 	void clear();
-
-	public static interface Projection<C>
-			extends ModifiableProof<C, Inference<C>> {
-		// Empty.
-	}
 
 }

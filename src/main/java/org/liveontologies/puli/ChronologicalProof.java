@@ -27,14 +27,11 @@ package org.liveontologies.puli;
  * {@link Proof}.
  * 
  * @author Peter Skocovsky
- *
- * @param <C>
- *            The type of conclusion and premises used by the inferences.
+ * 
  * @param <I>
- *            The type of the inferences.
+ *            the type of inferences provided by this proof
  */
-public class ChronologicalProof<C, I extends Inference<C>>
-		extends BaseProof<C, I> {
+public class ChronologicalProof<I extends Inference<?>> extends BaseProof<I> {
 
 	@Override
 	public void produce(final I inference) {
@@ -50,17 +47,12 @@ public class ChronologicalProof<C, I extends Inference<C>>
 	 * @param inference
 	 */
 	private void check(final I inference) {
-		for (final C premise : inference.getPremises()) {
+		for (final Object premise : inference.getPremises()) {
 			if (getInferences(premise).isEmpty()) {
 				throw new RuntimeException(
 						inference + ": premise not derived: " + premise);
 			}
 		}
-	}
-
-	public static class Projection<C>
-			extends ChronologicalProof<C, Inference<C>> {
-		// Empty.
 	}
 
 }

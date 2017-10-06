@@ -28,23 +28,24 @@ import com.google.common.base.Preconditions;
 
 class BaseProofStep<C> extends AbstractProofStep<C> {
 
-	private final Proof<C> proof_;
+	private final Proof<? extends Inference<? extends C>> proof_;
 
-	private final Inference<C> inference_;
+	private final Inference<? extends C> inference_;
 
-	BaseProofStep(Proof<C> proof, Inference<C> inference) {
+	BaseProofStep(Proof<? extends Inference<? extends C>> proof,
+			Inference<? extends C> inference) {
 		Preconditions.checkNotNull(proof);
 		Preconditions.checkNotNull(inference);
 		this.proof_ = proof;
 		this.inference_ = inference;
 	}
 
-	public Proof<C> getProof() {
+	public Proof<? extends Inference<? extends C>> getProof() {
 		return proof_;
 	}
 
 	@Override
-	public Inference<C> getInference() {
+	public Inference<? extends C> getInference() {
 		return inference_;
 	}
 

@@ -39,12 +39,12 @@ public class MinimalHittingSetEnumerator<E> implements
 
 	private static final Object CONCLUSION_ = new Object();
 
-	private final MinimalSubsetsFromProofs.Factory<Object, E> repairComputationFactory_;
+	private final MinimalSubsetsFromProofs.Factory<SetWrapperInference, E> repairComputationFactory_;
 
 	private final InterruptMonitor monitor_;
 
 	public MinimalHittingSetEnumerator(
-			final MinimalSubsetsFromProofs.Factory<Object, E> repairComputationFactory,
+			final MinimalSubsetsFromProofs.Factory<SetWrapperInference, E> repairComputationFactory,
 			final InterruptMonitor monitor) {
 		this.repairComputationFactory_ = repairComputationFactory;
 		this.monitor_ = monitor;
@@ -69,7 +69,7 @@ public class MinimalHittingSetEnumerator<E> implements
 		public void enumerate(final Listener<E> listener,
 				final PriorityComparator<? super Set<E>, ?> priorityComparator) {
 
-			final Proof<Object> proof = new SetWrapperProof(
+			final Proof<SetWrapperInference> proof = new SetWrapperProof(
 					originalSets_);
 
 			final MinimalSubsetEnumerator.Factory<Object, E> computation = repairComputationFactory_
@@ -82,7 +82,7 @@ public class MinimalHittingSetEnumerator<E> implements
 
 	}
 
-	private class SetWrapperProof implements Proof<Object> {
+	private class SetWrapperProof implements Proof<SetWrapperInference> {
 
 		private final Collection<? extends Set<? extends E>> originalSets_;
 
@@ -92,14 +92,14 @@ public class MinimalHittingSetEnumerator<E> implements
 		}
 
 		@Override
-		public Collection<? extends Inference<Object>> getInferences(
+		public Collection<? extends SetWrapperInference> getInferences(
 				final Object conclusion) {
 			if (conclusion == CONCLUSION_) {
 				return Collections2.transform(originalSets_,
-						new Function<Set<? extends E>, Inference<Object>>() {
+						new Function<Set<? extends E>, SetWrapperInference>() {
 
 							@Override
-							public Inference<Object> apply(
+							public SetWrapperInference apply(
 									final Set<? extends E> originalSet) {
 								return new SetWrapperInference(originalSet);
 							}
@@ -137,16 +137,12 @@ public class MinimalHittingSetEnumerator<E> implements
 
 	}
 
-	private final InferenceJustifier<Object, Set<? extends E>> setWrapperJustifier_ = new InferenceJustifier<Object, Set<? extends E>>() {
+	private final InferenceJustifier<SetWrapperInference, Set<? extends E>> setWrapperJustifier_ = new InferenceJustifier<SetWrapperInference, Set<? extends E>>() {
 
 		@Override
 		public Set<? extends E> getJustification(
-				final Inference<Object> inference) {
-			if (inference instanceof MinimalHittingSetEnumerator.SetWrapperInference) {
-				return ((SetWrapperInference) inference).originalSet_;
-			}
-			// else
-			return Collections.emptySet();
+				final SetWrapperInference inference) {
+			return inference.originalSet_;
 		}
 
 	};
@@ -157,7 +153,8 @@ public class MinimalHittingSetEnumerator<E> implements
 		final Collection<Set<? extends E>> result = new ArrayList<Set<? extends E>>();
 
 		final MinimalHittingSetEnumerator<E> computation = new MinimalHittingSetEnumerator<E>(
-				TopDownRepairComputation.<Object, E> getFactory(),
+				TopDownRepairComputation.<MinimalHittingSetEnumerator<E>
+						.SetWrapperInference, E> getFactory(),
 				InterruptMonitor.DUMMY);
 		computation.newEnumerator(sets)
 				.enumerate(new MinimalSubsetCollector<E>(result));

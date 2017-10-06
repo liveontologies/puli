@@ -23,6 +23,7 @@ package org.liveontologies.puli.pinpointing;
 
 import java.util.Set;
 
+import org.liveontologies.puli.Inference;
 import org.liveontologies.puli.InferenceJustifier;
 import org.liveontologies.puli.Proof;
 
@@ -41,8 +42,8 @@ public class MinimalSubsetEnumerators {
 	 * @param computation
 	 * @param listener
 	 */
-	public static <C, A> void enumerate(final C query,
-			final MinimalSubsetEnumerator.Factory<C, A> computation,
+	public static <Q, A> void enumerate(final Q query,
+			final MinimalSubsetEnumerator.Factory<Q, A> computation,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		final MinimalSubsetEnumerator<A> enumerator = computation
 				.newEnumerator(query);
@@ -64,9 +65,9 @@ public class MinimalSubsetEnumerators {
 	 * @param computation
 	 * @param listener
 	 */
-	public static <C, A> void enumerate(final C query,
+	public static <Q, A> void enumerate(final Q query,
 			final PriorityComparator<? super Set<A>, ?> priorityComparator,
-			final MinimalSubsetEnumerator.Factory<C, A> computation,
+			final MinimalSubsetEnumerator.Factory<Q, A> computation,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		final MinimalSubsetEnumerator<A> enumerator = computation
 				.newEnumerator(query);
@@ -85,9 +86,10 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <C, A> void enumerate(final C query, final Proof<C> proof,
-			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
-			final MinimalSubsetsFromProofs.Factory<C, A> computationFactory,
+	public static <I extends Inference<?>, A> void enumerate(final Object query,
+			final Proof<? extends I> proof,
+			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
+			final MinimalSubsetsFromProofs.Factory<I, A> computationFactory,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, computationFactory.create(proof, justifier, monitor),
@@ -112,10 +114,11 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <C, A> void enumerate(final C query, final Proof<C> proof,
-			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
+	public static <I extends Inference<?>, A> void enumerate(final Object query,
+			final Proof<? extends I> proof,
+			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final PriorityComparator<? super Set<A>, ?> priorityComparator,
-			final MinimalSubsetsFromProofs.Factory<C, A> computationFactory,
+			final MinimalSubsetsFromProofs.Factory<I, A> computationFactory,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, priorityComparator,
@@ -133,13 +136,13 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <C, A> void enumerateJustifications(final C query,
-			final Proof<C> proof,
-			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
+	public static <I extends Inference<?>, A> void enumerateJustifications(
+			final Object query, final Proof<? extends I> proof,
+			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, proof, justifier,
-				ResolutionJustificationComputation.<C, A> getFactory(), monitor,
+				ResolutionJustificationComputation.<I, A> getFactory(), monitor,
 				listener);
 	}
 
@@ -160,14 +163,14 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <C, A> void enumerateJustifications(final C query,
-			final Proof<C> proof,
-			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
+	public static <I extends Inference<?>, A> void enumerateJustifications(
+			final Object query, final Proof<? extends I> proof,
+			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final PriorityComparator<? super Set<A>, ?> priorityComparator,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, proof, justifier, priorityComparator,
-				ResolutionJustificationComputation.<C, A> getFactory(), monitor,
+				ResolutionJustificationComputation.<I, A> getFactory(), monitor,
 				listener);
 	}
 
@@ -182,13 +185,13 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <C, A> void enumerateRepairs(final C query,
-			final Proof<C> proof,
-			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
+	public static <I extends Inference<?>, A> void enumerateRepairs(
+			final Object query, final Proof<? extends I> proof,
+			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, proof, justifier,
-				TopDownRepairComputation.<C, A> getFactory(), monitor,
+				TopDownRepairComputation.<I, A> getFactory(), monitor,
 				listener);
 	}
 
@@ -209,14 +212,14 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <C, A> void enumerateRepairs(final C query,
-			final Proof<C> proof,
-			final InferenceJustifier<C, ? extends Set<? extends A>> justifier,
+	public static <I extends Inference<?>, A> void enumerateRepairs(
+			final Object query, final Proof<? extends I> proof,
+			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final PriorityComparator<? super Set<A>, ?> priorityComparator,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, proof, justifier, priorityComparator,
-				TopDownRepairComputation.<C, A> getFactory(), monitor,
+				TopDownRepairComputation.<I, A> getFactory(), monitor,
 				listener);
 	}
 

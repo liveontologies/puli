@@ -29,40 +29,42 @@ import java.util.Set;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
-public class InferenceExpander<C> implements Producer<Inference<C>> {
+public class InferenceExpander<C, I extends Inference<? extends C>>
+		implements Producer<I> {
 
 	private final Set<C> derivable_;
 
-	private final Proof<C> inferences_;
+	private final Proof<? extends I> proof_;
 
-	private final ListMultimap<C, Inference<C>> watchInferences_ = ArrayListMultimap
+	private final ListMultimap<C, I> watchInferences_ = ArrayListMultimap
 			.create();
 	private final ListMultimap<C, Integer> watchPositions_ = ArrayListMultimap
 			.create();
 
 	private final Queue<C> newlyDerived_ = new ArrayDeque<C>();
 
-	private final Producer<Inference<C>> producer_;
+	private final Producer<I> producer_;
 
-	InferenceExpander(Set<C> derivable, Proof<C> inferences, C goal,
-			Producer<Inference<C>> producer) {
-		this.inferences_ = inferences;
+	InferenceExpander(Set<C> derivable, Proof<? extends I> proof, C goal,
+			Producer<I> producer) {
+		this.proof_ = proof;
 		this.derivable_ = derivable;
 		this.producer_ = producer;
 		process(goal);
 	}
 
-	public static <C> void expand(Set<C> derivable, Proof<C> inferences, C goal,
-			Producer<Inference<C>> producer) {
-		new InferenceExpander<C>(derivable, inferences, goal, producer);
+	public static <C, I extends Inference<? extends C>> void expand(
+			Set<C> derivable, Proof<? extends I> proof, C goal,
+			Producer<I> producer) {
+		new InferenceExpander<C, I>(derivable, proof, goal, producer);
 	}
 
 	void process(C goal) {
-		Proofs.unfoldRecursively(inferences_, goal, this);
+		Proofs.unfoldRecursively(proof_, goal, this);
 	}
 
 	@Override
-	public void produce(Inference<C> inf) {
+	public void produce(I inf) {
 		List<? extends C> premises = inf.getPremises();
 		for (int i = 0; i < premises.size(); i++) {
 			C premise = premises.get(i);
@@ -87,10 +89,10 @@ public class InferenceExpander<C> implements Producer<Inference<C>> {
 			if (next == null) {
 				return;
 			}
-			List<Inference<C>> watch = watchInferences_.removeAll(next);
+			List<I> watch = watchInferences_.removeAll(next);
 			List<Integer> positions = watchPositions_.removeAll(next);
 			for (int i = 0; i < watch.size(); i++) {
-				Inference<C> inf = watch.get(i);
+				I inf = watch.get(i);
 				int pos = positions.get(i);
 				List<? extends C> premises = inf.getPremises();
 				for (;;) {

@@ -27,12 +27,11 @@ import java.util.List;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.liveontologies.puli.pinpointing.MinimalSubsetsFromProofs;
-import org.liveontologies.puli.pinpointing.ResolutionJustificationComputation;
+import org.liveontologies.puli.Inference;
 
 @RunWith(Parameterized.class)
-public class DualJustificationEnumeratorTest<C, A>
-		extends BaseDualEnumeratorTest<C, A> {
+public class DualJustificationEnumeratorTest<I extends Inference<?>, A>
+		extends BaseDualEnumeratorTest<I, A> {
 
 	public static List<MinimalSubsetsFromProofs.Factory<?, ?>> getJustificationEnumeratorFactories() {
 		final List<MinimalSubsetsFromProofs.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromProofs.Factory<?, ?>>();

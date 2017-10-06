@@ -24,16 +24,17 @@ package org.liveontologies.puli.pinpointing;
 import java.util.Collection;
 import java.util.Set;
 
+import org.liveontologies.puli.Inference;
 import org.liveontologies.puli.InferenceJustifier;
 import org.liveontologies.puli.Proof;
 
-public interface EnumeratorTestInput<C, A> {
+public interface EnumeratorTestInput<I extends Inference<?>, A> {
 
-	C getQuery();
+	Object getQuery();
 
-	Proof<C> getProof();
+	Proof<? extends I> getProof();
 
-	InferenceJustifier<C, ? extends Set<? extends A>> getJustifier();
+	InferenceJustifier<? super I, ? extends Set<? extends A>> getJustifier();
 
 	Collection<? extends Set<? extends A>> getExpectedResult();
 

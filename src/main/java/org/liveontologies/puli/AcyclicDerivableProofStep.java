@@ -25,11 +25,11 @@ class AcyclicDerivableProofStep<C> extends ConvertedProofStep<C> {
 
 	private final AcyclicDerivableProofNode<C> conclusion_;
 
-	private final DerivabilityCheckerWithBlocking<ProofNode<C>> checker_;
+	private final DerivabilityCheckerWithBlocking<ProofNode<?>> checker_;
 
 	AcyclicDerivableProofStep(ProofStep<C> delegate,
 			AcyclicDerivableProofNode<C> conclusion,
-			DerivabilityCheckerWithBlocking<ProofNode<C>> checker) {
+			DerivabilityCheckerWithBlocking<ProofNode<?>> checker) {
 		super(delegate);
 		this.conclusion_ = conclusion;
 		this.checker_ = checker;

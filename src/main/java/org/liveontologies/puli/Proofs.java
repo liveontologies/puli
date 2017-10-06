@@ -23,46 +23,26 @@ package org.liveontologies.puli;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
 
-import com.google.common.base.Function;
-
 public class Proofs {
 
 	@SuppressWarnings("rawtypes")
-	public static GenericDynamicProof EMPTY_PROOF = new EmptyProof();
+	public static DynamicProof EMPTY_PROOF = new EmptyProof();
 
 	/**
-	 * @return a {@link GenericDynamicProof} that has no inference, i.e.,
-	 *         {@link GenericDynamicProof#getInferences(Object)} is always the
-	 *         empty set. This proof never changes so if a
+	 * @return a {@link DynamicProof} that has no inference, i.e.,
+	 *         {@link DynamicProof#getInferences(Object)} is always the empty
+	 *         set. This proof never changes so if a
 	 *         {@link DynamicProof.ChangeListener} is added, it does not receive
 	 *         any notifications.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <C, I extends Inference<C>> GenericDynamicProof<C, I> emptyProof() {
-		return (GenericDynamicProof<C, I>) EMPTY_PROOF;
-	}
-
-	/**
-	 * Returns a {@link Proof} obtained from the supplied one by replacing
-	 * conclusions according to the provided functions.
-	 * <p>
-	 * <strong>{@code inverse} must be an inverse function to
-	 * {@code function}!</strong>
-	 * 
-	 * @param proof
-	 * @param function
-	 * @param inverse
-	 * @return a {@link Proof} obtained from the supplied one by replacing
-	 *         conclusions according to the provided functions.
-	 */
-	public static <F, T> Proof<T> transform(final Proof<F> proof,
-			final Function<? super F, ? extends T> function,
-			final Function<? super T, ? extends F> inverse) {
-		return new TransformedProof<F, T>(proof, function, inverse);
+	public static <I extends Inference<?>> DynamicProof<I> emptyProof() {
+		return (DynamicProof<I>) EMPTY_PROOF;
 	}
 
 	/**
@@ -74,8 +54,10 @@ public class Proofs {
 	 *         there exists an inference in {@link Proof#getInferences} that has
 	 *         as premises only conclusions that appear before in this sequence.
 	 */
-	public static <C> boolean isDerivable(Proof<C> proof, C conclusion) {
-		return ProofNodes.isDerivable(ProofNodes.create(proof, conclusion));
+	public static boolean isDerivable(Proof<?> proof, Object conclusion) {
+		return new InferenceDerivabilityChecker<Object>(proof)
+				.isDerivable(conclusion);
+		// return ProofNodes.isDerivable(ProofNodes.create(proof, conclusion));
 	}
 
 	/**
@@ -90,44 +72,32 @@ public class Proofs {
 	 *         only conclusions that appear before in this sequence or in the
 	 *         stated conclusions.
 	 */
-	public static <C> boolean isDerivable(Proof<C> proof, C conclusion,
-			Set<C> assertedConclusions) {
+	public static boolean isDerivable(Proof<?> proof, Object conclusion,
+			Set<?> assertedConclusions) {
 		return ProofNodes.isDerivable(ProofNodes.create(proof, conclusion),
 				assertedConclusions);
 	}
 
 	/**
 	 * @param proofs
-	 * @return the union of the given the {@link GenericProof}s, i.e., a
-	 *         {@link GenericProof} that for each conclusion returns the union
-	 *         of inferences returned by the proofs in the argument
+	 * @return the union of the given the {@link Proof}s, i.e., a {@link Proof}
+	 *         that for each conclusion returns the union of inferences returned
+	 *         by the proofs in the argument
 	 */
-	public static <C, I extends Inference<C>> GenericProof<C, I> union(
-			final Iterable<? extends GenericProof<C, I>> proofs) {
-		return new ProofUnion<C, I>(proofs);
+	public static <I extends Inference<?>> Proof<I> union(
+			final Iterable<? extends Proof<? extends I>> proofs) {
+		return new ProofUnion<I>(proofs);
 	}
 
 	/**
 	 * @param proofs
-	 * @return the union of the given the {@link GenericProof}s, i.e., a
-	 *         {@link GenericProof} that for each conclusion returns the union
-	 *         of inferences returned by the proofs in the argument
+	 * @return the union of the given the {@link Proof}s, i.e., a {@link Proof}
+	 *         that for each conclusion returns the union of inferences returned
+	 *         by the proofs in the argument
 	 */
-	public static <C, I extends Inference<C>> GenericProof<C, I> union(
-			final GenericProof<C, I>... proofs) {
-		return new ProofUnion<C, I>(proofs);
-	}
-
-	/**
-	 * @param proof
-	 * @param asserted
-	 * @return the {@link Proof} that has all inferences of the given
-	 *         {@link Proof} plus the {@link AssertedConclusionInference}s for
-	 *         each of the given asserted conclusions
-	 */
-	public static <C> Proof<C> addAssertedInferences(final Proof<C> proof,
-			final Set<? extends C> asserted) {
-		return new AddAssertedProof<C>(proof, asserted);
+	public static <I extends Inference<?>> Proof<I> union(
+			final Proof<? extends I>... proofs) {
+		return new ProofUnion<I>(proofs);
 	}
 
 	/**
@@ -137,8 +107,22 @@ public class Proofs {
 	 *         inferences for which {@link Inferences#isAsserted(Inference)}
 	 *         returns {@code false}.
 	 */
-	public static <C> Proof<C> removeAssertedInferences(final Proof<C> proof) {
-		return new RemoveAssertedProof<C>(proof);
+	public static <I extends Inference<?>> Proof<I> removeAssertedInferences(
+			final Proof<? extends I> proof) {
+		return removeAssertedInferences(proof, Collections.emptySet());
+	}
+
+	/**
+	 * @param proof
+	 * @param assertedConclusions
+	 * @return the {@link Proof} that has all inferences of the given
+	 *         {@link Proof} except for the asserted inferences (inferences for
+	 *         which {@link Inferences#isAsserted(Inference)} returns
+	 *         {@code false}), whose conclusions are not in the given set.
+	 */
+	public static <I extends Inference<?>> Proof<I> removeAssertedInferences(
+			final Proof<? extends I> proof, final Set<?> assertedConclusions) {
+		return new RemoveAssertedProof<I>(proof, assertedConclusions);
 	}
 
 	/**
@@ -147,21 +131,9 @@ public class Proofs {
 	 *         {@link DynamicProof#getInferences(Object)} requests of the input
 	 *         {@link DynamicProof}, until the input proof changes
 	 */
-	public static <C> DynamicProof<C> cache(DynamicProof<C> proof) {
-		return new CachingProof<C>(proof);
-	}
-
-	/**
-	 * @return An {@link InferenceJustifier} that justifies inferences by a set
-	 *         containing the conclusion if the inference is an
-	 *         {@link AssertedConclusionInference}, and by an empty set
-	 *         otherwise.
-	 * @see Proofs#addAssertedInferences(Proof, Set)
-	 * @deprecated Use {@link InferenceJustifiers#justifyAssertedInferences()}
-	 */
-	@Deprecated
-	public static <C> InferenceJustifier<C, ? extends Set<? extends C>> justifyAssertedInferences() {
-		return AssertedConclusionInferenceJustifier.getInstance();
+	public static <I extends Inference<?>> DynamicProof<I> cache(
+			DynamicProof<? extends I> proof) {
+		return new CachingProof<I>(proof);
 	}
 
 	/**
@@ -178,8 +150,8 @@ public class Proofs {
 	 * @return the set of all conclusions for which the inferences were
 	 *         enumerated
 	 */
-	public static <C> Set<C> unfoldRecursively(Proof<C> proof, C goal,
-			Producer<Inference<C>> producer) {
+	public static <C, I extends Inference<? extends C>> Set<C> unfoldRecursively(
+			Proof<? extends I> proof, C goal, Producer<I> producer) {
 		Set<C> result = new HashSet<C>();
 		Queue<C> toExpand = new ArrayDeque<C>();
 		result.add(goal);
@@ -189,7 +161,7 @@ public class Proofs {
 			if (next == null) {
 				break;
 			}
-			for (Inference<C> inf : proof.getInferences(next)) {
+			for (I inf : proof.getInferences(next)) {
 				producer.produce(inf);
 				for (C premise : inf.getPremises()) {
 					if (result.add(premise)) {
@@ -207,11 +179,11 @@ public class Proofs {
 	 * @return the number of inferences in the proof that is used for deriving
 	 *         the given goal
 	 */
-	public static <C> int countInferences(Proof<C> proof, C goal) {
+	public static int countInferences(Proof<?> proof, Object goal) {
 		final int[] counter = { 0 };
-		unfoldRecursively(proof, goal, new Producer<Inference<C>>() {
+		unfoldRecursively(proof, goal, new Producer<Inference<?>>() {
 			@Override
-			public void produce(Inference<C> object) {
+			public void produce(Inference<?> object) {
 				counter[0]++;
 			}
 		});
@@ -225,12 +197,13 @@ public class Proofs {
 	 *         derivable using the given inferences; i.e., every derivation
 	 *         using the inferences must use at least one essential conclusion
 	 */
-	public static <C> Set<C> getEssentialConclusions(Proof<C> proof, C goal) {
+	public static <C, I extends Inference<? extends C>> Set<C> getEssentialConclusions(
+			Proof<I> proof, C goal) {
 		Set<C> result = new HashSet<C>();
 		DerivabilityCheckerWithBlocking<C> checker = new InferenceDerivabilityChecker<C>(
 				proof);
 		for (C candidate : unfoldRecursively(proof, goal,
-				Producer.Dummy.<Inference<C>> get())) {
+				Producer.Dummy.<I> get())) {
 			checker.block(candidate);
 			if (!checker.isDerivable(goal)) {
 				result.add(candidate);
@@ -250,8 +223,8 @@ public class Proofs {
 	 * @param goal
 	 * @param producer
 	 */
-	public static <C> void expand(Set<C> derivable, Proof<C> proof, C goal,
-			Producer<Inference<C>> producer) {
+	public static <C, I extends Inference<? extends C>> void expand(
+			Set<C> derivable, Proof<I> proof, C goal, Producer<I> producer) {
 		InferenceExpander.expand(derivable, proof, goal, producer);
 	}
 
@@ -265,8 +238,9 @@ public class Proofs {
 	 *         subset of asserted conclusions using original inferences, then it
 	 *         is also derivable using the returned proof
 	 */
-	public static <C> Proof<C> prune(Proof<C> proof, C goal) {
-		return new PrunedProof<C>(proof, goal);
+	public static <I extends Inference<?>> Proof<I> prune(
+			Proof<? extends I> proof, Object goal) {
+		return new PrunedProof<I>(proof, goal);
 	}
 
 	/**
@@ -281,7 +255,8 @@ public class Proofs {
 	 * @param goal
 	 *            the conclusion starting from which the inferences are printed
 	 */
-	public static <C> void print(Proof<C> proof, C goal) {
+	public static <I extends Inference<?>> void print(Proof<I> proof,
+			Object goal) {
 		try {
 			ProofPrinter.print(proof, goal);
 		} catch (IOException e) {

@@ -35,27 +35,24 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
-import org.liveontologies.puli.pinpointing.InterruptMonitor;
-import org.liveontologies.puli.pinpointing.MinimalSubsetCollector;
-import org.liveontologies.puli.pinpointing.MinimalSubsetEnumerator;
-import org.liveontologies.puli.pinpointing.MinimalSubsetsFromProofs;
+import org.liveontologies.puli.Inference;
 
 @RunWith(Parameterized.class)
-public abstract class BaseEnumeratorTest<C, A> {
+public abstract class BaseEnumeratorTest<I extends Inference<?>, A> {
 
 	@Parameter(0)
 	public String name;
 
 	@Parameter(1)
-	public EnumeratorTestInput<C, A> input;
+	public EnumeratorTestInput<I, A> input;
 
 	@Parameter(2)
-	public MinimalSubsetsFromProofs.Factory<C, A> factory;
+	public MinimalSubsetsFromProofs.Factory<I, A> factory;
 
 	@Test
 	public void testJustifications() {
 
-		final MinimalSubsetEnumerator.Factory<C, A> computation = factory
+		final MinimalSubsetEnumerator.Factory<Object, A> computation = factory
 				.create(input.getProof(), input.getJustifier(),
 						InterruptMonitor.DUMMY);
 

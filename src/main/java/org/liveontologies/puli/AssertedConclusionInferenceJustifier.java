@@ -36,13 +36,13 @@ import java.util.Set;
  *            The type of conclusion and premises used by the inferences.
  */
 class AssertedConclusionInferenceJustifier<C>
-		implements InferenceJustifier<C, Set<? extends C>> {
+		implements InferenceJustifier<Inference<C>, Set<? extends C>> {
 
 	private static final InferenceJustifier<?, ?> INSTANCE_ = new AssertedConclusionInferenceJustifier<Object>();
 
 	@SuppressWarnings("unchecked")
-	static <C> InferenceJustifier<C, Set<? extends C>> getInstance() {
-		return (InferenceJustifier<C, Set<? extends C>>) INSTANCE_;
+	static <C> InferenceJustifier<Inference<C>, Set<? extends C>> getInstance() {
+		return (InferenceJustifier<Inference<C>, Set<? extends C>>) INSTANCE_;
 	}
 
 	@Override

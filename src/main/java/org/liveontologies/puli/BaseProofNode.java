@@ -28,34 +28,34 @@ import com.google.common.base.Preconditions;
 
 class BaseProofNode<C> extends AbstractProofNode<C> {
 
-	private final Proof<C> proof_;
+	private final Proof<? extends Inference<? extends C>> proof_;
 
 	private Collection<ProofStep<C>> steps_ = null;
 
-	BaseProofNode(Proof<C> proof, C member) {
+	BaseProofNode(Proof<? extends Inference<? extends C>> proof, C member) {
 		super(member);
 		Preconditions.checkNotNull(proof);
 		this.proof_ = proof;
 	}
 
-	public Proof<C> getProof() {
+	public Proof<? extends Inference<? extends C>> getProof() {
 		return proof_;
 	}
 
 	@Override
 	public Collection<? extends ProofStep<C>> getInferences() {
 		if (steps_ == null) {
-			Collection<? extends Inference<C>> original = proof_
+			Collection<? extends Inference<? extends C>> original = proof_
 					.getInferences(getMember());
 			steps_ = new ArrayList<ProofStep<C>>(original.size());
-			for (Inference<C> inf : original) {
+			for (Inference<? extends C> inf : original) {
 				convert(inf);
 			}
 		}
 		return steps_;
 	}
 
-	void convert(Inference<C> inf) {
+	void convert(Inference<? extends C> inf) {
 		steps_.add(new BaseProofStep<C>(proof_, inf));
 	}
 

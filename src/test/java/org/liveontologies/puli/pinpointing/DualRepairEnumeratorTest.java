@@ -27,12 +27,11 @@ import java.util.List;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.liveontologies.puli.pinpointing.MinimalSubsetsFromProofs;
-import org.liveontologies.puli.pinpointing.TopDownRepairComputation;
+import org.liveontologies.puli.Inference;
 
 @RunWith(Parameterized.class)
-public class DualRepairEnumeratorTest<C, A>
-		extends BaseDualEnumeratorTest<C, A> {
+public class DualRepairEnumeratorTest<I extends Inference<?>, A>
+		extends BaseDualEnumeratorTest<I, A> {
 
 	public static List<MinimalSubsetsFromProofs.Factory<?, ?>> getRepairEnumeratorFactories() {
 		final List<MinimalSubsetsFromProofs.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromProofs.Factory<?, ?>>();

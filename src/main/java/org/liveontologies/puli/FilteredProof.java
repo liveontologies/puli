@@ -23,17 +23,20 @@ package org.liveontologies.puli;
 
 import java.util.Collection;
 
-/**
- * @author Peter Skocovsky
- *
- * @param <C>
- *            The type of conclusion and premises used by the inferences.
- * @param <I>
- *            The type of the inferences.
- */
-public interface GenericProof<C, I extends Inference<C>> extends Proof<C> {
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+
+abstract class FilteredProof<I extends Inference<?>>
+		extends DelegatingProof<I, Proof<? extends I>> implements Predicate<I> {
+
+	FilteredProof(final Proof<? extends I> delegate) {
+		super(delegate);
+	}
 
 	@Override
-	Collection<? extends I> getInferences(C conclusion);
+	public Collection<? extends I> getInferences(final Object conclusion) {
+		return Collections2.filter(getDelegate().getInferences(conclusion),
+				this);
+	}
 
 }

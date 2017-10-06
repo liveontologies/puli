@@ -36,12 +36,13 @@ import java.util.Set;
  */
 public class ProofNodes {
 
-	public static <C> ProofNode<C> create(Proof<C> inferences, C member) {
-		return new BaseProofNode<C>(inferences, member);
+	public static <C> ProofNode<C> create(
+			Proof<? extends Inference<? extends C>> proof, C member) {
+		return new BaseProofNode<C>(proof, member);
 	}
 
 	public static <C> ProofNode<C> addAssertedInferences(ProofNode<C> node,
-			Set<C> assertedConclusions) {
+			Set<? extends C> assertedConclusions) {
 		return new AddAssertedProofNode<C>(node, assertedConclusions);
 	}
 
@@ -99,11 +100,11 @@ public class ProofNodes {
 	}
 
 	public static <C> boolean isDerivable(ProofNode<C> node) {
-		return new ProofNodeDerivabilityChecker<C>().isDerivable(node);
+		return new ProofNodeDerivabilityChecker().isDerivable(node);
 	}
 
 	public static <C> boolean isDerivable(ProofNode<C> node,
-			Set<C> assertedConclusions) {
+			Set<? extends C> assertedConclusions) {
 		node = addAssertedInferences(node, assertedConclusions);
 		return isDerivable(node);
 	}

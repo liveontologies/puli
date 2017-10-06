@@ -23,7 +23,7 @@ package org.liveontologies.puli;
 
 public class ProofBuilder<C> {
 
-	private final BaseProof.Projection<C> proof_ = new BaseProof.Projection<C>();
+	private final BaseProof<Inference<C>> proof_ = new BaseProof<Inference<C>>();
 
 	/**
 	 * use {@link #create()}
@@ -35,7 +35,7 @@ public class ProofBuilder<C> {
 		return new ProofBuilder<C>();
 	}
 
-	public BaseProof.Projection<C> build() {
+	public Proof<? extends Inference<C>> build() {
 		return proof_;
 	}
 

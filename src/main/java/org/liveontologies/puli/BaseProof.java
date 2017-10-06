@@ -39,29 +39,27 @@ import org.slf4j.LoggerFactory;
  * @author Yevgeny Kazakov
  * @author Peter Skocovsky
  *
- * @param <C>
- *            The type of conclusion and premises used by the inferences.
  * @param <I>
- *            The type of the inferences.
+ *            the type of inferences provided by this proof
  */
-public class BaseProof<C, I extends Inference<C>>
-		implements ModifiableProof<C, I>, GenericDynamicProof<C, I> {
+public class BaseProof<I extends Inference<?>>
+		implements ModifiableProof<I>, DynamicProof<I> {
 
 	private static final Logger LOGGER_ = LoggerFactory
 			.getLogger(BaseProof.class);
 
-	private final Map<C, Collection<I>> inferences_ = new HashMap<C, Collection<I>>();
+	private final Map<Object, Collection<I>> inferences_ = new HashMap<Object, Collection<I>>();
 
 	/**
 	 * conclusion for which {@link #getInferences(Object)} was called and the
 	 * result did not change since then
 	 */
-	private final Set<C> queried_ = new HashSet<C>();
+	private final Set<Object> queried_ = new HashSet<Object>();
 
 	private final List<ChangeListener> listeners_ = new ArrayList<ChangeListener>();
 
 	@Override
-	public Collection<? extends I> getInferences(C conclusion) {
+	public Collection<? extends I> getInferences(Object conclusion) {
 		queried_.add(conclusion);
 		Collection<? extends I> result = inferences_.get(conclusion);
 		if (result == null) {
@@ -83,7 +81,7 @@ public class BaseProof<C, I extends Inference<C>>
 	@Override
 	public void produce(final I inference) {
 		LOGGER_.trace("{}: inference added", inference);
-		final C conclusion = inference.getConclusion();
+		final Object conclusion = inference.getConclusion();
 		Collection<I> existing = inferences_.get(conclusion);
 		if (existing == null) {
 			existing = new ArrayList<I>();
@@ -118,10 +116,6 @@ public class BaseProof<C, I extends Inference<C>>
 	@Override
 	public void dispose() {
 		// no-op
-	}
-
-	public static class Projection<C> extends BaseProof<C, Inference<C>> {
-		// Empty.
 	}
 
 }

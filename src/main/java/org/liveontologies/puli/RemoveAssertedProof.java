@@ -21,28 +21,22 @@
  */
 package org.liveontologies.puli;
 
-import java.util.Collection;
+import java.util.Set;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
+class RemoveAssertedProof<I extends Inference<?>> extends FilteredProof<I> {
 
-class RemoveAssertedProof<C> extends DelegatingProof<C, Proof<C>>
-		implements Predicate<Inference<C>> {
+	private final Set<?> assertedConclusions_;
 
-	RemoveAssertedProof(final Proof<C> delegate) {
+	RemoveAssertedProof(final Proof<? extends I> delegate,
+			Set<?> assertedConclusions) {
 		super(delegate);
+		this.assertedConclusions_ = assertedConclusions;
 	}
 
 	@Override
-	public Collection<? extends Inference<C>> getInferences(
-			final C conclusion) {
-		return Collections2.filter(getDelegate().getInferences(conclusion),
-				this);
-	}
-
-	@Override
-	public boolean apply(Inference<C> input) {
-		return !Inferences.isAsserted(input);
+	public boolean apply(I inference) {
+		return !Inferences.isAsserted(inference)
+				|| assertedConclusions_.contains(inference.getConclusion());
 	}
 
 }

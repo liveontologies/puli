@@ -40,7 +40,7 @@ public class Inferences {
 	 * @param inference
 	 * @return {@code true}
 	 */
-	public static <C> boolean isAsserted(Inference<C> inference) {
+	public static boolean isAsserted(Inference<?> inference) {
 		return AssertedConclusionInference.NAME.equals(inference.getName());
 	}
 

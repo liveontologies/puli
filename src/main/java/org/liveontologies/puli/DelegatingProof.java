@@ -23,15 +23,15 @@ package org.liveontologies.puli;
 
 import java.util.Collection;
 
-public class DelegatingProof<C, S extends Proof<C>> extends Delegator<S>
-		implements Proof<C> {
+public class DelegatingProof<I extends Inference<?>, S extends Proof<? extends I>>
+		extends Delegator<S> implements Proof<I> {
 
 	public DelegatingProof(S delegate) {
 		super(delegate);
 	}
 
 	@Override
-	public Collection<? extends Inference<C>> getInferences(C conclusion) {
+	public Collection<? extends I> getInferences(Object conclusion) {
 		return getDelegate().getInferences(conclusion);
 	}
 

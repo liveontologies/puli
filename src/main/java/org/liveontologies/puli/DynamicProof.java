@@ -26,9 +26,10 @@ package org.liveontologies.puli;
  * 
  * @author Yevgeny Kazakov
  *
- * @param <C>
+ * @param <I>
+ *            the type of inferences provided by this proof
  */
-public interface DynamicProof<C> extends Proof<C> {
+public interface DynamicProof<I extends Inference<?>> extends Proof<I> {
 
 	public void addListener(ChangeListener listener);
 

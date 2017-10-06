@@ -27,26 +27,27 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class PrunedProof<C> extends DelegatingProof<C, Proof<C>>
-		implements Proof<C>, Producer<Inference<C>> {
+public class PrunedProof<I extends Inference<?>>
+		extends DelegatingProof<I, Proof<? extends I>>
+		implements Proof<I>, Producer<I> {
 
-	private final Map<C, Inference<C>> expanded_ = new HashMap<C, Inference<C>>();
+	private final Map<Object, I> expanded_ = new HashMap<Object, I>();
 
-	public PrunedProof(Proof<C> delegate, C goal) {
+	public PrunedProof(Proof<? extends I> delegate, Object goal) {
 		super(delegate);
-		Set<C> essential = Proofs.getEssentialConclusions(delegate, goal);
+		Set<Object> essential = Proofs.getEssentialConclusions(delegate, goal);
 		Proofs.expand(essential, Proofs.removeAssertedInferences(delegate),
 				goal, this);
 	}
 
 	@Override
-	public void produce(Inference<C> inf) {
+	public void produce(I inf) {
 		expanded_.put(inf.getConclusion(), inf);
 	}
 
 	@Override
-	public Collection<? extends Inference<C>> getInferences(C conclusion) {
-		Inference<C> inf = expanded_.get(conclusion);
+	public Collection<? extends I> getInferences(Object conclusion) {
+		I inf = expanded_.get(conclusion);
 		if (inf == null) {
 			return super.getInferences(conclusion);
 		}

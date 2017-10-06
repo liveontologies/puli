@@ -34,32 +34,30 @@ import com.google.common.base.Preconditions;
  * conclusion.
  * 
  * @author Peter Skocovsky
+ * @author Yevgeny Kazakov
  *
- * @param <C>
- *            The type of conclusion and premises used by the inferences.
  * @param <I>
- *            The type of the inferences.
+ *            the type of inferences provided by this proof
  */
-public class ProofUnion<C, I extends Inference<C>>
-		implements GenericProof<C, I> {
+public class ProofUnion<I extends Inference<?>> implements Proof<I> {
 
-	private final Iterable<? extends GenericProof<C, I>> proofs_;
+	private final Iterable<? extends Proof<? extends I>> proofs_;
 
-	public ProofUnion(final Iterable<? extends GenericProof<C, I>> proofs) {
+	public ProofUnion(final Iterable<? extends Proof<? extends I>> proofs) {
 		Preconditions.checkNotNull(proofs);
 		this.proofs_ = proofs;
 	}
 
-	public ProofUnion(final GenericProof<C, I>... proofs) {
+	public ProofUnion(final Proof<? extends I>... proofs) {
 		this(Arrays.asList(proofs));
 	}
 
 	@Override
-	public Collection<? extends I> getInferences(final C conclusion) {
+	public Collection<? extends I> getInferences(final Object conclusion) {
 
 		final List<I> result = new ArrayList<I>();
 
-		for (final GenericProof<C, I> proof : proofs_) {
+		for (final Proof<? extends I> proof : proofs_) {
 			final Collection<? extends I> infs = proof
 					.getInferences(conclusion);
 			if (infs != null) {

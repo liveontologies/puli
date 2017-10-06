@@ -49,7 +49,7 @@ public class ProofTest {
 		b.conclusion(1).premise(2).add();
 		b.conclusion(2).premise(3).premise(4).add();
 		b.conclusion(2).premise(5).premise(6).add();
-		Proof<Integer> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.build();
 		assertEquals(1, p.getInferences(1).size());
 		assertEquals(2, p.getInferences(2).size());
 		assertEquals(0, p.getInferences(3).size());
@@ -62,7 +62,7 @@ public class ProofTest {
 		b.conclusion("A ⊑ B").premise("A ⊑ C").premise("C ⊑ B").add();
 		b.conclusion("A ⊑ C").premise("A ⊑ D").premise("D ⊑ C").add();
 		b.conclusion("A ⊑ D").premise("A ⊑ B").premise("B ⊑ D").add();
-		Proof<String> p = b.build();
+		Proof<? extends Inference<String>> p = b.build();
 
 		Set<String> stated = new HashSet<String>(
 				Arrays.asList("A ⊑ B ⊓ C", "B ⊑ D", "D ⊑ C", "C ⊑ B"));
@@ -103,7 +103,7 @@ public class ProofTest {
 		b.conclusion(1).premise(2).add();
 		b.conclusion(11).premise(2).add();
 		b.conclusion(2).add();
-		BaseProof.Projection<Integer> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.build();
 		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
 				p);
 		checker.block(2);
@@ -124,7 +124,7 @@ public class ProofTest {
 		b.conclusion(22).premise(2).add();
 		b.conclusion(1).add();
 		b.conclusion(2).add();
-		BaseProof.Projection<Integer> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.build();
 		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
 				p);
 		assertTrue(checker.isDerivable(0));
@@ -146,7 +146,7 @@ public class ProofTest {
 		b.conclusion(1).premise(3).premise(4).add();
 		b.conclusion(3).add();
 		b.conclusion(4).add();
-		BaseProof.Projection<Integer> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.build();
 		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
 				p);
 		assertTrue(checker.isDerivable(0));
@@ -174,7 +174,7 @@ public class ProofTest {
 		b.conclusion(0).premise(2).add();
 		b.conclusion(1).add();
 		b.conclusion(2).add();
-		BaseProof.Projection<Integer> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.build();
 		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer>(
 				p);
 		checker.block(1);
@@ -195,7 +195,7 @@ public class ProofTest {
 		b.conclusion(0).premise(1).premise(2).add();
 		b.conclusion(0).premise(3).premise(4).add();
 		b.conclusion(2).premise(0).premise(0).add();
-		BaseProof.Projection<Integer> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.build();
 
 		Set<Integer> stated = new HashSet<Integer>(Arrays.asList(1, 3, 4));
 
@@ -234,7 +234,7 @@ public class ProofTest {
 		b.conclusion(1).premise(3).premise(4).premise(5).add();
 		b.conclusion(3).premise(6).premise(7).add();
 		b.conclusion(4).premise(8).premise(9).add();
-		BaseProof.Projection<Integer> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.build();
 
 		Set<Integer> stated = new HashSet<Integer>(
 				Arrays.asList(2, 5, 6, 7, 8, 9));
