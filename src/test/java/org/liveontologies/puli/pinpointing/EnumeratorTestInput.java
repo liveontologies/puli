@@ -28,9 +28,9 @@ import org.liveontologies.puli.Inference;
 import org.liveontologies.puli.InferenceJustifier;
 import org.liveontologies.puli.Proof;
 
-public interface EnumeratorTestInput<I extends Inference<?>, A> {
+public interface EnumeratorTestInput<C, I extends Inference<? extends C>, A> {
 
-	Object getQuery();
+	C getQuery();
 
 	Proof<? extends I> getProof();
 

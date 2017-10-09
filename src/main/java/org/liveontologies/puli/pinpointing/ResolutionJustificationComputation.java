@@ -63,19 +63,22 @@ import com.google.common.primitives.Ints;
  * @author Peter Skocovsky
  * @author Yevgeny Kazakov
  *
+ * @param <C>
+ *            the type of conclusions used in inferences
+ * 
  * @param <I>
  *            the type of inferences used in the proof
  * @param <A>
  *            the type of axioms used by the inferences
  */
-public class ResolutionJustificationComputation<I extends Inference<?>, A>
-		extends MinimalSubsetsFromProofs<I, A> {
+public class ResolutionJustificationComputation<C, I extends Inference<? extends C>, A>
+		extends MinimalSubsetsFromProofs<C, I, A> {
 
-	private static final ResolutionJustificationComputation.Factory<?, ?> FACTORY_ = new Factory<Inference<?>, Object>();
+	private static final ResolutionJustificationComputation.Factory<?, ?, ?> FACTORY_ = new Factory<Object, Inference<?>, Object>();
 
 	@SuppressWarnings("unchecked")
-	public static <I extends Inference<?>, A> Factory<I, A> getFactory() {
-		return (Factory<I, A>) FACTORY_;
+	public static <C, I extends Inference<? extends C>, A> Factory<C, I, A> getFactory() {
+		return (Factory<C, I, A>) FACTORY_;
 	}
 
 	public enum SelectionType {
@@ -88,9 +91,9 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 	/**
 	 * Conclusions for which computation of justifications has been initialized
 	 */
-	private final Set<Object> initialized_ = new HashSet<Object>();
+	private final Set<C> initialized_ = new HashSet<C>();
 
-	private final IdMap<Object> conclusionIds_ = HashIdMap.create();
+	private final IdMap<C> conclusionIds_ = HashIdMap.create();
 
 	private final IdMap<A> axiomIds_ = HashIdMap.create();
 
@@ -136,7 +139,7 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 	}
 
 	@Override
-	public MinimalSubsetEnumerator<A> newEnumerator(Object query) {
+	public MinimalSubsetEnumerator<A> newEnumerator(C query) {
 		return new JustificationEnumerator(query);
 	}
 
@@ -352,15 +355,15 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 		/**
 		 * the conclusion for which to enumerate justifications
 		 */
-		private final Object query_;
+		private final C query_;
 
-		public JustificationEnumerator(Object query) {
+		public JustificationEnumerator(C query) {
 			this.query_ = query;
 		}
 
 		@Override
 		public void enumerate(final Listener<A> listener,
-				final PriorityComparator<? super Set<A>, ?> priorityComparator) {			
+				final PriorityComparator<? super Set<A>, ?> priorityComparator) {
 			Preconditions.checkNotNull(listener);
 			if (priorityComparator == null) {
 				enumerate(listener);
@@ -388,7 +391,7 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 		/**
 		 * the conclusion for which to enumerate justifications
 		 */
-		private final Object query_;
+		private final C query_;
 
 		private final int queryId_;
 
@@ -407,7 +410,7 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 		 * a temporary queue used to initialize computation of justifications
 		 * for conclusions that are not yet {@link #initialized_}
 		 */
-		private final Queue<Object> toInitialize_ = new ArrayDeque<Object>();
+		private final Queue<C> toInitialize_ = new ArrayDeque<C>();
 
 		/**
 		 * the listener through which to report the justifications
@@ -423,7 +426,7 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 
 		private final InferenceProcessor<P> resolver_;
 
-		JustificationProcessor(Object query, final Listener<A> listener,
+		JustificationProcessor(C query, final Listener<A> listener,
 				PriorityComparator<? super Set<A>, P> priorityComparator) {
 			this.query_ = query;
 			this.queryId_ = conclusionIds_.getId(query);
@@ -440,11 +443,11 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 			return ResolutionJustificationComputation.this.getProof();
 		}
 
-		IdMap<Object> getConclusionIds() {
+		IdMap<C> getConclusionIds() {
 			return conclusionIds_;
 		}
 
-		private void toInitialize(Object conclusion) {
+		private void toInitialize(C conclusion) {
 			if (initialized_.add(conclusion)) {
 				toInitialize_.add(conclusion);
 			}
@@ -454,16 +457,16 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 			blockedInferences_.add(inf);
 		}
 
-		private void initialize() {			
+		private void initialize() {
 			toInitialize(query_);
 			for (;;) {
-				Object next = toInitialize_.poll();				
+				C next = toInitialize_.poll();
 				if (next == null) {
 					return;
 				}
-				for (final I inf : getInferences(next)) {					
+				for (final I inf : getInferences(next)) {
 					produce(newDerivedInference(inf, getInferenceJustifier()));
-					for (Object premise : inf.getPremises()) {
+					for (C premise : inf.getPremises()) {
 						toInitialize(premise);
 					}
 				}
@@ -489,12 +492,12 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 			}
 		}
 
-		private void process() {			
+		private void process() {
 			for (;;) {
 				if (isInterrupted()) {
 					break;
 				}
-				UnprocessedInference<P> next = unprocessedInferences_.poll();				
+				UnprocessedInference<P> next = unprocessedInferences_.poll();
 				if (next == null) {
 					break;
 				}
@@ -550,7 +553,7 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 
 		}
 
-		private void produce(final UnprocessedInference<P> resolvent) {			
+		private void produce(final UnprocessedInference<P> resolvent) {
 			if (resolvent.isATautology()) {
 				// skip tautologies
 				return;
@@ -588,7 +591,7 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 									secondInference.justificationIds_))));
 		}
 
-		int[] getConclusionIds(Collection<?> conclusions) {
+		int[] getConclusionIds(Collection<? extends C> conclusions) {
 			return SortedIdSet.getIds(conclusions, conclusionIds_);
 		}
 
@@ -910,27 +913,30 @@ public class ResolutionJustificationComputation<I extends Inference<?>, A>
 	 * 
 	 * @author Peter Skocovsky
 	 *
+	 * @param <C>
+	 *            the type of conclusions used in inferences
+	 *
 	 * @param <I>
 	 *            the type of inferences used in the proof
 	 * @param <A>
 	 *            the type of axioms used by the inferences
 	 */
-	public static class Factory<I extends Inference<?>, A>
-			implements MinimalSubsetsFromProofs.Factory<I, A> {
+	public static class Factory<C, I extends Inference<? extends C>, A>
+			implements MinimalSubsetsFromProofs.Factory<C, I, A> {
 
 		@Override
-		public MinimalSubsetEnumerator.Factory<Object, A> create(
+		public MinimalSubsetEnumerator.Factory<C, A> create(
 				final Proof<? extends I> proof,
 				final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor) {
 			return create(proof, justifier, monitor, SelectionType.THRESHOLD);
 		}
 
-		public MinimalSubsetEnumerator.Factory<Object, A> create(
+		public MinimalSubsetEnumerator.Factory<C, A> create(
 				final Proof<? extends I> proof,
 				final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 				final InterruptMonitor monitor, final SelectionType selection) {
-			return new ResolutionJustificationComputation<I, A>(proof,
+			return new ResolutionJustificationComputation<C, I, A>(proof,
 					justifier, monitor, selection);
 		}
 

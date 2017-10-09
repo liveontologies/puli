@@ -30,7 +30,7 @@ import org.liveontologies.puli.ProofAndJustifierBuilder;
 import org.liveontologies.puli.pinpointing.EnumeratorTestInput;
 
 public abstract class BaseEnumeratorTestInput<C, A>
-		implements EnumeratorTestInput<JustifiedInference<C, A>, A> {
+		implements EnumeratorTestInput<C, JustifiedInference<C, A>, A> {
 
 	private final ProofAndJustifierBuilder<C, A> builder_;
 

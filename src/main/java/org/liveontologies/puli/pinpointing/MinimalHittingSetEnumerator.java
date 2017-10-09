@@ -39,12 +39,12 @@ public class MinimalHittingSetEnumerator<E> implements
 
 	private static final Object CONCLUSION_ = new Object();
 
-	private final MinimalSubsetsFromProofs.Factory<SetWrapperInference, E> repairComputationFactory_;
+	private final MinimalSubsetsFromProofs.Factory<Object, SetWrapperInference, E> repairComputationFactory_;
 
 	private final InterruptMonitor monitor_;
 
 	public MinimalHittingSetEnumerator(
-			final MinimalSubsetsFromProofs.Factory<SetWrapperInference, E> repairComputationFactory,
+			final MinimalSubsetsFromProofs.Factory<Object, SetWrapperInference, E> repairComputationFactory,
 			final InterruptMonitor monitor) {
 		this.repairComputationFactory_ = repairComputationFactory;
 		this.monitor_ = monitor;
@@ -153,7 +153,7 @@ public class MinimalHittingSetEnumerator<E> implements
 		final Collection<Set<? extends E>> result = new ArrayList<Set<? extends E>>();
 
 		final MinimalHittingSetEnumerator<E> computation = new MinimalHittingSetEnumerator<E>(
-				TopDownRepairComputation.<MinimalHittingSetEnumerator<E>
+				TopDownRepairComputation.<Object, MinimalHittingSetEnumerator<E>
 						.SetWrapperInference, E> getFactory(),
 				InterruptMonitor.DUMMY);
 		computation.newEnumerator(sets)

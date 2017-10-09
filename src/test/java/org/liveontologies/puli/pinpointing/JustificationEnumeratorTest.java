@@ -30,13 +30,13 @@ import org.junit.runners.Parameterized.Parameters;
 import org.liveontologies.puli.Inference;
 
 @RunWith(Parameterized.class)
-public class JustificationEnumeratorTest<I extends Inference<?>, A>
-		extends BaseEnumeratorTest<I, A> {
+public class JustificationEnumeratorTest<C, I extends Inference<? extends C>, A>
+		extends BaseEnumeratorTest<C, I, A> {
 
 	public static final String TEST_INPUT_SUBPKG = "input.justifications";
 
-	public static List<MinimalSubsetsFromProofs.Factory<?, ?>> getJustificationEnumeratorFactories() {
-		final List<MinimalSubsetsFromProofs.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromProofs.Factory<?, ?>>();
+	public static List<MinimalSubsetsFromProofs.Factory<?, ?, ?>> getJustificationEnumeratorFactories() {
+		final List<MinimalSubsetsFromProofs.Factory<?, ?, ?>> factories = new ArrayList<MinimalSubsetsFromProofs.Factory<?, ?, ?>>();
 		factories.add(ResolutionJustificationComputation.getFactory());
 		return factories;
 	}

@@ -30,13 +30,13 @@ import org.junit.runners.Parameterized.Parameters;
 import org.liveontologies.puli.Inference;
 
 @RunWith(Parameterized.class)
-public class RepairEnumeratorTest<I extends Inference<?>, A>
-		extends BaseEnumeratorTest<I, A> {
+public class RepairEnumeratorTest<C, I extends Inference<? extends C>, A>
+		extends BaseEnumeratorTest<C, I, A> {
 
 	public static final String TEST_INPUT_SUBPKG = "input.repairs";
 
-	public static List<MinimalSubsetsFromProofs.Factory<?, ?>> getRepairEnumeratorFactories() {
-		final List<MinimalSubsetsFromProofs.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromProofs.Factory<?, ?>>();
+	public static List<MinimalSubsetsFromProofs.Factory<?, ?, ?>> getRepairEnumeratorFactories() {
+		final List<MinimalSubsetsFromProofs.Factory<?, ?, ?>> factories = new ArrayList<MinimalSubsetsFromProofs.Factory<?, ?, ?>>();
 		factories.add(TopDownRepairComputation.getFactory());
 		return factories;
 	}

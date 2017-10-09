@@ -37,13 +37,15 @@ import com.google.common.base.Preconditions;
  * 
  * @author Yevgeny Kazakov
  *
+ * @param <C>
+ *            the type of conclusions used in inferences
  * @param <I>
  *            the type of inferences used in the proof
  * @param <A>
  *            the type of axioms used in justification of inferences
  */
-public abstract class MinimalSubsetsFromProofs<I extends Inference<?>, A>
-		implements MinimalSubsetEnumerator.Factory<Object, A> {
+public abstract class MinimalSubsetsFromProofs<C, I extends Inference<? extends C>, A>
+		implements MinimalSubsetEnumerator.Factory<C, A> {
 
 	private final Proof<? extends I> proof_;
 
@@ -70,7 +72,7 @@ public abstract class MinimalSubsetsFromProofs<I extends Inference<?>, A>
 		return justifier_;
 	}
 
-	public Collection<? extends I> getInferences(final Object conclusion) {		
+	public Collection<? extends I> getInferences(final C conclusion) {
 		return proof_.getInferences(conclusion);
 	}
 
@@ -88,12 +90,15 @@ public abstract class MinimalSubsetsFromProofs<I extends Inference<?>, A>
 	 * @author Yevgeny Kazakov
 	 * @author Peter Skocovsky
 	 * 
+	 * @param <C>
+	 *            the type of conclusions used in inferences
+	 * 
 	 * @param <I>
 	 *            the type of inferences used in the proof
 	 * @param <A>
 	 *            the type of axioms used by the inferences
 	 */
-	public static interface Factory<I extends Inference<?>, A> {
+	public static interface Factory<C, I extends Inference<? extends C>, A> {
 
 		/**
 		 * @param proof
@@ -102,8 +107,7 @@ public abstract class MinimalSubsetsFromProofs<I extends Inference<?>, A>
 		 * @return a new {@link MinimalSubsetEnumerator.Factory} which uses the
 		 *         given proof and inference justifier
 		 */
-		MinimalSubsetEnumerator.Factory<Object, A> create(
-				Proof<? extends I> proof,
+		MinimalSubsetEnumerator.Factory<C, A> create(Proof<? extends I> proof,
 				InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 				InterruptMonitor monitor);
 

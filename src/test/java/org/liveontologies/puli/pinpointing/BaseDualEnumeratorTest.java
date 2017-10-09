@@ -32,21 +32,21 @@ import org.junit.runners.Parameterized.Parameter;
 import org.liveontologies.puli.Inference;
 
 @RunWith(Parameterized.class)
-public abstract class BaseDualEnumeratorTest<I extends Inference<?>, A> {
+public abstract class BaseDualEnumeratorTest<C, I extends Inference<? extends C>, A> {
 
 	@Parameter(0)
 	public String name;
 
 	@Parameter(1)
-	public EnumeratorTestInput<I, A> input;
+	public EnumeratorTestInput<C, I, A> input;
 
 	@Parameter(2)
-	public MinimalSubsetsFromProofs.Factory<I, A> factory;
+	public MinimalSubsetsFromProofs.Factory<C, I, A> factory;
 
 	@Test
 	public void testJustifications() {
 
-		final MinimalSubsetEnumerator.Factory<Object, A> computation = factory
+		final MinimalSubsetEnumerator.Factory<C, A> computation = factory
 				.create(input.getProof(), input.getJustifier(),
 						InterruptMonitor.DUMMY);
 

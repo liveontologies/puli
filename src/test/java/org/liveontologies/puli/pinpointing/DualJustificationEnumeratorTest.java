@@ -30,11 +30,11 @@ import org.junit.runners.Parameterized.Parameters;
 import org.liveontologies.puli.Inference;
 
 @RunWith(Parameterized.class)
-public class DualJustificationEnumeratorTest<I extends Inference<?>, A>
-		extends BaseDualEnumeratorTest<I, A> {
+public class DualJustificationEnumeratorTest<C, I extends Inference<? extends C>, A>
+		extends BaseDualEnumeratorTest<C, I, A> {
 
-	public static List<MinimalSubsetsFromProofs.Factory<?, ?>> getJustificationEnumeratorFactories() {
-		final List<MinimalSubsetsFromProofs.Factory<?, ?>> factories = new ArrayList<MinimalSubsetsFromProofs.Factory<?, ?>>();
+	public static List<MinimalSubsetsFromProofs.Factory<?, ?, ?>> getJustificationEnumeratorFactories() {
+		final List<MinimalSubsetsFromProofs.Factory<?, ?, ?>> factories = new ArrayList<MinimalSubsetsFromProofs.Factory<?, ?, ?>>();
 		factories.add(ResolutionJustificationComputation.getFactory());
 		return factories;
 	}

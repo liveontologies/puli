@@ -86,10 +86,10 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <I extends Inference<?>, A> void enumerate(final Object query,
-			final Proof<? extends I> proof,
+	public static <C, I extends Inference<? extends C>, A> void enumerate(
+			final C query, final Proof<? extends I> proof,
 			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
-			final MinimalSubsetsFromProofs.Factory<I, A> computationFactory,
+			final MinimalSubsetsFromProofs.Factory<C, I, A> computationFactory,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, computationFactory.create(proof, justifier, monitor),
@@ -114,11 +114,11 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <I extends Inference<?>, A> void enumerate(final Object query,
-			final Proof<? extends I> proof,
+	public static <C, I extends Inference<? extends C>, A> void enumerate(
+			final C query, final Proof<? extends I> proof,
 			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final PriorityComparator<? super Set<A>, ?> priorityComparator,
-			final MinimalSubsetsFromProofs.Factory<I, A> computationFactory,
+			final MinimalSubsetsFromProofs.Factory<C, I, A> computationFactory,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, priorityComparator,
@@ -136,14 +136,14 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <I extends Inference<?>, A> void enumerateJustifications(
-			final Object query, final Proof<? extends I> proof,
+	public static <C, I extends Inference<? extends C>, A> void enumerateJustifications(
+			final C query, final Proof<? extends I> proof,
 			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, proof, justifier,
-				ResolutionJustificationComputation.<I, A> getFactory(), monitor,
-				listener);
+				ResolutionJustificationComputation.<C, I, A> getFactory(),
+				monitor, listener);
 	}
 
 	/**
@@ -163,15 +163,15 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <I extends Inference<?>, A> void enumerateJustifications(
-			final Object query, final Proof<? extends I> proof,
+	public static <C, I extends Inference<? extends C>, A> void enumerateJustifications(
+			final C query, final Proof<? extends I> proof,
 			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final PriorityComparator<? super Set<A>, ?> priorityComparator,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, proof, justifier, priorityComparator,
-				ResolutionJustificationComputation.<I, A> getFactory(), monitor,
-				listener);
+				ResolutionJustificationComputation.<C, I, A> getFactory(),
+				monitor, listener);
 	}
 
 	/**
@@ -185,13 +185,13 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <I extends Inference<?>, A> void enumerateRepairs(
-			final Object query, final Proof<? extends I> proof,
+	public static <C, I extends Inference<? extends C>, A> void enumerateRepairs(
+			final C query, final Proof<? extends I> proof,
 			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, proof, justifier,
-				TopDownRepairComputation.<I, A> getFactory(), monitor,
+				TopDownRepairComputation.<C, I, A> getFactory(), monitor,
 				listener);
 	}
 
@@ -212,14 +212,14 @@ public class MinimalSubsetEnumerators {
 	 * @param monitor
 	 * @param listener
 	 */
-	public static <I extends Inference<?>, A> void enumerateRepairs(
-			final Object query, final Proof<? extends I> proof,
+	public static <C, I extends Inference<? extends C>, A> void enumerateRepairs(
+			final C query, final Proof<? extends I> proof,
 			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			final PriorityComparator<? super Set<A>, ?> priorityComparator,
 			final InterruptMonitor monitor,
 			final MinimalSubsetEnumerator.Listener<A> listener) {
 		enumerate(query, proof, justifier, priorityComparator,
-				TopDownRepairComputation.<I, A> getFactory(), monitor,
+				TopDownRepairComputation.<C, I, A> getFactory(), monitor,
 				listener);
 	}
 

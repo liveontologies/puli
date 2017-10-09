@@ -39,12 +39,14 @@ import java.util.Set;
  * 
  * @author Yevgeny Kazakov
  *
+ * @param <C>
+ *            the type of conclusions in inferences
  * @param <I>
  *            the type of the inferences returned by the proof
  * @param <A>
  *            the type of the axioms in the justification of inferences
  */
-public class ProofPrinter<I extends Inference<?>, A> {
+public class ProofPrinter<C, I extends Inference<? extends C>, A> {
 
 	/**
 	 * the set of inferences from which the proofs are formed
@@ -54,7 +56,7 @@ public class ProofPrinter<I extends Inference<?>, A> {
 	/**
 	 * provides justifications for inferences
 	 */
-	private final InferenceJustifier<I, ? extends Set<? extends A>> justifier_;
+	private final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier_;
 
 	/**
 	 * the current positions of iterators over inferences for conclusions
@@ -64,7 +66,7 @@ public class ProofPrinter<I extends Inference<?>, A> {
 	/**
 	 * the current positions of iterators over conclusions for inferences
 	 */
-	private final Deque<Iterator<?>> conclusionStack_ = new LinkedList<Iterator<?>>();
+	private final Deque<Iterator<? extends C>> conclusionStack_ = new LinkedList<Iterator<? extends C>>();
 
 	/**
 	 * the current positions of iterators over justifications for inferences
@@ -74,7 +76,7 @@ public class ProofPrinter<I extends Inference<?>, A> {
 	/**
 	 * accumulates the printed conclusions to avoid repetitions
 	 */
-	private final Set<Object> printed_ = new HashSet<Object>();
+	private final Set<C> printed_ = new HashSet<C>();
 
 	/**
 	 * where the output is written
@@ -82,7 +84,7 @@ public class ProofPrinter<I extends Inference<?>, A> {
 	private final BufferedWriter writer_;
 
 	protected ProofPrinter(final Proof<? extends I> proof,
-			final InferenceJustifier<I, ? extends Set<? extends A>> justifier,
+			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
 			BufferedWriter writer) {
 		this.proof_ = proof;
 		this.justifier_ = justifier;
@@ -90,27 +92,27 @@ public class ProofPrinter<I extends Inference<?>, A> {
 	}
 
 	protected ProofPrinter(final Proof<? extends I> proof,
-			final InferenceJustifier<I, ? extends Set<? extends A>> justifier) {
+			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier) {
 		this(proof, justifier,
 				new BufferedWriter(new OutputStreamWriter(System.out)));
 	}
 
-	public void printProof(Object conclusion) throws IOException {
+	public void printProof(C conclusion) throws IOException {
 		process(conclusion);
 		process();
 		writer_.flush();
 	}
 
-	public static <I extends Inference<?>, A> void print(
+	public static <C, I extends Inference<? extends C>, A> void print(
 			final Proof<? extends I> proof,
-			final InferenceJustifier<I, ? extends Set<? extends A>> justifier,
-			Object goal) throws IOException {
-		ProofPrinter<I, A> pp = new ProofPrinter<I, A>(proof, justifier);
+			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
+			C goal) throws IOException {
+		ProofPrinter<C, I, A> pp = new ProofPrinter<C, I, A>(proof, justifier);
 		pp.printProof(goal);
 	}
 
-	public static <I extends Inference<?>> void print(
-			final Proof<? extends I> proof, Object goal) throws IOException {
+	public static <C, I extends Inference<? extends C>> void print(
+			final Proof<? extends I> proof, C goal) throws IOException {
 		print(proof,
 				new BaseInferenceJustifier<I, Set<Void>>(
 						Collections.<I, Set<Void>> emptyMap(),
@@ -122,12 +124,12 @@ public class ProofPrinter<I extends Inference<?>, A> {
 		return writer_;
 	}
 
-	protected void writeConclusion(Object conclusion) throws IOException {
+	protected void writeConclusion(C conclusion) throws IOException {
 		// can be overridden
 		writer_.write(conclusion.toString());
 	}
 
-	private boolean process(Object conclusion) throws IOException {
+	private boolean process(C conclusion) throws IOException {
 		writePrefix();
 		writeConclusion(conclusion);
 		boolean newConclusion = printed_.add(conclusion);
@@ -164,7 +166,7 @@ public class ProofPrinter<I extends Inference<?>, A> {
 				inferenceStack_.pop();
 			}
 			// processing conclusions
-			Iterator<?> conclIter = conclusionStack_.peek();
+			Iterator<? extends C> conclIter = conclusionStack_.peek();
 			if (conclIter == null) {
 				return;
 			}
@@ -197,7 +199,7 @@ public class ProofPrinter<I extends Inference<?>, A> {
 	private void writePrefix() throws IOException {
 		Iterator<Iterator<? extends I>> inferStackItr = inferenceStack_
 				.descendingIterator();
-		Iterator<Iterator<?>> conclStackItr = conclusionStack_
+		Iterator<Iterator<? extends C>> conclStackItr = conclusionStack_
 				.descendingIterator();
 		Iterator<Iterator<? extends A>> justStackItr = justificationStack_
 				.descendingIterator();

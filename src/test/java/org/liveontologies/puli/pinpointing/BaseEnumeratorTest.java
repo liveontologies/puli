@@ -38,21 +38,21 @@ import org.junit.runners.Parameterized.Parameter;
 import org.liveontologies.puli.Inference;
 
 @RunWith(Parameterized.class)
-public abstract class BaseEnumeratorTest<I extends Inference<?>, A> {
+public abstract class BaseEnumeratorTest<C, I extends Inference<? extends C>, A> {
 
 	@Parameter(0)
 	public String name;
 
 	@Parameter(1)
-	public EnumeratorTestInput<I, A> input;
+	public EnumeratorTestInput<C, I, A> input;
 
 	@Parameter(2)
-	public MinimalSubsetsFromProofs.Factory<I, A> factory;
+	public MinimalSubsetsFromProofs.Factory<C, I, A> factory;
 
 	@Test
 	public void testJustifications() {
 
-		final MinimalSubsetEnumerator.Factory<Object, A> computation = factory
+		final MinimalSubsetEnumerator.Factory<C, A> computation = factory
 				.create(input.getProof(), input.getJustifier(),
 						InterruptMonitor.DUMMY);
 
@@ -65,15 +65,15 @@ public abstract class BaseEnumeratorTest<I extends Inference<?>, A> {
 	}
 
 	public static Iterable<Object[]> getParameters(
-			final List<MinimalSubsetsFromProofs.Factory<?, ?>> factories,
+			final List<MinimalSubsetsFromProofs.Factory<?, ?, ?>> factories,
 			final String testInputSubpkg) throws Exception {
 
-		final List<EnumeratorTestInput<?, ?>> inputs = getEnumeratorTestInputs(
+		final List<EnumeratorTestInput<?, ?, ?>> inputs = getEnumeratorTestInputs(
 				testInputSubpkg);
 
 		final List<Object[]> parameters = new ArrayList<Object[]>();
-		for (final MinimalSubsetsFromProofs.Factory<?, ?> factory : factories) {
-			for (final EnumeratorTestInput<?, ?> input : inputs) {
+		for (final MinimalSubsetsFromProofs.Factory<?, ?, ?> factory : factories) {
+			for (final EnumeratorTestInput<?, ?, ?> input : inputs) {
 				final String name = input.getClass().getSimpleName() + ", "
 						+ factory.getClass().getName();
 				parameters.add(new Object[] { name, input, factory });
@@ -85,12 +85,12 @@ public abstract class BaseEnumeratorTest<I extends Inference<?>, A> {
 
 	public static final String CLASS_FILE_EXT = ".class";
 
-	public static List<EnumeratorTestInput<?, ?>> getEnumeratorTestInputs(
+	public static List<EnumeratorTestInput<?, ?, ?>> getEnumeratorTestInputs(
 			final String testInputSubpkg)
 			throws URISyntaxException, ClassNotFoundException,
 			InstantiationException, IllegalAccessException {
 
-		final List<EnumeratorTestInput<?, ?>> inputs = new ArrayList<EnumeratorTestInput<?, ?>>();
+		final List<EnumeratorTestInput<?, ?, ?>> inputs = new ArrayList<EnumeratorTestInput<?, ?, ?>>();
 
 		final String pkgName = BaseEnumeratorTest.class.getPackage().getName();
 		final String inputsLocation = pkgName.replace('.', '/') + "/"
@@ -117,7 +117,7 @@ public abstract class BaseEnumeratorTest<I extends Inference<?>, A> {
 						+ " is not a subclass of " + EnumeratorTestInput.class);
 			}
 			// else
-			inputs.add((EnumeratorTestInput<?, ?>) inputClass.newInstance());
+			inputs.add((EnumeratorTestInput<?, ?, ?>) inputClass.newInstance());
 		}
 
 		return inputs;
