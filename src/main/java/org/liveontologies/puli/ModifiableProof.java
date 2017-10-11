@@ -21,6 +21,14 @@
  */
 package org.liveontologies.puli;
 
+/**
+ * A {@link Proof} whose inferences may change
+ * 
+ * @author Yevgeny Kazakov
+ *
+ * @param <I>
+ *            the type of inferences used in this proof
+ */
 public interface ModifiableProof<I extends Inference<?>>
 		extends Proof<I>, Producer<I> {
 

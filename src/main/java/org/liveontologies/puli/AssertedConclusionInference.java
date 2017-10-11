@@ -32,6 +32,7 @@ import java.util.List;
  * @author Yevgeny Kazakov
  *
  * @param <C>
+ *            the type of conclusions and premises of this inference
  */
 public class AssertedConclusionInference<C> extends Delegator<C>
 		implements Inference<C> {
