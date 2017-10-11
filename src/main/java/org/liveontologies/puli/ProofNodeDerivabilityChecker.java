@@ -22,7 +22,7 @@
 package org.liveontologies.puli;
 
 public class ProofNodeDerivabilityChecker
-		extends InferenceDerivabilityChecker<ProofNode<?>> {
+		extends InferenceDerivabilityChecker<ProofNode<?>, ProofStep<?>> {
 
 	public ProofNodeDerivabilityChecker() {
 		super(ProofNodeProof.get());

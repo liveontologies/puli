@@ -23,7 +23,7 @@ package org.liveontologies.puli;
 
 import java.util.List;
 
-public class DelegatingInference<C> extends Delegator<Inference<C>>
+public class DelegatingInference<C> extends Delegator<Inference<? extends C>>
 		implements Inference<C> {
 
 	public DelegatingInference(Inference<C> delegate) {

@@ -26,12 +26,12 @@ import java.util.List;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
-class TransformedInference<F, T> extends Delegator<Inference<F>>
+class TransformedInference<F, T> extends Delegator<Inference<? extends F>>
 		implements Inference<T> {
 
 	private final Function<? super F, ? extends T> function_;
 
-	public TransformedInference(final Inference<F> inference,
+	public TransformedInference(final Inference<? extends F> inference,
 			final Function<? super F, ? extends T> function) {
 		super(inference);
 		this.function_ = function;

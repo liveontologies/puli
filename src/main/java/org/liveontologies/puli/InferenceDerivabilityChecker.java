@@ -48,9 +48,11 @@ import com.google.common.collect.SetMultimap;
  * @author Yevgeny Kazakov
  *
  * @param <C>
- *            the type of conclusions supported by this checker
+ *            the type of conclusions in inferences
+ * @param <I>
+ *            the type of inferences in proofs
  */
-public class InferenceDerivabilityChecker<C>
+public class InferenceDerivabilityChecker<C, I extends Inference<? extends C>>
 		implements DerivabilityCheckerWithBlocking<C> {
 
 	// logger for this class
@@ -60,7 +62,7 @@ public class InferenceDerivabilityChecker<C>
 	/**
 	 * the inferences that can be used for deriving conclusions
 	 */
-	private final Proof<? extends Inference<? extends C>> proof_;
+	private final Proof<? extends I> proof_;
 
 	/**
 	 * conclusions that cannot be used in the derivations
@@ -80,7 +82,7 @@ public class InferenceDerivabilityChecker<C>
 	 * that have this conclusion as one of the premises; intuitively, these
 	 * inferences are "waiting" for this conclusion to be derived
 	 */
-	private final ListMultimap<C, Inference<? extends C>> watchedInferences_ = ArrayListMultimap
+	private final ListMultimap<C, I> watchedInferences_ = ArrayListMultimap
 			.create();
 
 	/**
@@ -95,14 +97,14 @@ public class InferenceDerivabilityChecker<C>
 	 * premises are also in {@link #derivable_}; intuitively, these inferences
 	 * are used in the derivations
 	 */
-	private final SetMultimap<C, Inference<? extends C>> firedInferencesByPremises_ = HashMultimap
+	private final SetMultimap<C, I> firedInferencesByPremises_ = HashMultimap
 			.create();
 
 	/**
 	 * a map containing inferences in {@link #firedInferencesByPremises_} with a
 	 * key for every premise of such inference
 	 */
-	private final ListMultimap<C, Inference<? extends C>> firedInferencesByConclusions_ = ArrayListMultimap
+	private final ListMultimap<C, I> firedInferencesByConclusions_ = ArrayListMultimap
 			.create();
 
 	/**
@@ -110,7 +112,7 @@ public class InferenceDerivabilityChecker<C>
 	 * {@link #proof_} with these conclusions that are neither present in
 	 * {@link #watchedInferences_} nor in {@link #firedInferencesByConclusions_}
 	 */
-	private final Map<C, Queue<Inference<? extends C>>> remainingInferences_ = new HashMap<C, Queue<Inference<? extends C>>>();
+	private final Map<C, Queue<I>> remainingInferences_ = new HashMap<C, Queue<I>>();
 
 	/**
 	 * conclusions for which a derivability test was initiated or finished
@@ -130,8 +132,7 @@ public class InferenceDerivabilityChecker<C>
 	 */
 	private final Queue<C> toPropagate_ = new LinkedList<C>();
 
-	public InferenceDerivabilityChecker(
-			Proof<? extends Inference<? extends C>> proof) {
+	public InferenceDerivabilityChecker(Proof<? extends I> proof) {
 		Preconditions.checkNotNull(proof);
 		this.proof_ = proof;
 	}
@@ -244,12 +245,11 @@ public class InferenceDerivabilityChecker<C>
 			C derivable = toPropagate_.poll();
 
 			if (derivable != null) {
-				List<Inference<? extends C>> watched = watchedInferences_
-						.removeAll(derivable);
+				List<I> watched = watchedInferences_.removeAll(derivable);
 				List<Integer> positions = watchPremisePositions_
 						.removeAll(derivable);
 				for (int i = 0; i < watched.size(); i++) {
-					Inference<? extends C> inf = watched.get(i);
+					I inf = watched.get(i);
 					int pos = positions.get(i);
 					check(pos, inf);
 				}
@@ -263,9 +263,8 @@ public class InferenceDerivabilityChecker<C>
 					toCheck_.poll();
 					continue;
 				}
-				Queue<Inference<? extends C>> inferences = getRemainingInferences(
-						unknown);
-				Inference<? extends C> inf = inferences.poll();
+				Queue<I> inferences = getRemainingInferences(unknown);
+				I inf = inferences.poll();
 				if (inf == null) {
 					toCheck_.poll();
 					continue;
@@ -281,18 +280,16 @@ public class InferenceDerivabilityChecker<C>
 
 	}
 
-	private Queue<Inference<? extends C>> getRemainingInferences(C conclusion) {
-		Queue<Inference<? extends C>> result = remainingInferences_
-				.get(conclusion);
+	private Queue<I> getRemainingInferences(C conclusion) {
+		Queue<I> result = remainingInferences_.get(conclusion);
 		if (result == null) {
-			result = new ArrayDeque<Inference<? extends C>>(
-					proof_.getInferences(conclusion));
+			result = new ArrayDeque<I>(proof_.getInferences(conclusion));
 			remainingInferences_.put(conclusion, result);
 		}
 		return result;
 	}
 
-	private void check(int pos, Inference<? extends C> inf) {
+	private void check(int pos, I inf) {
 		List<? extends C> premises = inf.getPremises();
 		int premiseCount = premises.size();
 		int premisesChecked = 0;
@@ -315,7 +312,7 @@ public class InferenceDerivabilityChecker<C>
 		}
 	}
 
-	private void fire(Inference<? extends C> inf) {
+	private void fire(I inf) {
 		LOGGER_.trace("{}: fire", inf);
 		C conclusion = inf.getConclusion();
 		derivable(conclusion);
@@ -326,10 +323,9 @@ public class InferenceDerivabilityChecker<C>
 		}
 	}
 
-	private void addWatch(C premise, int pos, Inference<? extends C> inf) {
+	private void addWatch(C premise, int pos, I inf) {
 		LOGGER_.trace("{}: watching position {}", inf, pos);
-		List<Inference<? extends C>> inferences = watchedInferences_
-				.get(premise);
+		List<I> inferences = watchedInferences_.get(premise);
 		List<Integer> positions = watchPremisePositions_.get(premise);
 		inferences.add(inf);
 		positions.add(pos);
@@ -351,16 +347,14 @@ public class InferenceDerivabilityChecker<C>
 			if (!blocked_.contains(conclusion)) {
 				toCheck_.addLast(conclusion);
 			}
-			List<Inference<? extends C>> fired = firedInferencesByConclusions_
-					.removeAll(conclusion);
-			for (Inference<? extends C> inf : fired) {
+			List<I> fired = firedInferencesByConclusions_.removeAll(conclusion);
+			for (I inf : fired) {
 				for (C premise : inf.getPremises()) {
 					firedInferencesByPremises_.remove(premise, inf);
 				}
 			}
 			getRemainingInferences(conclusion).addAll(fired);
-			for (Inference<? extends C> inf : firedInferencesByPremises_
-					.get(conclusion)) {
+			for (I inf : firedInferencesByPremises_.get(conclusion)) {
 				toSetUnknown_.add(inf.getConclusion());
 			}
 		}

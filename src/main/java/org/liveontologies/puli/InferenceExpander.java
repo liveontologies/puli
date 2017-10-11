@@ -29,7 +29,7 @@ import java.util.Set;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
-public class InferenceExpander<C, I extends Inference<? extends C>>
+class InferenceExpander<C, I extends Inference<? extends C>>
 		implements Producer<I> {
 
 	private final Set<C> derivable_;
@@ -43,10 +43,10 @@ public class InferenceExpander<C, I extends Inference<? extends C>>
 
 	private final Queue<C> newlyDerived_ = new ArrayDeque<C>();
 
-	private final Producer<I> producer_;
+	private final Producer<? super I> producer_;
 
 	InferenceExpander(Set<C> derivable, Proof<? extends I> proof, C goal,
-			Producer<I> producer) {
+			Producer<? super I> producer) {
 		this.proof_ = proof;
 		this.derivable_ = derivable;
 		this.producer_ = producer;
@@ -55,7 +55,7 @@ public class InferenceExpander<C, I extends Inference<? extends C>>
 
 	public static <C, I extends Inference<? extends C>> void expand(
 			Set<C> derivable, Proof<? extends I> proof, C goal,
-			Producer<I> producer) {
+			Producer<? super I> producer) {
 		new InferenceExpander<C, I>(derivable, proof, goal, producer);
 	}
 

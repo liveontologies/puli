@@ -27,15 +27,16 @@ import java.util.Map;
 
 /**
  * A {@link DynamicProof} that caches the inferences returned by the input
- * {@link DynamicProof} by {@link #getInferences(Object)}. When this method is
- * called for the second time with the same input, the cached version is used.
+ * {@link DynamicProof} by {@link DynamicProof#getInferences(Object)}. When this
+ * method is called for the second time with the same input, the cached version
+ * is used.
  * 
  * @author Yevgeny Kazakov
  *
  * @param <I>
  *            the type of inferences provided by this proof
  */
-public class CachingProof<I extends Inference<?>>
+class CachingProof<I extends Inference<?>>
 		extends DelegatingDynamicProof<I, DynamicProof<? extends I>>
 		implements DynamicProof.ChangeListener {
 

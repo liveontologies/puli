@@ -26,19 +26,35 @@ import java.util.List;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
+/**
+ * A collection of static methods for working with {@link Inference}s
+ * 
+ * @author Yevgeny Kazakov
+ */
 public class Inferences {
 
+	/**
+	 * @param name
+	 * @param conclusion
+	 * @param premises
+	 * @return a new {@link Inference} with the given names, conclusion, and
+	 *         premises
+	 * @see Inference#getName()
+	 * @see Inference#getConclusion()
+	 * @see Inference#getPremises()
+	 */
 	public static <C> Inference<C> create(String name, C conclusion,
 			List<? extends C> premises) {
 		return new BaseInference<C>(name, conclusion, premises);
 	}
 
 	/**
-	 * Tests if the given {@link Inference} is asserted, i.e., its name equals
+	 * Tests if the given {@link Inference} is asserted, i.e., its name is equal
 	 * to {@link AssertedConclusionInference#NAME}
 	 * 
 	 * @param inference
-	 * @return {@code true}
+	 * @return {@code true} if the inference is asserted and {@code false}
+	 *         otherwise
 	 */
 	public static boolean isAsserted(Inference<?> inference) {
 		return AssertedConclusionInference.NAME.equals(inference.getName());
@@ -50,12 +66,26 @@ public class Inferences {
 	 * @return an {@link Inference} obtained from the supplied one by replacing
 	 *         conclusion and premises according to the provided function.
 	 */
-	public static <F, T> Inference<T> transform(final Inference<F> inference,
+	public static <F, T> Inference<T> transform(
+			final Inference<? extends F> inference,
 			final Function<? super F, ? extends T> function) {
 		return new TransformedInference<F, T>(inference, function);
 	}
 
-	public static <C> boolean equals(Inference<C> inference, Object o) {
+	/**
+	 * Tests equality of an given {@link Inference} to a given object.
+	 * 
+	 * @param inference
+	 * @param o
+	 * @return {@code true} if the object is an inference and has the same name,
+	 *         conclusion, and premises as the given inference
+	 * 
+	 * @see Inference#getName()
+	 * @see Inference#getConclusion()
+	 * @see Inference#getPremises()
+	 * @see #hashCode()
+	 */
+	public static boolean equals(Inference<?> inference, Object o) {
 		if (o instanceof Inference<?>) {
 			Inference<?> other = (Inference<?>) o;
 			return (inference.getName().equals(other.getName())
@@ -66,7 +96,21 @@ public class Inferences {
 		return false;
 	}
 
-	public static <C> int hashCode(Inference<C> inference) {
+	/**
+	 * Computes the hash value of an {@link Inference}. As usual, the hash
+	 * function is compatible with the equality function, that is, if two
+	 * inferences are equal then the same hash values are returned for them.
+	 * 
+	 * @param inference
+	 * @return an integer number uniquely determined by the inference name, its
+	 *         conclusion, and its premises
+	 * 
+	 * @see Inference#getName()
+	 * @see Inference#getConclusion()
+	 * @see Inference#getPremises()
+	 * @see #equals(Object)
+	 */
+	public static int hashCode(Inference<?> inference) {
 		if (inference == null) {
 			return 0;
 		}
@@ -75,7 +119,18 @@ public class Inferences {
 				+ inference.getPremises().hashCode();
 	}
 
-	public static <C> String toString(Inference<C> inference) {
+	/**
+	 * Compute a string representation of the given {@link Inference}
+	 * 
+	 * @param inference
+	 * @return the string representing the inference uniquely determined by its
+	 *         name, conclusion, and premises
+	 * 
+	 * @see Inference#getName()
+	 * @see Inference#getConclusion()
+	 * @see Inference#getPremises()
+	 */
+	public static String toString(Inference<?> inference) {
 		Preconditions.checkNotNull(inference);
 		return inference.getConclusion() + " -| " + inference.getPremises()
 				+ " by " + inference.getName();

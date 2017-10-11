@@ -33,8 +33,18 @@ import java.util.Collection;
  */
 public interface ProofNode<C> {
 
+	/**
+	 * @return the conclusion represented by this {@link ProofNode}
+	 */
 	C getMember();
 
+	/**
+	 * @return the {@link ProofStep}s corresponding to inferences deriving the
+	 *         member; the conclusion of each inference must be equal to this
+	 *         {@link ProofNode}
+	 * 
+	 * @see ProofStep#getConclusion()
+	 */
 	Collection<? extends ProofStep<C>> getInferences();
 
 }

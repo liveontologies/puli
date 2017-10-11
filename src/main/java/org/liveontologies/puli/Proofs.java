@@ -28,6 +28,12 @@ import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
 
+/**
+ * A collection of static methods for working with {@link Proof}s
+ * 
+ * @author Yevgeny Kazakov
+ *
+ */
 public class Proofs {
 
 	@SuppressWarnings("rawtypes")
@@ -55,27 +61,10 @@ public class Proofs {
 	 *         as premises only conclusions that appear before in this sequence.
 	 */
 	public static boolean isDerivable(Proof<?> proof, Object conclusion) {
-		return new InferenceDerivabilityChecker<Object>(proof)
+		return new InferenceDerivabilityChecker<Object, Inference<?>>(proof)
 				.isDerivable(conclusion);
+		// alternatively:
 		// return ProofNodes.isDerivable(ProofNodes.create(proof, conclusion));
-	}
-
-	/**
-	 * @param proof
-	 * @param conclusion
-	 * @param assertedConclusions
-	 * @return {@code true} if the given conclusion is derivable in the given
-	 *         {@link Proof} starting from the given 'asserted' conclusions,
-	 *         i.e., there exists an sequence of conclusions ending with the
-	 *         given conclusion, such that for each conclusion there exists an
-	 *         inference in {@link Proof#getInferences} that has as premises
-	 *         only conclusions that appear before in this sequence or in the
-	 *         stated conclusions.
-	 */
-	public static boolean isDerivable(Proof<?> proof, Object conclusion,
-			Set<?> assertedConclusions) {
-		return ProofNodes.isDerivable(ProofNodes.create(proof, conclusion),
-				assertedConclusions);
 	}
 
 	/**
@@ -151,7 +140,7 @@ public class Proofs {
 	 *         enumerated
 	 */
 	public static <C, I extends Inference<? extends C>> Set<C> unfoldRecursively(
-			Proof<? extends I> proof, C goal, Producer<I> producer) {
+			Proof<? extends I> proof, C goal, Producer<? super I> producer) {
 		Set<C> result = new HashSet<C>();
 		Queue<C> toExpand = new ArrayDeque<C>();
 		result.add(goal);
@@ -200,7 +189,7 @@ public class Proofs {
 	public static <C, I extends Inference<? extends C>> Set<C> getEssentialConclusions(
 			Proof<I> proof, C goal) {
 		Set<C> result = new HashSet<C>();
-		DerivabilityCheckerWithBlocking<C> checker = new InferenceDerivabilityChecker<C>(
+		DerivabilityCheckerWithBlocking<C> checker = new InferenceDerivabilityChecker<C, I>(
 				proof);
 		for (C candidate : unfoldRecursively(proof, goal,
 				Producer.Dummy.<I> get())) {
@@ -224,7 +213,8 @@ public class Proofs {
 	 * @param producer
 	 */
 	public static <C, I extends Inference<? extends C>> void expand(
-			Set<C> derivable, Proof<I> proof, C goal, Producer<I> producer) {
+			Set<C> derivable, Proof<? extends I> proof, C goal,
+			Producer<? super I> producer) {
 		InferenceExpander.expand(derivable, proof, goal, producer);
 	}
 
@@ -233,10 +223,12 @@ public class Proofs {
 	 * @param goal
 	 * @return a proof obtained from the given proofs by removing some
 	 *         inferences that do not have effect on the derivation relation
-	 *         between subsets of the given asserted conclusion and the goal
-	 *         conclusion; i.e., if the goal conclusion was derivable from some
-	 *         subset of asserted conclusions using original inferences, then it
-	 *         is also derivable using the returned proof
+	 *         between the asserted conclusions in the proof (derived by
+	 *         asserted inferences) and the goal conclusion; i.e., if the goal
+	 *         conclusion was derivable from some subset of asserted conclusions
+	 *         using original inferences, then it is also derivable using the
+	 *         returned proof
+	 * @see Inferences#isAsserted(Inference)
 	 */
 	public static <I extends Inference<?>> Proof<I> prune(
 			Proof<? extends I> proof, Object goal) {
@@ -255,8 +247,7 @@ public class Proofs {
 	 * @param goal
 	 *            the conclusion starting from which the inferences are printed
 	 */
-	public static <I extends Inference<?>> void print(Proof<I> proof,
-			Object goal) {
+	public static void print(Proof<?> proof, Object goal) {
 		try {
 			ProofPrinter.print(proof, goal);
 		} catch (IOException e) {

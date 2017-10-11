@@ -33,6 +33,11 @@ package org.liveontologies.puli;
  */
 public interface InferenceJustifier<I extends Inference<?>, J> {
 
+	/**
+	 * @param inference
+	 * @return an object that is responsible for this inference, i.e., the
+	 *         reason why this inference takes place
+	 */
 	J getJustification(I inference);
 
 }
