@@ -8,6 +8,10 @@
 	<version>0.1.0-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 
+	<prerequisites>
+		<maven>3.0.5</maven>
+	</prerequisites>
+
 	<name>Proof Utility Library</name>
 	<description>
 		A library for manipulating with proofs based on inference rules.
@@ -146,7 +150,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.0</version>
+				<version>3.7.0</version>
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
@@ -155,7 +159,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>animal-sniffer-maven-plugin</artifactId>
-				<version>1.15</version>
+				<version>1.16</version>
 				<configuration>
 					<signature>
 						<groupId>org.codehaus.mojo.signature</groupId>
@@ -176,7 +180,7 @@
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>3.3.0</version>
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
@@ -198,7 +202,7 @@
 				<!-- the plugin used to generate license headers -->
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>license-maven-plugin</artifactId>
-				<version>1.9</version>
+				<version>1.14</version>
 				<configuration>
 					<verbose>false</verbose>
 					<addSvnKeyWords>true</addSvnKeyWords>
@@ -228,7 +232,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>1.11</version>
+				<version>3.0.0</version>
 				<executions>
 					<execution>
 						<!-- retrive the current year from the build timestamp, used in README.txt -->
@@ -247,7 +251,7 @@
 				<!-- filtering and copying of additional files; these will *not* be included 
 					in the jar -->
 				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.7</version>
+				<version>3.0.2</version>
 				<executions>
 					<execution>
 						<id>filter-main-resources</id>
@@ -274,7 +278,7 @@
 			<plugin>
 				<groupId>org.sonatype.plugins</groupId>
 				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>1.6.7</version>
+				<version>1.6.8</version>
 				<extensions>true</extensions>
 				<configuration>
 					<serverId>ossrh</serverId>
@@ -304,13 +308,23 @@
 			</build>
 		</profile>
 		<profile>
+			<id>java8-doclint-disabled</id>
+			<activation>
+				<jdk>[1.8,)</jdk>
+			</activation>
+			<properties>
+				<!-- javadoc of JDK8 fail on many warnings -->
+				<javadoc.opts>-Xdoclint:none</javadoc.opts>
+			</properties>
+		</profile>
+		<profile>
 			<id>release</id>
 			<build>
 				<plugins>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
-						<version>2.2.1</version>
+						<version>3.0.1</version>
 						<executions>
 							<execution>
 								<id>attach-sources</id>
@@ -323,20 +337,23 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>2.9.1</version>
+						<version>3.0.0-M1</version>
 						<executions>
 							<execution>
 								<id>attach-javadocs</id>
 								<goals>
 									<goal>jar</goal>
 								</goals>
+								<configuration>
+									<additionalparam>${javadoc.opts}</additionalparam>
+								</configuration>
 							</execution>
 						</executions>
 					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.5</version>
+						<version>1.6</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
