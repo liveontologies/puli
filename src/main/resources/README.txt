@@ -21,4 +21,4 @@ ${project.description}
 
 For further information see: 
 
-${project.scm.url} 
+${project.url} 
