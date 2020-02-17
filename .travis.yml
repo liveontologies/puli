@@ -6,8 +6,13 @@ matrix:
   - jdk: oraclejdk7
     dist: precise
   - jdk: openjdk7
+    dist: trusty
   - jdk: oraclejdk8
+    dist: trusty
+  - jdk: oraclejdk11
     env: DEPLOY=true
+  - jdk: oraclejdk13
+
 install: mvn install -DskipTests=true
 script: mvn test -Dassembly.skipAssembly=true -B
 after_success:
