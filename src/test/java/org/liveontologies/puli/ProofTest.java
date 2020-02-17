@@ -181,6 +181,18 @@ public class ProofTest {
 		checker.unblock(2);
 		assertTrue(checker.isDerivable(0));
 	}
+	
+	@Test
+	public void testDerivabilityCheckerWithBlocking4() throws Exception {
+		ProofBuilder<Integer> b = ProofBuilder.create();
+		b.conclusion(0).premise(1).add();
+		b.conclusion(1).premise(0).add();
+		b.conclusion(0).add();
+		Proof<? extends Inference<Integer>> p = b.build();
+		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer, Inference<Integer>>(
+				p);
+		assertTrue(checker.isDerivable(0));		
+	}
 
 	@Test
 	public void blockCyclicProof2() throws Exception {
