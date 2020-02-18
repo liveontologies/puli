@@ -1,6 +1,6 @@
 Proof Utility Library
 
-Proof Utility Library is Copyright (c) 2014 - 2017 
+Proof Utility Library is Copyright (c) 2014 - 2020 
 Live Ontologies Project
 
    Licensed under the Apache License, Version 2.0 (the "License");
