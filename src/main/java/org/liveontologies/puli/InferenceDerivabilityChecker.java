@@ -55,7 +55,7 @@ import com.google.common.collect.SetMultimap;
  *            the type of inferences in proofs
  */
 public class InferenceDerivabilityChecker<C, I extends Inference<? extends C>>
-		implements DerivabilityCheckerWithBlocking<C>, Proof<I> {
+		implements DerivabilityCheckerWithBlocking<C, I>, Proof<I> {
 
 	// logger for this class
 	private static final Logger LOGGER_ = LoggerFactory
@@ -148,6 +148,22 @@ public class InferenceDerivabilityChecker<C, I extends Inference<? extends C>>
 				&& !blocked_.contains(conclusion);
 		LOGGER_.trace("{}: derivable: {}", conclusion, derivable);
 		return derivable;
+	}
+
+	@Override
+	public Proof<I> getDerivation(C conclusion) {
+		if (!isDerivable(conclusion)) {
+			return null;
+		}
+		// else construct proof of fired inferences
+		return new Proof<I>() {
+
+			@Override
+			public Collection<? extends I> getInferences(Object conclusion) {
+				return Collections.singleton(
+						firedInferencesByConclusions_.get(conclusion));
+			}
+		};
 	}
 
 	@Override

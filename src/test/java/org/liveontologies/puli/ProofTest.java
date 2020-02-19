@@ -97,7 +97,7 @@ public class ProofTest {
 		b.conclusion(11).premise(2).add();
 		b.conclusion(2).add();
 		Proof<? extends Inference<Integer>> p = b.build();
-		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer, Inference<Integer>>(
+		DerivabilityCheckerWithBlocking<Integer, Inference<Integer>> checker = new InferenceDerivabilityChecker<>(
 				p);
 		checker.block(2);
 		assertFalse(checker.isDerivable(0));
@@ -118,7 +118,7 @@ public class ProofTest {
 		b.conclusion(1).add();
 		b.conclusion(2).add();
 		Proof<? extends Inference<Integer>> p = b.build();
-		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer, Inference<Integer>>(
+		DerivabilityCheckerWithBlocking<Integer, Inference<Integer>> checker = new InferenceDerivabilityChecker<>(
 				p);
 		assertTrue(checker.isDerivable(0));
 		checker.block(2);
@@ -140,7 +140,7 @@ public class ProofTest {
 		b.conclusion(3).add();
 		b.conclusion(4).add();
 		Proof<? extends Inference<Integer>> p = b.build();
-		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer, Inference<Integer>>(
+		DerivabilityCheckerWithBlocking<Integer, Inference<Integer>> checker = new InferenceDerivabilityChecker<>(
 				p);
 		assertTrue(checker.isDerivable(0));
 		checker.block(1);
@@ -168,7 +168,7 @@ public class ProofTest {
 		b.conclusion(1).add();
 		b.conclusion(2).add();
 		Proof<? extends Inference<Integer>> p = b.build();
-		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer, Inference<Integer>>(
+		DerivabilityCheckerWithBlocking<Integer, Inference<Integer>> checker = new InferenceDerivabilityChecker<>(
 				p);
 		checker.block(1);
 		assertTrue(checker.isDerivable(0));
@@ -189,7 +189,7 @@ public class ProofTest {
 		b.conclusion(1).premise(0).add();
 		b.conclusion(0).add();
 		Proof<? extends Inference<Integer>> p = b.build();
-		DerivabilityCheckerWithBlocking<Integer> checker = new InferenceDerivabilityChecker<Integer, Inference<Integer>>(
+		DerivabilityCheckerWithBlocking<Integer, Inference<Integer>> checker = new InferenceDerivabilityChecker<>(
 				p);
 		assertTrue(checker.isDerivable(0));		
 	}

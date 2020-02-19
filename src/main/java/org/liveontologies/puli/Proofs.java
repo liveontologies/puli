@@ -84,6 +84,7 @@ public class Proofs {
 	 *         that for each conclusion returns the union of inferences returned
 	 *         by the proofs in the argument
 	 */
+	@SafeVarargs
 	public static <I extends Inference<?>> Proof<I> union(
 			final Proof<? extends I>... proofs) {
 		return new ProofUnion<I>(proofs);
@@ -189,7 +190,7 @@ public class Proofs {
 	public static <C, I extends Inference<? extends C>> Set<C> getEssentialConclusions(
 			Proof<I> proof, C goal) {
 		Set<C> result = new HashSet<C>();
-		DerivabilityCheckerWithBlocking<C> checker = new InferenceDerivabilityChecker<C, I>(
+		DerivabilityCheckerWithBlocking<C, I> checker = new InferenceDerivabilityChecker<C, I>(
 				proof);
 		for (C candidate : unfoldRecursively(proof, goal,
 				Producer.Dummy.<I> get())) {
