@@ -72,6 +72,10 @@ public abstract class MinimalSubsetsFromProofs<C, I extends Inference<? extends 
 		return justifier_;
 	}
 
+	public InterruptMonitor getInterruptMonitor() {
+		return monitor_;
+	}
+	
 	public Collection<? extends I> getInferences(final C conclusion) {
 		return proof_.getInferences(conclusion);
 	}
