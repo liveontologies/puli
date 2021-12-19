@@ -25,38 +25,42 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class BaseProofTest {
 
+	ProofBuilder<Integer, Integer, ?> b;
+	BaseProof<? extends Inference<Integer>> p;
+	
+	@Before
+	public void init() {
+		b = new BaseProofBuilder<Integer, Integer>();
+		p = b.getProof();
+	}
+	
+	
 	@Test
-	public void testAddingAndRemovingInferences() {
-
-		BaseProof<Inference<Integer>> p = new BaseProof<Inference<Integer>>();
+	public void testAddingAndRemovingInferences() {        
 		assertEquals(0, p.getInferences(1).size());
-		assertEquals(0, p.getInferences(2).size());
+		assertEquals(0, p.getInferences(2).size());		
 
-		p.produce(InferenceBuilder.<Integer> create().conclusion(1).premise(2)
-				.build());
-		p.produce(InferenceBuilder.<Integer> create().conclusion(2).premise(3)
-				.premise(4).build());
-		p.produce(InferenceBuilder.<Integer> create().conclusion(2).premise(3)
-				.premise(1).build());
+		b.conclusion(1).premise(2).add();
+		b.conclusion(2).premise(3).premise(4).add();
+		b.conclusion(2).premise(3).premise(1).add();
+		
 		assertEquals(1, p.getInferences(1).size());
 		assertEquals(2, p.getInferences(2).size());
 
 		p.clear();
 		assertEquals(0, p.getInferences(1).size());
 		assertEquals(0, p.getInferences(2).size());
-
 	}
 
 	@Test
 	public void testProofListenerAfterAppearence() {
 
-		BaseProof<Inference<Integer>> p = new BaseProof<Inference<Integer>>();
-		p.produce(InferenceBuilder.<Integer> create().conclusion(1).premise(2)
-				.build());
+		b.conclusion(1).premise(2).add();
 
 		ProofListener listener = new ProofListener();
 		assertFalse(listener.wasNotified());
@@ -65,9 +69,8 @@ public class BaseProofTest {
 		// If no conclusion was queried, nothing is guaranteed.
 
 		// Add inference for a queried conclusion.
-		p.getInferences(1);
-		p.produce(InferenceBuilder.<Integer> create().conclusion(1).premise(3)
-				.build());
+		p.getInferences(1);		
+		b.conclusion(1).premise(3).add();
 		assertTrue(listener.wasNotified());
 
 		// After one notification no more notifications are guaranteed.
@@ -75,12 +78,9 @@ public class BaseProofTest {
 
 	@Test
 	public void testProofListenerAfterDeletion() {
-
-		BaseProof<Inference<Integer>> p = new BaseProof<Inference<Integer>>();
-		p.produce(InferenceBuilder.<Integer> create().conclusion(2).premise(3)
-				.premise(4).build());
-		p.produce(InferenceBuilder.<Integer> create().conclusion(2).premise(3)
-				.premise(1).build());
+		
+		b.conclusion(2).premise(3).premise(4).add();
+		b.conclusion(2).premise(3).premise(1).build();
 
 		ProofListener listener = new ProofListener();
 		assertFalse(listener.wasNotified());

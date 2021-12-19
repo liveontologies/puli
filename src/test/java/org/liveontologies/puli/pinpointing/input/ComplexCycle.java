@@ -21,35 +21,20 @@
  */
 package org.liveontologies.puli.pinpointing.input;
 
-import org.liveontologies.puli.ProofAndJustifierBuilder;
-
-public abstract class ComplexCycle
-		extends BaseEnumeratorTestInput<String, Integer> {
-
-	private static ProofAndJustifierBuilder<String, Integer> getBuilder() {
-
-		final ProofAndJustifierBuilder<String, Integer> builder = new ProofAndJustifierBuilder<String, Integer>();
-
-		builder.conclusion("A").premise("B").axiom(1).add();
-		builder.conclusion("A").premise("C").axiom(2).add();
-		builder.conclusion("B").premise("C").axiom(3).add();
-		builder.conclusion("C").premise("D").axiom(4).add();
-		builder.conclusion("D").premise("B").axiom(5).add();
-		builder.conclusion("D").axiom(6).axiom(7).add();
-		builder.conclusion("A").premise("E").axiom(8).add();
-		builder.conclusion("E").axiom(1).axiom(9).add();
-		builder.conclusion("B").axiom(8).axiom(9).add();
-
-		return builder;
-	}
-
-	public ComplexCycle() {
-		super(getBuilder());
-	}
+public class ComplexCycle extends BaseEnumeratorTestInput {
 
 	@Override
-	public String getQuery() {
-		return "A";
+	protected void build() {
+		conclusion("A").premise("B").axiom(1).add();
+		conclusion("A").premise("C").axiom(2).add();
+		conclusion("B").premise("C").axiom(3).add();
+		conclusion("C").premise("D").axiom(4).add();
+		conclusion("D").premise("B").axiom(5).add();
+		conclusion("D").axiom(6).axiom(7).add();
+		conclusion("A").premise("E").axiom(8).add();
+		conclusion("E").axiom(1).axiom(9).add();
+		conclusion("B").axiom(8).axiom(9).add();
+		query("A");
 	}
 
 }

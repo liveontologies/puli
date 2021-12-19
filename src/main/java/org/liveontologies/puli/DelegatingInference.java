@@ -23,10 +23,21 @@ package org.liveontologies.puli;
 
 import java.util.List;
 
-public class DelegatingInference<C> extends Delegator<Inference<? extends C>>
-		implements Inference<C> {
+/**
+ * An {@link Inference} that delegates all method calls to the given
+ * {@link Inference}
+ * 
+ * @author Yevgeny Kazakov
+ *
+ * @param <C>
+ *            the type of conclusions and premises this inference operates with
+ * @param <I>
+ *            the type of the delegated inference
+ */
+public class DelegatingInference<C, I extends Inference<? extends C>>
+		extends Delegator<I> implements Inference<C> {
 
-	public DelegatingInference(Inference<C> delegate) {
+	public DelegatingInference(I delegate) {
 		super(delegate);
 	}
 

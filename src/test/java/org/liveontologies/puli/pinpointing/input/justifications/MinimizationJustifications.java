@@ -21,22 +21,16 @@
  */
 package org.liveontologies.puli.pinpointing.input.justifications;
 
-import java.util.Collection;
-import java.util.Set;
-
+import org.liveontologies.puli.pinpointing.BaseAxiomPinpointingTestInput;
 import org.liveontologies.puli.pinpointing.input.Minimization;
 
-import com.google.common.collect.ImmutableSet;
-
-public class MinimizationJustifications extends Minimization {
+public class MinimizationJustifications extends BaseAxiomPinpointingTestInput {
 
 	@Override
-	public Collection<? extends Set<? extends Integer>> getExpectedResult() {
-		// @formatter:off
-		return ImmutableSet.of(
-				ImmutableSet.of(1, 2)
-			);
-		// @formatter:on
+	protected void build() {
+		input(new Minimization());
+
+		justification(1, 2);
 	}
 
 }

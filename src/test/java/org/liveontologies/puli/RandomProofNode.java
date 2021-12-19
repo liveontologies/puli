@@ -33,10 +33,10 @@ public class RandomProofNode {
 			int maxPremises, int maxInferences) {
 		List<Integer> derived = new ArrayList<Integer>(maxConclusions);
 		Set<Integer> derivedSet = new HashSet<Integer>(maxConclusions);
-		ProofBuilder<Integer> b = ProofBuilder.create();
+		BaseProofBuilder<Integer, ?> b = new BaseProofBuilder<>();
 		for (int i = 0; i < maxInferences; i++) {
 			int conclusion = random.nextInt(maxConclusions);
-			ProofBuilder<Integer>.ThisInferenceBuilder ib = b
+			ProofBuilder<Integer, ?, ?>.ProofInferenceBuilder ib = b
 					.conclusion(conclusion);
 			int noPremises = random.nextInt(maxPremises);
 			if (derived.size() < noPremises) {
@@ -46,13 +46,12 @@ public class RandomProofNode {
 				int premise = derived.get(random.nextInt(derived.size()));
 				ib.premise(premise);
 			}
-			b.build();
 			if (derivedSet.add(conclusion)) {
 				derived.add(conclusion);
 			}
 		}
 		// return the last derived
-		return ProofNodes.create(b.build(), derived.get(derived.size() - 1));
+		return ProofNodes.create(b.getProof(), derived.get(derived.size() - 1));
 	}
 
 	public static ProofNode<Integer> generate(Random random, int maxConclusions,

@@ -21,34 +21,27 @@
  */
 package org.liveontologies.puli.pinpointing.input.repairs;
 
-import java.util.Collection;
-import java.util.Set;
-
+import org.liveontologies.puli.pinpointing.BaseAxiomPinpointingTestInput;
 import org.liveontologies.puli.pinpointing.input.ComplexCycle;
 
-import com.google.common.collect.ImmutableSet;
+public class ComplexCycleRepairs extends BaseAxiomPinpointingTestInput {
 
-public class ComplexCycleRepairs extends ComplexCycle {
-
-	@SuppressWarnings("unchecked")
 	@Override
-	public Collection<? extends Set<? extends Integer>> getExpectedResult() {
-		// @formatter:off
-		return ImmutableSet.of(
-				ImmutableSet.of(1, 2),
-				ImmutableSet.of(1, 4),
-				ImmutableSet.of(1, 5, 6),
-				ImmutableSet.of(1, 5, 7),
-				ImmutableSet.of(2, 3, 8),
-				ImmutableSet.of(2, 3, 9),
-				ImmutableSet.of(4, 8),
-				ImmutableSet.of(4, 9),
-				ImmutableSet.of(6, 8),
-				ImmutableSet.of(6, 9),
-				ImmutableSet.of(7, 8),
-				ImmutableSet.of(7, 9)
-			);
-		// @formatter:on
+	protected void build() {
+		input(new ComplexCycle());
+
+		repair(1, 2);
+		repair(1, 4);
+		repair(1, 5, 6);
+		repair(1, 5, 7);
+		repair(2, 3, 8);
+		repair(2, 3, 9);
+		repair(4, 8);
+		repair(4, 9);
+		repair(6, 8);
+		repair(6, 9);
+		repair(7, 8);
+		repair(7, 9);
 	}
 
 }

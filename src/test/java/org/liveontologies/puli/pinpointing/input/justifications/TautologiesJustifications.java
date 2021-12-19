@@ -21,23 +21,17 @@
  */
 package org.liveontologies.puli.pinpointing.input.justifications;
 
-import java.util.Collection;
-import java.util.Set;
-
+import org.liveontologies.puli.pinpointing.BaseAxiomPinpointingTestInput;
 import org.liveontologies.puli.pinpointing.input.Tautologies;
 
-import com.google.common.collect.ImmutableSet;
-
-public class TautologiesJustifications extends Tautologies {
+public class TautologiesJustifications extends BaseAxiomPinpointingTestInput {
 
 	@Override
-	public Collection<? extends Set<? extends Integer>> getExpectedResult() {
-		// @formatter:off
-		return ImmutableSet.of(
-				ImmutableSet.of(1, 2),
-				ImmutableSet.of(3)
-			);
-		// @formatter:on
+	protected void build() {
+		input(new Tautologies());
+
+		justification(1, 2);
+		justification(3);
 	}
 
 }

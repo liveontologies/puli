@@ -21,25 +21,19 @@
  */
 package org.liveontologies.puli.pinpointing.input.justifications;
 
-import java.util.Collection;
-import java.util.Set;
-
+import org.liveontologies.puli.pinpointing.BaseAxiomPinpointingTestInput;
 import org.liveontologies.puli.pinpointing.input.ComplexCycle;
 
-import com.google.common.collect.ImmutableSet;
-
-public class ComplexCycleJustifications extends ComplexCycle {
+public class ComplexCycleJustifications extends BaseAxiomPinpointingTestInput {
 
 	@Override
-	public Collection<? extends Set<? extends Integer>> getExpectedResult() {
-		// @formatter:off
-		return ImmutableSet.of(
-				ImmutableSet.of(1, 8, 9),
-				ImmutableSet.of(1, 3, 4, 6, 7),
-				ImmutableSet.of(2, 4, 6, 7),
-				ImmutableSet.of(2, 4, 5, 8, 9)
-			);
-		// @formatter:on
+	protected void build() {
+		input(new ComplexCycle());
+
+		justification(1, 8, 9);
+		justification(1, 3, 4, 6, 7);
+		justification(2, 4, 6, 7);
+		justification(2, 4, 5, 8, 9);
 	}
 
 }

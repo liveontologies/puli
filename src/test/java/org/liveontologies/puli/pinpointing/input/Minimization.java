@@ -21,29 +21,14 @@
  */
 package org.liveontologies.puli.pinpointing.input;
 
-import org.liveontologies.puli.ProofAndJustifierBuilder;
-
-public abstract class Minimization
-		extends BaseEnumeratorTestInput<String, Integer> {
-
-	private static ProofAndJustifierBuilder<String, Integer> getBuilder() {
-
-		final ProofAndJustifierBuilder<String, Integer> builder = new ProofAndJustifierBuilder<String, Integer>();
-
-		builder.conclusion("A").axiom(1).axiom(2).add();
-		builder.conclusion("A").premise("B").axiom(1).add();
-		builder.conclusion("B").axiom(2).axiom(3).add();
-
-		return builder;
-	}
-
-	public Minimization() {
-		super(getBuilder());
-	}
+public class Minimization extends BaseEnumeratorTestInput {
 
 	@Override
-	public String getQuery() {
-		return "A";
+	protected void build() {
+		conclusion("A").axiom(1).axiom(2).add();
+		conclusion("A").premise("B").axiom(1).add();
+		conclusion("B").axiom(2).axiom(3).add();
+		query("A");
 	}
 
 }

@@ -21,65 +21,61 @@
  */
 package org.liveontologies.puli.pinpointing;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.liveontologies.puli.Inference;
-import org.liveontologies.puli.InferenceJustifier;
+import org.liveontologies.puli.AxiomPinpointingInference;
 import org.liveontologies.puli.Proof;
+import org.liveontologies.puli.Prover;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
+/**
+ * Computes the minimal hitting sets of the given collection of sets.
+ * 
+ * A hitting set of the collection of sets s1, s2,..., sn is a set containing
+ * one element from each of these sets. A minimal hitting set is a hitting set
+ * such that all its proper subsets are not hitting sets. For example, the
+ * minimal hitting sets of the sets s1 = {a, b} and s2 = {b, c} are {a, c} and
+ * {b}.
+ * 
+ * @author Peter Skocovsky
+ * @author Yevgeny Kazakov
+ *
+ * @param <E>
+ */
 public class MinimalHittingSetEnumerator<E> implements
-		MinimalSubsetEnumerator.Factory<Collection<? extends Set<? extends E>>, E> {
+		AxiomPinpointingEnumerator<Collection<? extends Set<? extends E>>, E> {
 
 	private static final Object CONCLUSION_ = new Object();
 
-	private final MinimalSubsetsFromProofs.Factory<Object, SetWrapperInference, E> repairComputationFactory_;
+	private final ProverAxiomPinpointingEnumerationFactory<Object, E> repairComputationFactory_;
 
-	private final InterruptMonitor monitor_;
+	private final AxiomPinpointingInterruptMonitor monitor_;
 
 	public MinimalHittingSetEnumerator(
-			final MinimalSubsetsFromProofs.Factory<Object, SetWrapperInference, E> repairComputationFactory,
-			final InterruptMonitor monitor) {
+			final ProverAxiomPinpointingEnumerationFactory<Object, E> repairComputationFactory,
+			final AxiomPinpointingInterruptMonitor monitor) {
 		this.repairComputationFactory_ = repairComputationFactory;
 		this.monitor_ = monitor;
 	}
 
 	@Override
-	public MinimalSubsetEnumerator<E> newEnumerator(
-			final Collection<? extends Set<? extends E>> query) {
-		return new Enumerator(query);
-	}
+	public void enumerate(final Collection<? extends Set<? extends E>> query,
+			final AxiomPinpointingListener<E> listener) {
+		repairComputationFactory_
+				.create(new Prover<Object, SetWrapperInference>() {
 
-	private class Enumerator extends AbstractMinimalSubsetEnumerator<E> {
+					@Override
+					public Proof<? extends SetWrapperInference> getProof(
+							Object ignore) {
+						return new SetWrapperProof(query);
+					}
 
-		private final Collection<? extends Set<? extends E>> originalSets_;
-
-		private Enumerator(
-				final Collection<? extends Set<? extends E>> originalSets) {
-			this.originalSets_ = originalSets;
-		}
-
-		@Override
-		public void enumerate(final Listener<E> listener,
-				final PriorityComparator<? super Set<E>, ?> priorityComparator) {
-
-			final Proof<SetWrapperInference> proof = new SetWrapperProof(
-					originalSets_);
-
-			final MinimalSubsetEnumerator.Factory<Object, E> computation = repairComputationFactory_
-					.create(proof, setWrapperJustifier_, monitor_);
-			final MinimalSubsetEnumerator<E> enumerator = computation
-					.newEnumerator(CONCLUSION_);
-
-			enumerator.enumerate(listener, priorityComparator);
-		}
-
+				}, monitor_).enumerate(CONCLUSION_, listener);
 	}
 
 	private class SetWrapperProof implements Proof<SetWrapperInference> {
@@ -112,7 +108,8 @@ public class MinimalHittingSetEnumerator<E> implements
 
 	}
 
-	private class SetWrapperInference implements Inference<Object> {
+	private class SetWrapperInference
+			implements AxiomPinpointingInference<Object, E> {
 
 		private final Set<? extends E> originalSet_;
 
@@ -135,31 +132,24 @@ public class MinimalHittingSetEnumerator<E> implements
 			return Collections.emptyList();
 		}
 
-	}
-
-	private final InferenceJustifier<SetWrapperInference, Set<? extends E>> setWrapperJustifier_ = new InferenceJustifier<SetWrapperInference, Set<? extends E>>() {
-
 		@Override
-		public Set<? extends E> getJustification(
-				final SetWrapperInference inference) {
-			return inference.originalSet_;
+		public Set<? extends E> getJustification() {
+			return originalSet_;
 		}
 
-	};
+	}
 
 	public static <E> Collection<? extends Set<? extends E>> compute(
 			final Collection<? extends Set<? extends E>> sets) {
 
-		final Collection<Set<? extends E>> result = new ArrayList<Set<? extends E>>();
+		AxiomPinpointingCollector<E> collector = new AxiomPinpointingCollector<E>();
 
-		final MinimalHittingSetEnumerator<E> computation = new MinimalHittingSetEnumerator<E>(
-				TopDownRepairComputation.<Object, MinimalHittingSetEnumerator<E>
-						.SetWrapperInference, E> getFactory(),
-				InterruptMonitor.DUMMY);
-		computation.newEnumerator(sets)
-				.enumerate(new MinimalSubsetCollector<E>(result));
+		new MinimalHittingSetEnumerator<E>(
+				TopDownRepairComputation.<Object, E> getFactory(),
+				AxiomPinpointingInterruptMonitor.DUMMY).enumerate(sets,
+						collector);
 
-		return result;
+		return collector.getRepairs();
 	}
 
 }

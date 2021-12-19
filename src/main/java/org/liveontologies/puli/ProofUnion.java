@@ -48,6 +48,7 @@ public class ProofUnion<I extends Inference<?>> implements Proof<I> {
 		this.proofs_ = proofs;
 	}
 
+	@SafeVarargs
 	public ProofUnion(final Proof<? extends I>... proofs) {
 		this(Arrays.asList(proofs));
 	}

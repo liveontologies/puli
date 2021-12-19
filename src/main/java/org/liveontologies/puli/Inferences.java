@@ -22,6 +22,7 @@
 package org.liveontologies.puli;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -34,10 +35,12 @@ import com.google.common.base.Preconditions;
 public class Inferences {
 
 	/**
+	 * Creates an {@link Inference} with the supplied parameters
+	 * 
 	 * @param name
 	 * @param conclusion
 	 * @param premises
-	 * @return a new {@link Inference} with the given names, conclusion, and
+	 * @return a new {@link Inference} with the given name, conclusion, and
 	 *         premises
 	 * @see Inference#getName()
 	 * @see Inference#getConclusion()
@@ -46,6 +49,27 @@ public class Inferences {
 	public static <C> Inference<C> create(String name, C conclusion,
 			List<? extends C> premises) {
 		return new BaseInference<C>(name, conclusion, premises);
+	}
+
+	/**
+	 * Creates an {@link AxiomPinpointingInference} with the supplied parameters
+	 * 
+	 * @param name
+	 * @param conclusion
+	 * @param premises
+	 * @param justification
+	 * @return a new {@link AxiomPinpointingInference} with the given name,
+	 *         conclusion, premises, and justification
+	 * @see Inference#getName()
+	 * @see Inference#getConclusion()
+	 * @see Inference#getPremises()
+	 * @see AxiomPinpointingInference#getJustification()
+	 */
+	public static <C, A> AxiomPinpointingInference<C, A> create(String name,
+			C conclusion, List<? extends C> premises,
+			Set<? extends A> justification) {
+		return new BaseAxiomPinpointingInference<C, A>(name, conclusion,
+				premises, justification);
 	}
 
 	/**
@@ -86,6 +110,9 @@ public class Inferences {
 	 * @see #hashCode()
 	 */
 	public static boolean equals(Inference<?> inference, Object o) {
+		if (inference == o) {
+			return true;
+		}
 		if (o instanceof Inference<?>) {
 			Inference<?> other = (Inference<?>) o;
 			return (inference.getName().equals(other.getName())

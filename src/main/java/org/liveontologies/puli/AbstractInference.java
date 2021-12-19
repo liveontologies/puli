@@ -23,7 +23,7 @@ package org.liveontologies.puli;
 
 public abstract class AbstractInference<C> implements Inference<C> {
 
-	protected int hash = 0;
+	private int hash_ = 0;
 
 	@Override
 	public boolean equals(Object o) {
@@ -32,10 +32,14 @@ public abstract class AbstractInference<C> implements Inference<C> {
 
 	@Override
 	public synchronized int hashCode() {
-		if (hash == 0) {
-			hash = Inferences.hashCode(this);
+		if (hash_ == 0) {
+			hash_ = computeHashCode();
 		}
-		return hash;
+		return hash_;
+	}
+
+	protected int computeHashCode() {
+		return Inferences.hashCode(this);
 	}
 
 	@Override

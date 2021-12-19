@@ -26,25 +26,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A {@link DynamicProof} that caches the inferences returned by the input
- * {@link DynamicProof} by {@link DynamicProof#getInferences(Object)}. When this
- * method is called for the second time with the same input, the cached version
- * is used.
+ * A {@link Proof} which caches the inferences returned by the input
+ * {@link Proof} by {@link Proof#getInferences(Object)}. When this method is
+ * called for the second time with the same input, the cached version is used.
  * 
  * @author Yevgeny Kazakov
  *
  * @param <I>
  *            the type of inferences provided by this proof
  */
-class CachingProof<I extends Inference<?>>
-		extends DelegatingDynamicProof<I, DynamicProof<? extends I>>
-		implements DynamicProof.ChangeListener {
+public class CachingProof<I extends Inference<?>>
+		extends DelegatingProof<I, Proof<? extends I>> {
 
 	private final Map<Object, Collection<? extends I>> inferenceCache_ = new HashMap<Object, Collection<? extends I>>();
 
-	public CachingProof(DynamicProof<? extends I> delegate) {
+	public CachingProof(Proof<? extends I> delegate) {
 		super(delegate);
-		addListener(this);
 	}
 
 	@Override
@@ -55,17 +52,6 @@ class CachingProof<I extends Inference<?>>
 			inferenceCache_.put(conclusion, result);
 		}
 		return result;
-	}
-
-	@Override
-	public void inferencesChanged() {
-		inferenceCache_.clear();
-	}
-
-	@Override
-	public void dispose() {
-		removeListener(this);
-		super.dispose();
 	}
 
 }

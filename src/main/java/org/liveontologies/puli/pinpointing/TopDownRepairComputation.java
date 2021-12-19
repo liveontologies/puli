@@ -31,113 +31,165 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
+import org.liveontologies.puli.AxiomPinpointingInference;
 import org.liveontologies.puli.Delegator;
 import org.liveontologies.puli.Inference;
-import org.liveontologies.puli.InferenceJustifier;
-import org.liveontologies.puli.Proof;
+import org.liveontologies.puli.Prover;
 import org.liveontologies.puli.collections.BloomTrieCollection2;
 import org.liveontologies.puli.collections.Collection2;
-import org.liveontologies.puli.statistics.NestedStats;
-import org.liveontologies.puli.statistics.ResetStats;
-import org.liveontologies.puli.statistics.Stat;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 
 /**
  * 
  * @author Yevgeny Kazakov
  *
- * @param <C>
- *            the type of conclusions used in inferences
- * @param <I>
- *            the type of inferences used in the proof
+ * @param <Q>
+ *                the type of the query
  * @param <A>
- *            the type of axioms used by the inferences
+ *                the type of axioms used by the inferences
+ * @param <I>
+ *                the type of inferences used in the proof
  */
-public class TopDownRepairComputation<C, I extends Inference<? extends C>, A>
-		extends MinimalSubsetsFromProofs<C, I, A> {
+public class TopDownRepairComputation<Q, A, I extends AxiomPinpointingInference<?, ? extends A>>
+		extends AbstractProofAxiomPinpointingEnumerator<Q, A, I> {
 
-	private static final TopDownRepairComputation.Factory<?, ?, ?> FACTORY_ = new Factory<Object, Inference<?>, Object>();
+	/**
+	 * Returns a {@link ProverAxiomPinpointingEnumerationFactory} for
+	 * enumerating repairs using the provided {@link PriorityComparator}. The
+	 * {@link PriorityComparator} specifies the order in which repairs are
+	 * reported by the {@link AxiomPinpointingListener}: the repairs for which
+	 * the value of {@link PriorityComparator#getPriority(Object)} is smaller
+	 * according to {@link PriorityComparator#compare(Object, Object)} are
+	 * reported first. This function must be compatible with the subset
+	 * ordering, that is: <blockquote>If
+	 * {@link Set#containsAll(java.util.Collection) set2.containsAll(set1) ==
+	 * true} and {@link Set#containsAll(java.util.Collection)
+	 * set1.containsAll(set2) == false}, then
+	 * {@link Comparator#compare(Object, Object)
+	 * priorityComparator.compare(priorityComparator.getPriority(set1),
+	 * priorityComparator.getPriority(set2)) < 0}.</blockquote>
+	 * 
+	 * @author Yevgeny Kazakov
+	 * @author Peter Skocovsky
+	 * 
+	 * @param <Q>
+	 *                               the type of the query
+	 * @param <A>
+	 *                               the type of axioms in repairs
+	 * 
+	 * @param priorityComparator
+	 *                               The comparator that defines the order in
+	 *                               which repairs are reported to the listener.
+	 * @param statusListener
+	 *                               a listener to notify about the different
+	 *                               stages of the computation
+	 * 
+	 * @return a {@link AbstractProofAxiomPinpointingEnumerator} that can
+	 *         perform computations of repairs from proofs according to the
+	 *         specified parameters
+	 */
+	public static <Q, A> ProverAxiomPinpointingEnumerationFactory<Q, A> getFactory(
+			final PriorityComparator<? super Set<A>, ?> priorityComparator,
+			final StatusListener statusListener) {
+		return new ProverAxiomPinpointingEnumerationFactory<Q, A>() {
 
-	@SuppressWarnings("unchecked")
-	public static <C, I extends Inference<? extends C>, A> MinimalSubsetsFromProofs.Factory<C, I, A> getFactory() {
-		return (Factory<C, I, A>) FACTORY_;
+			@Override
+			public <I extends AxiomPinpointingInference<?, ? extends A>> AxiomPinpointingEnumerator<Q, A> create(
+					Prover<? super Q, ? extends I> prover,
+					AxiomPinpointingInterruptMonitor monitor) {
+				return new TopDownRepairComputation<Q, A, I>(prover, monitor,
+						priorityComparator, statusListener);
+			}
+
+		};
 	}
 
-	// Statistics
-	private int producedJobsCount_ = 0;
+	/**
+	 * Returns a factory for creating
+	 * {@link AbstractProofAxiomPinpointingEnumerator} computations for
+	 * enumerating repairs. The repairs are reported by the
+	 * {@link AxiomPinpointingListener} in the order of increasing cardinality,
+	 * that is, justifications that contain smaller number of axioms are
+	 * reported first.
+	 * 
+	 * @param <C>
+	 *                the type of conclusions used in inferences
+	 * @param <A>
+	 *                the type of axioms in repairs
+	 * @return a {@link AbstractProofAxiomPinpointingEnumerator} that can
+	 *         perform computations of repairs from proofs according to the
+	 *         default parameters
+	 */
+	public static <C, A> ProverAxiomPinpointingEnumerationFactory<C, A> getFactory() {
+		return getFactory(PriorityComparators.<A> cardinality(),
+				new DummyStatusListener());
+	}
 
-	private TopDownRepairComputation(final Proof<? extends I> proof,
-			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
-			final InterruptMonitor monitor) {
-		super(proof, justifier, monitor);
+	private final PriorityComparator<? super Set<A>, ?> priorityComparator_;
+
+	private final StatusListener statusListener_;
+
+	private TopDownRepairComputation(Prover<? super Q, ? extends I> prover,
+			final AxiomPinpointingInterruptMonitor monitor,
+			final PriorityComparator<? super Set<A>, ?> priorityComparator,
+			StatusListener statusListener) {
+		super(prover, monitor, statusListener);
+		this.priorityComparator_ = priorityComparator;
+		this.statusListener_ = statusListener;
 	}
 
 	@Override
-	public MinimalSubsetEnumerator<A> newEnumerator(final Object query) {
-		return new Enumerator(query);
+	protected AbstractProofAxiomPinpointingEnumerator<Q, A, I>.QueryEnumerator getQueryEnumerator(
+			Q query) {
+		return new JobProcessor<>(query, priorityComparator_);
 	}
 
-	private class Enumerator extends AbstractMinimalSubsetEnumerator<A> {
+	private class JobProcessor<P> extends
+			AbstractProofAxiomPinpointingEnumerator<Q, A, I>.QueryEnumerator {
 
-		private final Object query_;
+		final PriorityComparator<? super Set<A>, P> priorityComparator_;
 
 		/**
 		 * jobs to be processed
 		 */
-		private Queue<JobFactory<I, A, ?>.Job> toDoJobs_;
+		final Queue<Job> toDoJobs_ = new PriorityQueue<Job>();
 
 		/**
 		 * Used to collect the result and prune jobs
 		 */
-		private final Collection2<Set<A>> minimalRepairs_ = new BloomTrieCollection2<Set<A>>();
+		final Collection2<Set<A>> minimalRepairs_ = new BloomTrieCollection2<Set<A>>();
 
 		/**
 		 * Used to filter out redundant jobs
 		 */
-		private final Collection2<JobFactory<I, A, ?>.Job> minimalJobs_ = new BloomTrieCollection2<JobFactory<I, A, ?>.Job>();
+		final Collection2<Job> minimalJobs_ = new BloomTrieCollection2<Job>();
 
-		private Listener<A> listener_ = null;
-
-		private JobFactory<I, A, ?> jobFactory_ = null;
-
-		Enumerator(final Object query) {
-			this.query_ = query;
+		JobProcessor(Q query,
+				final PriorityComparator<? super Set<A>, P> priorityComparator) {
+			super(query);
+			this.priorityComparator_ = priorityComparator;
 		}
 
 		@Override
-		public void enumerate(final Listener<A> listener,
-				final PriorityComparator<? super Set<A>, ?> priorityComparator) {
-			Preconditions.checkNotNull(listener);
-			if (priorityComparator == null) {
-				enumerate(listener);
-				return;
-			}
-			// else
-			this.listener_ = listener;
-			this.jobFactory_ = JobFactory.create(getProof(),
-					getInferenceJustifier(), priorityComparator);
-			this.toDoJobs_ = new PriorityQueue<JobFactory<I, A, ?>.Job>();
-			this.minimalRepairs_.clear();
-
-			initialize(query_);
-			process();
-
-			this.listener_ = null;
+		public void enumerate(AxiomPinpointingListener<A> listener) {
+			listener.computesRepairs();
+			initialize();
+			process(listener);
+			listener.computationComplete();
 		}
 
-		private void initialize(final Object goal) {
-			produce(jobFactory_.newJob(goal));
+		void initialize() {
+			produce(newJob(getQuery()));
 		}
 
-		private void process() {
+		void process(AxiomPinpointingListener<A> listener) {
 			for (;;) {
-				if (isInterrupted()) {
+				if (getInterruptMonitor().isInterrupted()) {
 					break;
 				}
-				final JobFactory<I, A, ?>.Job job = toDoJobs_.poll();
+				final Job job = toDoJobs_.poll();
 				if (job == null) {
 					break;
 				}
@@ -154,23 +206,27 @@ public class TopDownRepairComputation<C, I extends Inference<? extends C>, A>
 				final I nextToBreak = chooseToBreak(job.toBreak_);
 				if (nextToBreak == null) {
 					minimalRepairs_.add(job.repair_);
-					if (listener_ != null) {
-						listener_.newMinimalSubset(job.repair_);
+					if (listener != null) {
+						listener.newRepairFound();
+						for (A axiom : job.repair_) {
+							listener.usefulAxiom(axiom);
+						}
+						listener.newRepairComplete();
 					}
 					continue;
 				}
 				for (Object premise : nextToBreak.getPremises()) {
-					produce(jobFactory_.doBreak(job.repair_, job.toBreak_,
-							job.broken_, premise));
+					produce(doBreak(job.repair_, job.toBreak_, job.broken_,
+							premise));
 				}
-				for (A axiom : getJustification(nextToBreak)) {
-					produce(jobFactory_.repair(job.repair_, job.toBreak_,
-							job.broken_, axiom));
+				for (A axiom : nextToBreak.getJustification()) {
+					produce(repair(job.repair_, job.toBreak_, job.broken_,
+							axiom));
 				}
 			}
 		}
 
-		private I chooseToBreak(final Collection<I> inferences) {
+		I chooseToBreak(final Collection<I> inferences) {
 			// select the smallest conclusion according to the comparator
 			I result = null;
 			for (I inf : inferences) {
@@ -182,42 +238,18 @@ public class TopDownRepairComputation<C, I extends Inference<? extends C>, A>
 			return result;
 		}
 
-		private void produce(final JobFactory<I, A, ?>.Job job) {
-			producedJobsCount_++;
+		void produce(final Job job) {
 			toDoJobs_.add(job);
+			statusListener_.newPartialRepair();
 		}
 
-	}
-
-	private static class JobFactory<I extends Inference<?>, A, P> {
-
-		private final Proof<? extends I> proof_;
-		private final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier_;
-		private final PriorityComparator<? super Set<A>, P> priorityComparator_;
-
-		public JobFactory(final Proof<? extends I> proof,
-				final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
-				final PriorityComparator<? super Set<A>, P> priorityComparator) {
-			this.proof_ = proof;
-			this.justifier_ = justifier;
-			this.priorityComparator_ = priorityComparator;
-		}
-
-		public static <I extends Inference<?>, A, P> JobFactory<I, A, P> create(
-				final Proof<? extends I> proof,
-				final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
-				final PriorityComparator<? super Set<A>, P> priorityComparator) {
-			return new JobFactory<I, A, P>(proof, justifier,
-					priorityComparator);
-		}
-
-		public Job newJob(final Object conclusion) {
+		Job newJob(final Object conclusion) {
 			return doBreak(Collections.<A> emptySet(),
 					Collections.<I> emptySet(), Collections.<Object> emptySet(),
 					conclusion);
 		}
 
-		public Job doBreak(final Set<A> repair, final Collection<I> toBreak,
+		Job doBreak(final Set<A> repair, final Collection<I> toBreak,
 				final Set<Object> broken, final Object conclusion) {
 
 			final Set<A> newRepair = repair.isEmpty() ? new HashSet<A>(1)
@@ -234,13 +266,13 @@ public class TopDownRepairComputation<C, I extends Inference<? extends C>, A>
 					newToBreak.add(inf);
 				}
 			}
-			infLoop: for (final I inf : proof_.getInferences(conclusion)) {
+			infLoop: for (final I inf : getProof().getInferences(conclusion)) {
 				for (final Object premise : inf.getPremises()) {
 					if (broken.contains(premise)) {
 						continue infLoop;
 					}
 				}
-				for (final A axiom : justifier_.getJustification(inf)) {
+				for (final A axiom : inf.getJustification()) {
 					if (repair.contains(axiom)) {
 						continue infLoop;
 					}
@@ -251,7 +283,7 @@ public class TopDownRepairComputation<C, I extends Inference<? extends C>, A>
 					priorityComparator_.getPriority(newRepair));
 		}
 
-		public Job repair(final Set<A> repair, final Collection<I> toBreak,
+		Job repair(final Set<A> repair, final Collection<I> toBreak,
 				final Set<Object> broken, final A axiom) {
 
 			final Set<A> newRepair = new HashSet<A>(repair);
@@ -260,7 +292,7 @@ public class TopDownRepairComputation<C, I extends Inference<? extends C>, A>
 
 			newRepair.add(axiom);
 			for (final I inf : toBreak) {
-				if (!justifier_.getJustification(inf).contains(axiom)) {
+				if (!inf.getJustification().contains(axiom)) {
 					newToBreak.add(inf);
 				}
 			}
@@ -274,19 +306,19 @@ public class TopDownRepairComputation<C, I extends Inference<? extends C>, A>
 		 * @author Peter Skocovsky
 		 * @author Yevgeny Kazakov
 		 */
-		public class Job extends AbstractSet<JobMember<I, A>>
+		private class Job extends AbstractSet<JobMember<I, A>>
 				implements Comparable<Job> {
 
-			private final Set<A> repair_;
-			private final Set<I> toBreak_;
+			final Set<A> repair_;
+			final Set<I> toBreak_;
 			/**
 			 * the cached set of conclusions not derivable without using
 			 * {@link #repair_} and {@link #toBreak_}
 			 */
-			private final Set<Object> broken_;
-			private final P priority_;
+			final Set<Object> broken_;
+			final P priority_;
 
-			private Job(final Set<A> repair, final Set<I> toBreak,
+			Job(final Set<A> repair, final Set<I> toBreak,
 					final Set<Object> broken, final P priority) {
 				this.repair_ = repair;
 				this.toBreak_ = toBreak;
@@ -296,8 +328,8 @@ public class TopDownRepairComputation<C, I extends Inference<? extends C>, A>
 
 			@Override
 			public boolean containsAll(final Collection<?> c) {
-				if (c instanceof JobFactory<?, ?, ?>.Job) {
-					final JobFactory<?, ?, ?>.Job other = (JobFactory<?, ?, ?>.Job) c;
+				if (c instanceof TopDownRepairComputation<?, ?, ?>.JobProcessor<?>.Job) {
+					final TopDownRepairComputation<?, ?, ?>.JobProcessor<?>.Job other = (TopDownRepairComputation<?, ?, ?>.JobProcessor<?>.Job) c;
 					return repair_.containsAll(other.repair_)
 							&& toBreak_.containsAll(other.toBreak_);
 				}
@@ -352,27 +384,14 @@ public class TopDownRepairComputation<C, I extends Inference<? extends C>, A>
 
 	}
 
-	@Stat
-	public int nProducedJobs() {
-		return producedJobsCount_;
-	}
-
-	@ResetStats
-	public void resetStats() {
-		producedJobsCount_ = 0;
-	}
-
-	@NestedStats
-	public static Class<?> getNestedStats() {
-		return BloomTrieCollection2.class;
-	}
-
-	private final Comparator<I> inferenceComparator = new Comparator<I>() {
+	private final Comparator<AxiomPinpointingInference<?, ?>> inferenceComparator = new Comparator<AxiomPinpointingInference<?, ?>>() {
 
 		@Override
-		public int compare(final I inf1, final I inf2) {
-			return inf1.getPremises().size() + getJustification(inf1).size()
-					- inf2.getPremises().size() - getJustification(inf2).size();
+		public int compare(final AxiomPinpointingInference<?, ?> inf1,
+				final AxiomPinpointingInference<?, ?> inf2) {
+			return inf1.getPremises().size() + inf1.getJustification().size()
+					- inf2.getPremises().size()
+					- inf2.getJustification().size();
 		}
 
 	};
@@ -399,28 +418,20 @@ public class TopDownRepairComputation<C, I extends Inference<? extends C>, A>
 
 	}
 
-	/**
-	 * The factory.
-	 * 
-	 * @author Peter Skocovsky
-	 *
-	 * @param <C>
-	 *            the type of conclusions used in inferences
-	 * @param <I>
-	 *            the type of inferences used in the proof
-	 * @param <A>
-	 *            the type of axioms used by the inferences
-	 */
-	private static class Factory<C, I extends Inference<? extends C>, A>
-			implements MinimalSubsetsFromProofs.Factory<C, I, A> {
+	public interface StatusListener
+			extends AbstractProofAxiomPinpointingEnumerator.StatusListener {
+
+		void newPartialRepair();
+
+	}
+
+	public static class DummyStatusListener
+			extends AbstractProofAxiomPinpointingEnumerator.DummyStatusListener
+			implements StatusListener {
 
 		@Override
-		public MinimalSubsetEnumerator.Factory<C, A> create(
-				final Proof<? extends I> proof,
-				final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
-				final InterruptMonitor monitor) {
-			return new TopDownRepairComputation<C, I, A>(proof, justifier,
-					monitor);
+		public void newPartialRepair() {
+			// no-op
 		}
 
 	}

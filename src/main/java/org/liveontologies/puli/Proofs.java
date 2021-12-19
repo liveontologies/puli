@@ -23,10 +23,15 @@ package org.liveontologies.puli;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 
 /**
  * A collection of static methods for working with {@link Proof}s
@@ -95,7 +100,7 @@ public class Proofs {
 	 * @return the {@link Proof} that has all inferences of the given
 	 *         {@link Proof} except for the asserted inferences, i.e., all
 	 *         inferences for which {@link Inferences#isAsserted(Inference)}
-	 *         returns {@code false}.
+	 *         returns {@code true}.
 	 */
 	public static <I extends Inference<?>> Proof<I> removeAssertedInferences(
 			final Proof<? extends I> proof) {
@@ -108,11 +113,51 @@ public class Proofs {
 	 * @return the {@link Proof} that has all inferences of the given
 	 *         {@link Proof} except for the asserted inferences (inferences for
 	 *         which {@link Inferences#isAsserted(Inference)} returns
-	 *         {@code false}), whose conclusions are not in the given set.
+	 *         {@code true}), whose conclusions are not in the given set.
 	 */
 	public static <I extends Inference<?>> Proof<I> removeAssertedInferences(
 			final Proof<? extends I> proof, final Set<?> assertedConclusions) {
 		return new RemoveAssertedProof<I>(proof, assertedConclusions);
+	}
+
+	public static <I extends Inference<?>, J extends Inference<?>> Proof<J> transform(
+			final Proof<I> proof, Function<? super I, J> transformatin) {
+		return new Proof<J>() {
+
+			@Override
+			public Collection<J> getInferences(Object conclusion) {
+				return Collections2.transform(proof.getInferences(conclusion),
+						transformatin);
+			}
+		};
+	}
+
+	public static <C> AxiomPinpointingInference<C, C> justifyAsserted(
+			Inference<? extends C> inf) {
+		return new AssertedAxiomPinpointingInferenceAdapter<>(inf);
+	}
+
+	public static <C> Proof<AxiomPinpointingInference<C, C>> justifyAsserted(
+			Proof<? extends Inference<? extends C>> proof) {
+		return transform(proof,
+				new Function<Inference<? extends C>, AxiomPinpointingInference<C, C>>() {
+
+					@Override
+					public AxiomPinpointingInference<C, C> apply(
+							Inference<? extends C> inference) {
+						return justifyAsserted(inference);
+					}
+				});
+	}
+
+	/**
+	 * @param proof
+	 * @return {@link Proof} that caches all {@link Proof#getInferences(Object)}
+	 *         requests of the input {@link Proof}
+	 */
+	public static <I extends Inference<?>> Proof<I> cache(
+			Proof<? extends I> proof) {
+		return new CachingProof<I>(proof);
 	}
 
 	/**
@@ -123,7 +168,7 @@ public class Proofs {
 	 */
 	public static <I extends Inference<?>> DynamicProof<I> cache(
 			DynamicProof<? extends I> proof) {
-		return new CachingProof<I>(proof);
+		return new CachingDynamicProof<I>(proof);
 	}
 
 	/**
@@ -157,6 +202,36 @@ public class Proofs {
 					if (result.add(premise)) {
 						toExpand.add(premise);
 					}
+				}
+			}
+		}
+		return result;
+	}
+
+	public static <C, I extends Inference<? extends C>> Set<C> unfoldTopologically(
+			Proof<? extends I> proof, C goal, Producer<? super I> producer) {
+		Set<C> result = new HashSet<C>();
+		Deque<C> toExpand = new ArrayDeque<C>();
+		result.add(goal);
+		toExpand.add(goal);
+		for (;;) {
+			C next = toExpand.peekFirst();
+			if (next == null) {
+				break;
+			}
+			boolean expanded = true;
+			for (I inf : proof.getInferences(next)) {
+				for (C premise : inf.getPremises()) {
+					if (result.add(premise)) {
+						toExpand.addFirst(premise);
+						expanded = false;
+					}
+				}
+			}
+			if (expanded) {
+				toExpand.removeFirst();
+				for (I inf : proof.getInferences(next)) {
+					producer.produce(inf);
 				}
 			}
 		}
@@ -216,7 +291,7 @@ public class Proofs {
 	public static <C, I extends Inference<? extends C>> void expand(
 			Set<C> derivable, Proof<? extends I> proof, C goal,
 			Producer<? super I> producer) {
-		InferenceExpander.expand(derivable, proof, goal, producer);
+		InferenceExpander.<C, I> expand(derivable, proof, goal, producer);
 	}
 
 	/**

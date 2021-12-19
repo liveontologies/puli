@@ -24,7 +24,6 @@ package org.liveontologies.puli;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,98 +37,76 @@ import java.util.Set;
  * conclusion is labeled by {@code *}.
  * 
  * @author Yevgeny Kazakov
- *
- * @param <C>
- *            the type of conclusions in inferences
- * @param <I>
- *            the type of the inferences returned by the proof
- * @param <A>
- *            the type of the axioms in the justification of inferences
  */
-public class ProofPrinter<C, I extends Inference<? extends C>, A> {
+public class ProofPrinter {
 
 	/**
 	 * the set of inferences from which the proofs are formed
 	 */
-	private final Proof<? extends I> proof_;
-
-	/**
-	 * provides justifications for inferences
-	 */
-	private final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier_;
+	private final Proof<? extends AxiomPinpointingInference<?, ?>> proof_;
 
 	/**
 	 * the current positions of iterators over inferences for conclusions
 	 */
-	private final Deque<Iterator<? extends I>> inferenceStack_ = new LinkedList<Iterator<? extends I>>();
+	private final Deque<Iterator<? extends AxiomPinpointingInference<?, ?>>> inferenceStack_ = new LinkedList<>();
 
 	/**
 	 * the current positions of iterators over conclusions for inferences
 	 */
-	private final Deque<Iterator<? extends C>> conclusionStack_ = new LinkedList<Iterator<? extends C>>();
+	private final Deque<Iterator<?>> conclusionStack_ = new LinkedList<>();
 
 	/**
 	 * the current positions of iterators over justifications for inferences
 	 */
-	private final Deque<Iterator<? extends A>> justificationStack_ = new LinkedList<Iterator<? extends A>>();
+	private final Deque<Iterator<?>> justificationStack_ = new LinkedList<>();
 
 	/**
 	 * accumulates the printed conclusions to avoid repetitions
 	 */
-	private final Set<C> printed_ = new HashSet<C>();
+	private final Set<Object> printed_ = new HashSet<>();
 
 	/**
 	 * where the output is written
 	 */
 	private final BufferedWriter writer_;
 
-	protected ProofPrinter(final Proof<? extends I> proof,
-			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
+	protected ProofPrinter(
+			final Proof<? extends AxiomPinpointingInference<?, ?>> proof,
 			BufferedWriter writer) {
 		this.proof_ = proof;
-		this.justifier_ = justifier;
 		this.writer_ = writer;
 	}
 
-	protected ProofPrinter(final Proof<? extends I> proof,
-			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier) {
-		this(proof, justifier,
-				new BufferedWriter(new OutputStreamWriter(System.out)));
+	protected ProofPrinter(
+			final Proof<? extends AxiomPinpointingInference<?, ?>> proof) {
+		this(proof, new BufferedWriter(new OutputStreamWriter(System.out)));
 	}
 
-	public void printProof(C conclusion) throws IOException {
+	public void printProof(Object conclusion) throws IOException {
 		process(conclusion);
 		process();
 		writer_.flush();
 	}
 
-	public static <C, I extends Inference<? extends C>, A> void print(
-			final Proof<? extends I> proof,
-			final InferenceJustifier<? super I, ? extends Set<? extends A>> justifier,
-			C goal) throws IOException {
-		ProofPrinter<C, I, A> pp = new ProofPrinter<C, I, A>(proof, justifier);
+	public static void print(final Proof<? extends Inference<?>> proof,
+			Object goal) throws IOException {
+		ProofPrinter pp = new ProofPrinter(Proofs.transform(proof,
+				input -> input instanceof AxiomPinpointingInference<?, ?>
+						? (AxiomPinpointingInference<?, ?>) input
+						: new AxiomPinpointingInferenceAdapter<>(input)));
 		pp.printProof(goal);
-	}
-
-	public static <C, I extends Inference<? extends C>> void print(
-			final Proof<? extends I> proof, C goal) throws IOException {
-		print(proof,
-				new BaseInferenceJustifier<I, Set<Void>>(
-						Collections.<I, Set<Void>> emptyMap(),
-						Collections.<Void> emptySet()),
-				goal);
 	}
 
 	protected BufferedWriter getWriter() {
 		return writer_;
 	}
 
-	protected void writeConclusion(C conclusion) throws IOException {
+	protected void writeConclusion(Object conclusion) throws IOException {
 		// can be overridden
 		writer_.write(conclusion.toString());
 	}
 
-	private boolean process(C conclusion) throws IOException {
+	private boolean process(Object conclusion) throws IOException {
 		writePrefix();
 		writeConclusion(conclusion);
 		boolean newConclusion = printed_.add(conclusion);
@@ -143,7 +120,7 @@ public class ProofPrinter<C, I extends Inference<? extends C>, A> {
 		return newConclusion;
 	}
 
-	private void print(A just) throws IOException {
+	private void print(Object just) throws IOException {
 		writePrefix();
 		writer_.write(just.toString());
 		writer_.newLine();
@@ -152,21 +129,21 @@ public class ProofPrinter<C, I extends Inference<? extends C>, A> {
 	private void process() throws IOException {
 		for (;;) {
 			// processing inferences
-			Iterator<? extends I> infIter = inferenceStack_.peek();
+			Iterator<? extends AxiomPinpointingInference<?, ?>> infIter = inferenceStack_
+					.peek();
 			if (infIter == null) {
 				return;
 			}
 			// else
 			if (infIter.hasNext()) {
-				I inf = infIter.next();
+				AxiomPinpointingInference<?, ?> inf = infIter.next();
 				conclusionStack_.push(inf.getPremises().iterator());
-				justificationStack_
-						.push(justifier_.getJustification(inf).iterator());
+				justificationStack_.push(inf.getJustification().iterator());
 			} else {
 				inferenceStack_.pop();
 			}
 			// processing conclusions
-			Iterator<? extends C> conclIter = conclusionStack_.peek();
+			Iterator<?> conclIter = conclusionStack_.peek();
 			if (conclIter == null) {
 				return;
 			}
@@ -181,7 +158,7 @@ public class ProofPrinter<C, I extends Inference<? extends C>, A> {
 				}
 				// else
 				// processing justifications
-				Iterator<? extends A> justIter = justificationStack_.peek();
+				Iterator<?> justIter = justificationStack_.peek();
 				if (justIter == null) {
 					return;
 				}
@@ -197,16 +174,17 @@ public class ProofPrinter<C, I extends Inference<? extends C>, A> {
 	}
 
 	private void writePrefix() throws IOException {
-		Iterator<Iterator<? extends I>> inferStackItr = inferenceStack_
+		Iterator<Iterator<? extends AxiomPinpointingInference<?, ?>>> inferStackItr = inferenceStack_
 				.descendingIterator();
-		Iterator<Iterator<? extends C>> conclStackItr = conclusionStack_
+		Iterator<Iterator<?>> conclStackItr = conclusionStack_
 				.descendingIterator();
-		Iterator<Iterator<? extends A>> justStackItr = justificationStack_
+		Iterator<Iterator<?>> justStackItr = justificationStack_
 				.descendingIterator();
 		while (inferStackItr.hasNext()) {
-			Iterator<? extends I> inferIter = inferStackItr.next();
+			Iterator<? extends AxiomPinpointingInference<?, ?>> inferIter = inferStackItr
+					.next();
 			Iterator<?> conclIter = conclStackItr.next();
-			Iterator<? extends A> justIter = justStackItr.next();
+			Iterator<?> justIter = justStackItr.next();
 			boolean hasNextPremise = conclIter.hasNext() || justIter.hasNext();
 			if (conclStackItr.hasNext() || justStackItr.hasNext()) {
 				writer_.write(hasNextPremise ? "|  "

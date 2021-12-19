@@ -38,11 +38,11 @@ public class ProofTest {
 
 	@Test
 	public void proofTest() {
-		ProofBuilder<Integer> b = ProofBuilder.create();
+		BaseProofBuilder<Integer, ?> b = new BaseProofBuilder<>();
 		b.conclusion(1).premise(2).add();
 		b.conclusion(2).premise(3).premise(4).add();
 		b.conclusion(2).premise(5).premise(6).add();
-		Proof<? extends Inference<Integer>> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.getProof();
 		assertEquals(1, p.getInferences(1).size());
 		assertEquals(2, p.getInferences(2).size());
 		assertEquals(0, p.getInferences(3).size());
@@ -50,7 +50,7 @@ public class ProofTest {
 
 	@Test
 	public void blockCyclicProof() throws Exception {
-		ProofBuilder<String> b = ProofBuilder.create();
+		BaseProofBuilder<String, ?> b = new BaseProofBuilder<>();
 		b.conclusion("A ⊑ B").premise("A ⊑ B ⊓ C").add();
 		b.conclusion("A ⊑ B").premise("A ⊑ C").premise("C ⊑ B").add();
 		b.conclusion("A ⊑ C").premise("A ⊑ D").premise("D ⊑ C").add();
@@ -60,7 +60,7 @@ public class ProofTest {
 		b.conclusion("D ⊑ C").add();
 		b.conclusion("C ⊑ B").add();
 
-		Proof<? extends Inference<String>> p = b.build();
+		Proof<? extends Inference<String>> p = b.getProof();
 
 		assertTrue(ProofNodes.isDerivable(ProofNodes.create(p, "A ⊑ C")));
 
@@ -91,12 +91,12 @@ public class ProofTest {
 
 	@Test
 	public void testDerivabilityCheckerWithBlocking0() throws Exception {
-		ProofBuilder<Integer> b = ProofBuilder.create();
+		BaseProofBuilder<Integer, ?> b = new BaseProofBuilder<>();
 		b.conclusion(0).premise(1).add();
 		b.conclusion(1).premise(2).add();
 		b.conclusion(11).premise(2).add();
 		b.conclusion(2).add();
-		Proof<? extends Inference<Integer>> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.getProof();
 		DerivabilityCheckerWithBlocking<Integer, Inference<Integer>> checker = new InferenceDerivabilityChecker<>(
 				p);
 		checker.block(2);
@@ -111,13 +111,13 @@ public class ProofTest {
 
 	@Test
 	public void testDerivabilityCheckerWithBlocking1() throws Exception {
-		ProofBuilder<Integer> b = ProofBuilder.create();
+		BaseProofBuilder<Integer, ?> b = new BaseProofBuilder<>();
 		b.conclusion(0).premise(11).premise(22).add();
 		b.conclusion(11).premise(1).add();
 		b.conclusion(22).premise(2).add();
 		b.conclusion(1).add();
 		b.conclusion(2).add();
-		Proof<? extends Inference<Integer>> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.getProof();
 		DerivabilityCheckerWithBlocking<Integer, Inference<Integer>> checker = new InferenceDerivabilityChecker<>(
 				p);
 		assertTrue(checker.isDerivable(0));
@@ -132,14 +132,14 @@ public class ProofTest {
 
 	@Test
 	public void testDerivabilityCheckerWithBlocking2() throws Exception {
-		ProofBuilder<Integer> b = ProofBuilder.create();
+		BaseProofBuilder<Integer, ?> b = new BaseProofBuilder<>();
 		b.conclusion(0).premise(1).premise(2).add();
 		b.conclusion(0).premise(3).premise(4).add();
 		b.conclusion(2).premise(0).premise(0).add();
 		b.conclusion(1).premise(3).premise(4).add();
 		b.conclusion(3).add();
 		b.conclusion(4).add();
-		Proof<? extends Inference<Integer>> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.getProof();
 		DerivabilityCheckerWithBlocking<Integer, Inference<Integer>> checker = new InferenceDerivabilityChecker<>(
 				p);
 		assertTrue(checker.isDerivable(0));
@@ -162,12 +162,12 @@ public class ProofTest {
 
 	@Test
 	public void testDerivabilityCheckerWithBlocking3() throws Exception {
-		ProofBuilder<Integer> b = ProofBuilder.create();
+		BaseProofBuilder<Integer, ?> b = new BaseProofBuilder<>();
 		b.conclusion(0).premise(1).add();
 		b.conclusion(0).premise(2).add();
 		b.conclusion(1).add();
 		b.conclusion(2).add();
-		Proof<? extends Inference<Integer>> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.getProof();
 		DerivabilityCheckerWithBlocking<Integer, Inference<Integer>> checker = new InferenceDerivabilityChecker<>(
 				p);
 		checker.block(1);
@@ -184,11 +184,11 @@ public class ProofTest {
 	
 	@Test
 	public void testDerivabilityCheckerWithBlocking4() throws Exception {
-		ProofBuilder<Integer> b = ProofBuilder.create();
+		BaseProofBuilder<Integer, ?> b = new BaseProofBuilder<>();
 		b.conclusion(0).premise(1).add();
 		b.conclusion(1).premise(0).add();
 		b.conclusion(0).add();
-		Proof<? extends Inference<Integer>> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.getProof();
 		DerivabilityCheckerWithBlocking<Integer, Inference<Integer>> checker = new InferenceDerivabilityChecker<>(
 				p);
 		assertTrue(checker.isDerivable(0));		
@@ -196,14 +196,14 @@ public class ProofTest {
 
 	@Test
 	public void blockCyclicProof2() throws Exception {
-		ProofBuilder<Integer> b = ProofBuilder.create();
+		BaseProofBuilder<Integer, ?> b = new BaseProofBuilder<>();
 		b.conclusion(0).premise(1).premise(2).add();
 		b.conclusion(0).premise(3).premise(4).add();
 		b.conclusion(2).premise(0).premise(0).add();
 		b.conclusion(1).add();
 		b.conclusion(3).add();
 		b.conclusion(4).add();
-		Proof<? extends Inference<Integer>> p = b.build();
+		Proof<? extends Inference<Integer>> p = b.getProof();
 
 		ProofNode<Integer> root = ProofNodes.create(p, 0);
 
@@ -232,10 +232,9 @@ public class ProofTest {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void recursiveBlocking() throws Exception {
-		ProofBuilder<Integer> b = ProofBuilder.create();
+		BaseProofBuilder<Integer, ?> b = new BaseProofBuilder<>();
 		b.conclusion(0).premise(1).premise(2).add();
 		b.conclusion(1).premise(3).premise(4).premise(5).add();
 		b.conclusion(3).premise(6).premise(7).add();
@@ -245,11 +244,11 @@ public class ProofTest {
 		b.conclusion(7).add();
 		b.conclusion(8).add();
 		b.conclusion(9).add();
-		Proof<? extends Inference<Integer>> p1 = b.build();
+		Proof<? extends Inference<Integer>> p1 = b.getProof();
 
-		b = ProofBuilder.create();
+		b = new BaseProofBuilder<>();
 		b.conclusion(6).add();
-		Proof<? extends Inference<Integer>> p2 = b.build();
+		Proof<? extends Inference<Integer>> p2 = b.getProof();
 
 		ProofNode<Integer> root = ProofNodes.create(p1, 0);
 

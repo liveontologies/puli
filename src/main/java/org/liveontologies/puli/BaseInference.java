@@ -25,6 +25,14 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 
+/**
+ * A base implementation for {@link Inference}
+ * 
+ * @author Yevgeny Kazakov
+ *
+ * @param <C>
+ *            the type of conclusions and premises this inference operates with
+ */
 public class BaseInference<C> extends AbstractInference<C> {
 
 	private final String name_;

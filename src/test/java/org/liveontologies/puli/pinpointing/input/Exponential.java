@@ -21,31 +21,15 @@
  */
 package org.liveontologies.puli.pinpointing.input;
 
-import org.liveontologies.puli.ProofAndJustifierBuilder;
-
-public abstract class Exponential
-		extends BaseEnumeratorTestInput<String, Integer> {
-
-	private static ProofAndJustifierBuilder<String, Integer> getBuilder() {
-
-		final ProofAndJustifierBuilder<String, Integer> builder = new ProofAndJustifierBuilder<String, Integer>();
-
-		builder.conclusion("A").axiom(0).axiom(1).add();
-		builder.conclusion("A").axiom(0).axiom(2).add();
-
-		builder.conclusion("B").premise("A").axiom(3).add();
-		builder.conclusion("B").premise("A").axiom(4).add();
-
-		return builder;
-	}
-
-	public Exponential() {
-		super(getBuilder());
-	}
+public class Exponential extends BaseEnumeratorTestInput {
 
 	@Override
-	public String getQuery() {
-		return "B";
+	protected void build() {
+		conclusion("A").axiom(0).axiom(1).add();
+		conclusion("A").axiom(0).axiom(2).add();
+		conclusion("B").premise("A").axiom(3).add();
+		conclusion("B").premise("A").axiom(4).add();
+		query("B");
 	}
 
 }

@@ -26,7 +26,8 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 
-public class InferenceBuilder<C> {
+public class InferenceBuilder<C, B extends Builder<B>>
+		extends AbstractBuilder<B> {
 
 	static final String INF_NAME = "inf";
 
@@ -40,12 +41,8 @@ public class InferenceBuilder<C> {
 		this.name_ = name;
 	}
 
-	public static <C> InferenceBuilder<C> create(String name) {
-		return new InferenceBuilder<C>(name);
-	}
-
-	public static <C> InferenceBuilder<C> create() {
-		return create(INF_NAME);
+	protected InferenceBuilder() {
+		this(INF_NAME);
 	}
 
 	String getName() {
@@ -60,20 +57,20 @@ public class InferenceBuilder<C> {
 		return premises_;
 	}
 
-	InferenceBuilder<C> conclusion(C conclusion) {
+	public B conclusion(C conclusion) {
 		Preconditions.checkNotNull(conclusion);
 		if (conclusion_ != null) {
 			throw new RuntimeException(
 					"Conclusion already assigned: " + conclusion);
 		}
 		this.conclusion_ = conclusion;
-		return this;
+		return getBuilder();
 	}
 
-	InferenceBuilder<C> premise(C premise) {
+	public B premise(C premise) {
 		Preconditions.checkNotNull(premise);
 		premises_.add(premise);
-		return this;
+		return getBuilder();
 	}
 
 	Inference<C> build() {
