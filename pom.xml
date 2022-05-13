@@ -245,7 +245,7 @@
 									<directory>src/main/resources</directory>
 									<filtering>true</filtering>
 									<includes>
-										<include>README.txt</include>
+										<include>README.md</include>
 									</includes>
 								</resource>
 							</resources>
