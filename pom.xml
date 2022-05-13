@@ -211,7 +211,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>3.3.0</version>
 				<executions>
 					<execution>
 						<!-- retrive the current year from the build timestamp, used in README.txt -->
@@ -223,6 +223,12 @@
 							<name>currentYear</name>
 							<pattern>yyyy</pattern>
 						</configuration>
+					</execution>
+					<execution>
+						<id>released-version</id>
+						<goals>
+							<goal>released-version</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>

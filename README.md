@@ -9,18 +9,18 @@ For further information, see <https://github.com/liveontologies/puli>.
 
 ## Usage
 
-To use this library add the following maven dependency:
+To use this library add the following Maven dependency:
 ```
 <dependency>
   <groupId>org.liveontologies</groupId>
   <artifactId>puli</artifactId>
-  <version>...</version>
+  <version>0.1.0</version>
 </dependency>
 ```
 See `src/test/test` for examples on how to use this library.
 
 To use snapshots versions of this library (if not compiled from sources), please add
-the sonatype snapshot repository either to your `pom.xml` or `settings.xml`:
+the Sonatype OSSRH snapshot repository either to your `pom.xml` or `settings.xml`:
 ```
 <repositories>
   <repository>
