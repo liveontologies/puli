@@ -30,7 +30,7 @@ import com.google.common.base.Preconditions;
 
 /**
  * An {@link AxiomPinpointingListener} that collects the found justifications,
- * repairs and other essential axioms
+ * repairs and useful axioms that belong to repairs and justifications
  * 
  * @author Yevgeny Kazakov
  *
@@ -44,14 +44,14 @@ public class AxiomPinpointingCollector<A>
 
 	private Collection<Set<? extends A>> repairs_;
 
-	private final Set<A> essentialAxioms_;
+	private final Set<A> usefulAxioms_;
 
 	private Collection<A> current_;
 
 	private Set<A> currentJustification_, currentRepair_;
 
 	public AxiomPinpointingCollector() {
-		current_ = essentialAxioms_ = new HashSet<>();
+		current_ = usefulAxioms_ = new HashSet<>();
 	}
 
 	@Override
@@ -92,7 +92,7 @@ public class AxiomPinpointingCollector<A>
 
 	@Override
 	public void usefulAxiom(A axiom) {
-		essentialAxioms_.add(axiom);
+		usefulAxioms_.add(axiom);
 		if (current_ != null) {
 			current_.add(axiom);
 		}
@@ -118,8 +118,8 @@ public class AxiomPinpointingCollector<A>
 	 * @return the set of all axioms that appear in justifications and repairs.
 	 *         The result cannot be {@code null}.
 	 */
-	public Set<? extends A> getEssentialAxioms() {
-		return essentialAxioms_;
+	public Set<? extends A> getUsefulAxioms() {
+		return usefulAxioms_;
 	}
 
 	@Override

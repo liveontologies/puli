@@ -260,7 +260,7 @@ public class Proofs {
 	 * @param goal
 	 * @return the set of conclusions without which the goal would not be
 	 *         derivable using the given inferences; i.e., every derivation
-	 *         using the inferences must use at least one essential conclusion
+	 *         using the inferences must use every essential conclusion
 	 */
 	public static <C, I extends Inference<? extends C>> Set<C> getEssentialConclusions(
 			Proof<I> proof, C goal) {

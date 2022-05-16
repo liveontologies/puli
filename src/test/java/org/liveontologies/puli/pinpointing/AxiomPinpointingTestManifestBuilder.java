@@ -49,7 +49,7 @@ public abstract class AxiomPinpointingTestManifestBuilder<Q, A, I extends AxiomP
 	private TestInputManifest<Q, A, I> input_;
 
 	private Set<Set<? extends A>> justifications_, repairs_;
-	private Set<A> essentialAxioms_;
+	private Set<A> usefulAxioms_;
 
 	protected AxiomPinpointingTestManifestBuilder() {
 		setBuilder(this);
@@ -78,7 +78,7 @@ public abstract class AxiomPinpointingTestManifestBuilder<Q, A, I extends AxiomP
 			justifications_ = new HashSet<>();
 		}
 		justifications_.add(new HashSet<>(Arrays.asList(axioms)));
-		addEssentailAxioms(axioms);
+		addUsefulAxioms(axioms);
 		return getBuilder();
 	}
 
@@ -94,32 +94,32 @@ public abstract class AxiomPinpointingTestManifestBuilder<Q, A, I extends AxiomP
 			repairs_ = new HashSet<>();
 		}
 		repairs_.add(new HashSet<>(Arrays.asList(axioms)));
-		addEssentailAxioms(axioms);
+		addUsefulAxioms(axioms);
 		return getBuilder();
 	}
 
-	private void addEssentailAxioms(A[] axioms) {
-		if (essentialAxioms_ == null) {
-			essentialAxioms_ = new HashSet<>();
+	private void addUsefulAxioms(A[] axioms) {
+		if (usefulAxioms_ == null) {
+			usefulAxioms_ = new HashSet<>();
 		}
 		for (int i = 0; i < axioms.length; i++) {
-			essentialAxioms_.add(axioms[i]);
+			usefulAxioms_.add(axioms[i]);
 		}
 	}
 
 	/**
-	 * Lists all essential axioms, i.e., all axioms that belong to repairs and
+	 * Lists all useful axioms, i.e., all axioms that belong to repairs and
 	 * justifications.
 	 * 
 	 * @param axioms
 	 * @return this builder
 	 */
 	@SuppressWarnings("unchecked")
-	public AxiomPinpointingTestManifestBuilder<Q, A, I> essentialAxioms(
+	public AxiomPinpointingTestManifestBuilder<Q, A, I> usefulAxioms(
 			A... axioms) {
-		Preconditions.checkArgument(essentialAxioms_ == null,
-				"Essential axioms cannot be provided when justifications or repairs are given");
-		essentialAxioms_ = Collections
+		Preconditions.checkArgument(usefulAxioms_ == null,
+				"Useful axioms shoould not be provided when justifications or repairs are given");
+		usefulAxioms_ = Collections
 				.unmodifiableSet(new HashSet<>(Arrays.asList(axioms)));
 		return this;
 	}
@@ -158,9 +158,9 @@ public abstract class AxiomPinpointingTestManifestBuilder<Q, A, I extends AxiomP
 	}
 
 	@Override
-	public Set<? extends A> getEssentialAxioms() {
-		return essentialAxioms_ == null ? Collections.emptySet()
-				: essentialAxioms_;
+	public Set<? extends A> getUsefulAxioms() {
+		return usefulAxioms_ == null ? Collections.emptySet()
+				: usefulAxioms_;
 	}
 
 }

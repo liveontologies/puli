@@ -62,13 +62,13 @@ public class AxiomPinpointingTestRunner<C, A, I extends AxiomPinpointingInferenc
 	public void runTest(AxiomPinpointingTestManifest<C, A, I> manifest) {
 		AxiomPinpointingCollector<A> actualResults = getActualResults(
 				manifest.getInput());
-		assumeTrue(actualResults.getEssentialAxioms() != null
-				&& manifest.getEssentialAxioms() != null);
+		assumeTrue(actualResults.getUsefulAxioms() != null
+				&& manifest.getUsefulAxioms() != null);
 		verifyThat(actualResults.getJustifications(),
 				manifest.getJustifications());
 		verifyThat(actualResults.getRepairs(), manifest.getRepairs());
-		verifyThat(actualResults.getEssentialAxioms(),
-				manifest.getEssentialAxioms());
+		verifyThat(actualResults.getUsefulAxioms(),
+				manifest.getUsefulAxioms());
 	}
 
 	private static <E> void verifyThat(Set<? extends E> actual,

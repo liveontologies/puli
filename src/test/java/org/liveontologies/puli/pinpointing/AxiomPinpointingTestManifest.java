@@ -53,6 +53,6 @@ public interface AxiomPinpointingTestManifest<Q, A, I extends AxiomPinpointingIn
 	 *         i.e., the union of all justifications (= the union of all
 	 *         repairs). This output cannot be {@code null}
 	 */
-	Set<? extends A> getEssentialAxioms();
+	Set<? extends A> getUsefulAxioms();
 
 }
