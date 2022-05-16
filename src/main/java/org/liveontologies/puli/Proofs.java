@@ -312,6 +312,24 @@ public class Proofs {
 	}
 
 	/**
+	 * @param <Q>
+	 * @param <I>
+	 * @param prover
+	 * @return a prover returning pruned proofs of the given prover
+	 */
+	public static <Q, I extends Inference<?>> Prover<Q, I> prune(
+			Prover<? super Q, ? extends I> prover) {
+		return new Prover<Q, I>() {
+
+			@Override
+			public Proof<? extends I> getProof(Q query) {
+				return prune(prover.getProof(query), query);
+			}
+
+		};
+	}
+
+	/**
 	 * Recursively prints all inferences for the derived goal and the premises
 	 * of such inferences to the standard output using ASCII characters. Due to
 	 * potential cycles, inferences for every conclusion are printed only once
@@ -319,9 +337,10 @@ public class Proofs {
 	 * the same conclusion is labeled by {@code *}.
 	 * 
 	 * @param proof
-	 *            the {@link Proof} from which to take the inferences
+	 *                  the {@link Proof} from which to take the inferences
 	 * @param goal
-	 *            the conclusion starting from which the inferences are printed
+	 *                  the conclusion starting from which the inferences are
+	 *                  printed
 	 */
 	public static void print(Proof<?> proof, Object goal) {
 		try {
