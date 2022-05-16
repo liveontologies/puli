@@ -1,5 +1,8 @@
 package org.liveontologies.puli.pinpointing;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+
 /*-
  * #%L
  * Proof Utility Library
@@ -22,8 +25,7 @@ package org.liveontologies.puli.pinpointing;
  * #L%
  */
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.Collection;
@@ -74,14 +76,14 @@ public class AxiomPinpointingTestRunner<C, A, I extends AxiomPinpointingInferenc
 	private static <E> void verifyThat(Set<? extends E> actual,
 			Set<? extends E> expected) {
 		if (actual != null && expected != null) {
-			assertThat(actual, is(expected));
+			assertThat(actual, is(equalTo(expected)));
 		}
 	}
 
 	private static <E> void verifyThat(Collection<? extends E> actual,
 			Set<? extends E> expected) {
 		if (actual != null && expected != null) {
-			assertThat(new HashSet<>(actual), is(expected));
+			assertThat(new HashSet<>(actual), is(equalTo(expected)));
 		}
 	}
 
