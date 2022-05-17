@@ -34,6 +34,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
+import org.liveontologies.puli.pinpointing.AxiomPinpointingTestManifest;
 
 @RunWith(Parameterized.class)
 public abstract class BaseTest<TM extends TestManifest, R extends TestRunner<TM>> {
@@ -47,6 +48,21 @@ public abstract class BaseTest<TM extends TestManifest, R extends TestRunner<TM>
 	@Test
 	public void test() {
 		testRunner.runTest(testManifest);
+	}
+	
+	public static Iterable<Object[]> data(
+			List<? extends TestRunner<?>> testRunners, List<String> testInputs)
+			throws Exception {
+		final List<Object[]> parameters = new ArrayList<Object[]>();
+		for (String testInput : testInputs) {
+			for (TestManifest manifest : BaseTest.getInstances(
+					AxiomPinpointingTestManifest.class, testInput)) {
+				for (final TestRunner<?> runner : testRunners) {
+					parameters.add(new Object[] { manifest, runner });
+				}
+			}
+		}
+		return parameters;
 	}
 
 	public static final String CLASS_FILE_EXT = ".class";

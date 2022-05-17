@@ -41,23 +41,19 @@ public class AxiomPinpointingTestRunner<C, A, I extends AxiomPinpointingInferenc
 
 	private final ProverAxiomPinpointingEnumerationFactory<C, A> factory_;
 
-	private final String name_;
-
 	AxiomPinpointingTestRunner(
-			ProverAxiomPinpointingEnumerationFactory<C, A> computationFactory,
-			String name) {
+			ProverAxiomPinpointingEnumerationFactory<C, A> computationFactory) {
 		this.factory_ = computationFactory;
-		this.name_ = name;
 	}
 
 	@Override
 	public String toString() {
-		return name_;
+		return factory_.toString();
 	}
 
 	@Override
 	public String getName() {
-		return name_;
+		return toString();
 	}
 
 	@Override
