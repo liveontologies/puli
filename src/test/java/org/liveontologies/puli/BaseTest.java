@@ -46,7 +46,7 @@ public abstract class BaseTest<TM extends TestManifest, R extends TestRunner<TM>
 	public R testRunner;
 
 	@Test
-	public void test() {
+	public void test() throws Exception {
 		testRunner.runTest(testManifest);
 	}
 	

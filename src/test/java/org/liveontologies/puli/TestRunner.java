@@ -26,6 +26,6 @@ public interface TestRunner<M> {
 
 	public String getName();
 
-	void runTest(M manfiest);
+	void runTest(M manfiest) throws Exception;
 		
 }
