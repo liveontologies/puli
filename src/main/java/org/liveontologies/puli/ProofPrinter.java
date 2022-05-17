@@ -24,6 +24,7 @@ package org.liveontologies.puli;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -68,8 +69,8 @@ public class ProofPrinter {
 	/**
 	 * where the output is written
 	 */
-	private final BufferedWriter writer_;
-
+	private final BufferedWriter writer_;	
+	
 	protected ProofPrinter(
 			final Proof<? extends AxiomPinpointingInference<?, ?>> proof,
 			BufferedWriter writer) {
@@ -81,7 +82,7 @@ public class ProofPrinter {
 			final Proof<? extends AxiomPinpointingInference<?, ?>> proof) {
 		this(proof, new BufferedWriter(new OutputStreamWriter(System.out)));
 	}
-
+	
 	public void printProof(Object conclusion) throws IOException {
 		process(conclusion);
 		process();
@@ -89,12 +90,25 @@ public class ProofPrinter {
 	}
 
 	public static void print(final Proof<? extends Inference<?>> proof,
-			Object goal) throws IOException {
+			Object goal, BufferedWriter writer) throws IOException {
 		ProofPrinter pp = new ProofPrinter(Proofs.transform(proof,
 				input -> input instanceof AxiomPinpointingInference<?, ?>
 						? (AxiomPinpointingInference<?, ?>) input
-						: new AxiomPinpointingInferenceAdapter<>(input)));
+						: new AxiomPinpointingInferenceAdapter<>(input)),
+				writer);
 		pp.printProof(goal);
+	}
+	
+	public static void print(final Proof<? extends Inference<?>> proof,
+			Object goal) throws IOException {
+		print(proof, goal, new BufferedWriter(new OutputStreamWriter(System.out)));
+	}
+	
+	public static String toString(final Proof<? extends Inference<?>> proof,
+			Object goal) throws IOException {
+		StringWriter writer = new StringWriter();
+		print(proof, goal, new BufferedWriter(writer));
+		return writer.toString();
 	}
 
 	protected BufferedWriter getWriter() {
