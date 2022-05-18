@@ -29,6 +29,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -140,6 +141,11 @@ public class ProofPrinter {
 		writer_.newLine();
 	}
 
+	private void printTautology() throws IOException {
+		writePrefix();
+		writer_.newLine();		
+	}
+	
 	private void process() throws IOException {
 		for (;;) {
 			// processing inferences
@@ -151,8 +157,13 @@ public class ProofPrinter {
 			// else
 			if (infIter.hasNext()) {
 				AxiomPinpointingInference<?, ?> inf = infIter.next();
-				conclusionStack_.push(inf.getPremises().iterator());
-				justificationStack_.push(inf.getJustification().iterator());
+				List<?> premises = inf.getPremises();
+				Set<?> justification = inf.getJustification();
+				conclusionStack_.push(premises.iterator());
+				justificationStack_.push(justification.iterator());
+				if (premises.isEmpty() && justification.isEmpty()) {
+					printTautology();
+				}				
 			} else {
 				inferenceStack_.pop();
 			}
