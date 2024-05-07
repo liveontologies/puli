@@ -17,7 +17,7 @@ To use this library add the following Maven dependency:
   <version>0.1.0</version>
 </dependency>
 ```
-See `src/test/test` for examples on how to use this library.
+See `src/test/java` for examples on how to use this library.
 
 To use snapshots versions of this library (if not compiled from sources), please add
 the Sonatype OSSRH snapshot repository either to your `pom.xml` or `settings.xml`:
@@ -35,7 +35,7 @@ the Sonatype OSSRH snapshot repository either to your `pom.xml` or `settings.xml
 
 ## License
 
-Proof Utility Library is Copyright (c) 2014 - 2022 Live Ontologies Project
+Proof Utility Library is Copyright (c) 2014 - 2024 Live Ontologies Project
 
 All sources of this project are available under the terms of the 
 [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
